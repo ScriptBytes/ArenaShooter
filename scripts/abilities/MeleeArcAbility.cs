@@ -34,7 +34,7 @@ public partial class MeleeArcAbility : AbilityData
             var toEnemy = enemy.GlobalPosition - ctx.Origin;
             // Enemies overlapping the caster always get hit, whatever the angle.
             if (toEnemy.Length() < 20f || Mathf.Abs(facing.AngleTo(toEnemy)) <= halfArc)
-                Combat.Hit(enemy, Damage * ctx.DamageMultiplier, Effects, ctx.Origin);
+                Combat.Hit(enemy, Damage * ctx.DamageMultiplier, Effects(ctx), ctx.Origin);
         }
 
         AreaFlash.Spawn(ctx.World, ctx.Origin, reach, IconColor, halfArc * 2f, facing.Angle());

@@ -26,11 +26,22 @@ public partial class AbilityData : Resource
     [Export] public float SlowDuration { get; set; }
     [Export] public float Knockback { get; set; }
 
+    /// <summary>Base crit chance in percent; the player's Crit Chance stat adds to it.</summary>
+    [ExportGroup("Crit")]
+    [Export(PropertyHint.Range, "0,100,1")] public float CritChance { get; set; } = 5f;
+
+    /// <summary>Damage multiplier on a crit. Fast, light attacks get a low one; slow, heavy ones a high one.</summary>
+    [Export] public float CritMultiplier { get; set; } = 1.5f;
+
     [ExportGroup("Feel")]
     /// <summary>Camera trauma (0–1) added when the ability lands. Keep it for big hits.</summary>
     [Export(PropertyHint.Range, "0,1,0.05")] public float ScreenShake { get; set; }
 
-    protected HitEffects Effects => new(SlowMultiplier, SlowDuration, Knockback);
+    public float EffectiveCritChance(AbilityContext ctx) =>
+        Mathf.Clamp((CritChance + ctx.CritChanceBonus) / 100f, 0f, 1f);
+
+    protected HitEffects Effects(AbilityContext ctx) =>
+        new(SlowMultiplier, SlowDuration, Knockback, EffectiveCritChance(ctx), CritMultiplier);
 
     /// <summary>Manual casts aim at the mouse when true; otherwise they fire from the caster.</summary>
     public virtual bool NeedsAim => true;

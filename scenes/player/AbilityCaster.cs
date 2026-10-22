@@ -38,6 +38,7 @@ public partial class AbilityCaster : Node2D
     {
         _context.DamageMultiplier = stats.Multiplier(StatType.Damage);
         _context.RangeBonus = stats.Get(StatType.Range);
+        _context.CritChanceBonus = stats.Get(StatType.CritChance);
         if (Weapon != null)
             Weapon.CooldownMultiplier = 1f / stats.Multiplier(StatType.AttackSpeed);
     }

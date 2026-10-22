@@ -21,7 +21,8 @@ public partial class AbilitySlotView : Control
         CustomMinimumSize = new Vector2(SlotSize, SlotSize);
         if (Slot != null)
         {
-            TooltipText = $"{Slot.Ability.DisplayName}\n{Slot.Ability.Description}\n\n" +
+            TooltipText = $"{Slot.Ability.DisplayName}\n{Slot.Ability.Description}\n" +
+                          $"Base crit: {Slot.Ability.CritChance:0}% for x{Slot.Ability.CritMultiplier:0.#} damage\n\n" +
                           $"Press {Index + 1} to cast (aims at mouse)\nShift+{Index + 1} or right-click: toggle auto-cast";
         }
     }

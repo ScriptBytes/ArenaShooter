@@ -13,7 +13,8 @@ Where the project stands and what's next. `Goals.md` holds the vision and the de
 | Enemy variety: Grunt, Runner, Archer (ranged), Brute; per-wave weighted spawn mix | `6ffd010` |
 | Ground Slam is a real leap; abilities can default to manual cast | `c1bc250` |
 | Game feel: floating damage numbers (red on the player), enemy hit pop, Wand knockback, per-ability screen shake + shake when hurt, death pop, Brute health bars | `da42f55` |
-| No overkill: projectiles reserve their damage on the target, and auto-targeting skips enemies already doomed by shots in flight (wasted Fireballs ~1 in 6 → 0 on wave 1, wasted Wand bolts ~16% → 0) | _this commit_ |
+| No overkill: projectiles reserve their damage on the target, and auto-targeting skips enemies already doomed by shots in flight (wasted Fireballs ~1 in 6 → 0 on wave 1, wasted Wand bolts ~16% → 0) | `18dcf05` |
+| Crits: per-ability crit chance + multiplier, global Crit Chance stat, yellow "N!" crit numbers, 3 crit items (Rabbit's Foot, Assassin's Mark, Duelist's Gloves) | _this commit_ |
 
 **Playtest status:** the user has beaten wave 5 with both classes and finds it fun so far. Balance hasn't been tuned on purpose yet.
 
@@ -48,5 +49,6 @@ Where the project stands and what's next. `Goals.md` holds the vision and the de
 - The HUD gold count behind the shop doesn't update on purchase. It's hidden by the shop and refreshed when the next wave starts.
 - Restart (R) always goes back to class select.
 - Difficulty in waves 4–5 hasn't been tuned since the new enemy types were added.
+- Crit item values are first guesses: crit chance is worth less per point than Damage% (+10% crit at ×1.5 ≈ +5% damage), so the items give bigger numbers.
 - Feel knobs not tuned by playtest yet: `ScreenShake` per ability (Feel group), `Player.HurtShake`, `ShakeCamera.MaxOffset`, Wand knockback 40. Damage numbers stay frozen on screen behind the defeat message.
 - Enemies can pile up on top of each other. Fine for now; a separation behavior would help once there's art.

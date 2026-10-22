@@ -10,5 +10,6 @@ IconColor = Color(0.847, 0.867, 0.902, 1)
 Cooldown = 0.6
 Damage = 8.0
 Range = 85.0
+CritMultiplier = 2.0
 Knockback = 120.0
 ArcDegrees = 140.0

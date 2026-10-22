@@ -14,7 +14,10 @@
 [ext_resource type="Resource" path="res://data/items/spyglass.tres" id="item_9"]
 [ext_resource type="Resource" path="res://data/items/magnet_ring.tres" id="item_10"]
 [ext_resource type="Resource" path="res://data/items/hunters_cloak.tres" id="item_11"]
+[ext_resource type="Resource" path="res://data/items/rabbits_foot.tres" id="item_12"]
+[ext_resource type="Resource" path="res://data/items/assassins_mark.tres" id="item_13"]
+[ext_resource type="Resource" path="res://data/items/duelists_gloves.tres" id="item_14"]
 
 [resource]
 script = ExtResource("1_catalog")
-Items = Array[ExtResource("2_item")]([ExtResource("item_0"), ExtResource("item_1"), ExtResource("item_2"), ExtResource("item_3"), ExtResource("item_4"), ExtResource("item_5"), ExtResource("item_6"), ExtResource("item_7"), ExtResource("item_8"), ExtResource("item_9"), ExtResource("item_10"), ExtResource("item_11")])
+Items = Array[ExtResource("2_item")]([ExtResource("item_0"), ExtResource("item_1"), ExtResource("item_2"), ExtResource("item_3"), ExtResource("item_4"), ExtResource("item_5"), ExtResource("item_6"), ExtResource("item_7"), ExtResource("item_8"), ExtResource("item_9"), ExtResource("item_10"), ExtResource("item_11"), ExtResource("item_12"), ExtResource("item_13"), ExtResource("item_14")])

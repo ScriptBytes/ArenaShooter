@@ -3,8 +3,13 @@ using Godot;
 
 namespace ArenaShooter;
 
-/// <summary>Secondary effects a hit can apply on top of damage.</summary>
-public readonly record struct HitEffects(float SlowMultiplier = 1f, float SlowDuration = 0f, float Knockback = 0f);
+/// <summary>
+/// Everything a hit does beyond its base damage: crit odds and secondary effects.
+/// <see cref="CritChance"/> is 0–1; a crit multiplies the damage by <see cref="CritMultiplier"/>.
+/// </summary>
+public readonly record struct HitEffects(
+    float SlowMultiplier = 1f, float SlowDuration = 0f, float Knockback = 0f,
+    float CritChance = 0f, float CritMultiplier = 1f);
 
 /// <summary>
 /// Shared targeting and damage helpers. Uses simple distance checks against the enemies
@@ -51,6 +56,11 @@ public static class Combat
         return result;
     }
 
+    /// <summary>
+    /// Applies one hit. Crit is rolled here, per enemy, so an explosion can crit some targets
+    /// and not others. Damage reservations use the non-crit damage, so a crit can only make
+    /// an enemy die sooner than expected, never later.
+    /// </summary>
     public static void Hit(Enemy enemy, float damage, HitEffects effects, Vector2 source)
     {
         if (effects.Knockback > 0f)
@@ -58,7 +68,8 @@ public static class Combat
         if (effects.SlowDuration > 0f)
             enemy.ApplySlow(effects.SlowMultiplier, effects.SlowDuration);
 
-        enemy.TakeDamage(damage);
+        bool crit = GD.Randf() < effects.CritChance;
+        enemy.TakeDamage(crit ? damage * effects.CritMultiplier : damage, crit);
     }
 
     public static void DamageArea(SceneTree tree, Vector2 center, float radius, float damage, HitEffects effects)
