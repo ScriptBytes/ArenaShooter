@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/EnemyData.cs" id="1_enemy"]
+
+[resource]
+script = ExtResource("1_enemy")
+DisplayName = "Grunt"
+Shape = 0
+Color = Color(0.898, 0.282, 0.302, 1)
+Size = 24.0
+MaxHealth = 10.0
+Speed = 90.0
+ContactDamage = 5.0
+GoldValue = 1
+FirstWave = 1
+SpawnWeight = 10.0

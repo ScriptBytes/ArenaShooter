@@ -7,6 +7,7 @@ namespace ArenaShooter;
 /// waves need hand-authored enemy mixes.
 /// </summary>
 public readonly record struct WaveSettings(
+    int Number,
     float Duration,
     float SpawnRateMultiplier,
     float EnemyHealthMultiplier,
@@ -17,6 +18,7 @@ public readonly record struct WaveSettings(
     {
         int i = wave - 1;
         return new WaveSettings(
+            Number: wave,
             Duration: Mathf.Min(30f + 10f * i, 60f),
             SpawnRateMultiplier: 1f + 0.2f * i,
             EnemyHealthMultiplier: 1f + 0.35f * i,

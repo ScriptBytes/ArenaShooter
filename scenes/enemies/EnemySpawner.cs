@@ -1,9 +1,11 @@
+using System.Linq;
 using Godot;
 
 namespace ArenaShooter;
 
 /// <summary>
 /// Spawns enemies at random points in the arena, speeding up as the wave progresses.
+/// Each spawn picks a type by weight from those unlocked for the current wave.
 /// Spawned enemies (and pending spawn markers) are children of this node.
 /// </summary>
 public partial class EnemySpawner : Node2D
@@ -11,6 +13,7 @@ public partial class EnemySpawner : Node2D
     [Signal] public delegate void EnemyKilledEventHandler();
 
     [Export] public PackedScene EnemyScene { get; set; }
+    [Export] public Godot.Collections.Array<EnemyData> EnemyTypes { get; set; } = new();
     [Export] public Arena Arena { get; set; }
 
     [Export] public float StartInterval { get; set; } = 1.5f;
@@ -74,12 +77,28 @@ public partial class EnemySpawner : Node2D
         return point;
     }
 
+    private EnemyData PickEnemyType()
+    {
+        var unlocked = EnemyTypes.Where(t => t.FirstWave <= _wave.Number).ToList();
+        float roll = (float)GD.RandRange(0.0, unlocked.Sum(t => t.SpawnWeight));
+
+        foreach (var type in unlocked)
+        {
+            roll -= type.SpawnWeight;
+            if (roll <= 0f)
+                return type;
+        }
+
+        return unlocked[^1];
+    }
+
     private void SpawnEnemy(Vector2 position)
     {
         if (!Active)
             return;
 
         var enemy = EnemyScene.Instantiate<Enemy>();
+        enemy.Data = PickEnemyType();
         enemy.Position = position;
         enemy.Died += _ => EmitSignal(SignalName.EnemyKilled);
         AddChild(enemy);

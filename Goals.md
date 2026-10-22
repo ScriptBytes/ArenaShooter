@@ -28,3 +28,4 @@ Other decisions I haven't decided on yet.
 - **Weapons and spells:** every class's equipped weapon is its basic attack and fires constantly on its own (aiming at the nearest enemy). Spells and abilities are stronger options on longer cooldowns, kept in hotkey slots 1–4. Each slot can auto-cast or be cast on demand (manual casts aim at the mouse). Slots after 4 are reserved for consumables later.
 - **Classes so far:** Fighter (Sword; Whirlwind, Ground Slam) and Mage (Wand; Fireball, Frost Nova). Each class's spells are fixed for now; picking 3–4 from a larger list at the start of a run comes later.
 - **Armor** is a flat reduction to each hit (minimum 1 damage).
+- **Enemy roster so far:** Grunt (basic chaser), Runner (fast and fragile, from wave 2), Archer (keeps its distance and shoots dodgeable bolts, from wave 3), Brute (slow, tanky, resists knockback, hits hard, from wave 4). Each spawn is a weighted random pick from the types unlocked so far.

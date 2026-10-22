@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/EnemyData.cs" id="1_enemy"]
+
+[resource]
+script = ExtResource("1_enemy")
+DisplayName = "Runner"
+Shape = 1
+Color = Color(1, 0.624, 0.263, 1)
+Size = 18.0
+MaxHealth = 5.0
+Speed = 165.0
+ContactDamage = 3.0
+GoldValue = 1
+FirstWave = 2
+SpawnWeight = 5.0

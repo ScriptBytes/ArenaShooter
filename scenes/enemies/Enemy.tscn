@@ -2,19 +2,22 @@
 
 [ext_resource type="Script" path="res://scenes/enemies/Enemy.cs" id="1_enemy"]
 [ext_resource type="Script" path="res://scripts/Health.cs" id="2_health"]
+[ext_resource type="Resource" path="res://data/enemies/grunt.tres" id="3_grunt"]
+[ext_resource type="PackedScene" path="res://scenes/weapons/Projectile.tscn" id="4_projectile"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
-size = Vector2(24, 24)
+[sub_resource type="CircleShape2D" id="CircleShape2D_body"]
+radius = 12.0
 
 [node name="Enemy" type="CharacterBody2D"]
 collision_layer = 4
 collision_mask = 5
 motion_mode = 1
 script = ExtResource("1_enemy")
+Data = ExtResource("3_grunt")
+ProjectileScene = ExtResource("4_projectile")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("RectangleShape2D_body")
+shape = SubResource("CircleShape2D_body")
 
 [node name="Health" type="Node" parent="."]
 script = ExtResource("2_health")
-Max = 10.0

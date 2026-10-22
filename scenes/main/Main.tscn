@@ -12,6 +12,11 @@
 [ext_resource type="Script" path="res://scripts/classes/ClassData.cs" id="10_class_data"]
 [ext_resource type="Resource" path="res://data/classes/fighter.tres" id="11_fighter"]
 [ext_resource type="Resource" path="res://data/classes/mage.tres" id="12_mage"]
+[ext_resource type="Script" path="res://scripts/enemies/EnemyData.cs" id="13_enemy_data"]
+[ext_resource type="Resource" path="res://data/enemies/grunt.tres" id="14_grunt"]
+[ext_resource type="Resource" path="res://data/enemies/runner.tres" id="15_runner"]
+[ext_resource type="Resource" path="res://data/enemies/archer.tres" id="16_archer"]
+[ext_resource type="Resource" path="res://data/enemies/brute.tres" id="17_brute"]
 
 [node name="Main" type="Node2D" node_paths=PackedStringArray("Arena", "Player", "Spawner", "Hud", "Shop", "ClassSelect")]
 script = ExtResource("1_main")
@@ -30,6 +35,7 @@ script = ExtResource("2_arena")
 [node name="Spawner" type="Node2D" parent="." node_paths=PackedStringArray("Arena")]
 script = ExtResource("3_spawner")
 EnemyScene = ExtResource("4_enemy")
+EnemyTypes = Array[ExtResource("13_enemy_data")]([ExtResource("14_grunt"), ExtResource("15_runner"), ExtResource("16_archer"), ExtResource("17_brute")])
 Arena = NodePath("../Arena")
 
 [node name="Player" parent="." instance=ExtResource("5_player")]

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/EnemyData.cs" id="1_enemy"]
+
+[resource]
+script = ExtResource("1_enemy")
+DisplayName = "Brute"
+Shape = 3
+Color = Color(0.659, 0.196, 0.431, 1)
+Size = 40.0
+MaxHealth = 45.0
+Speed = 55.0
+ContactDamage = 10.0
+GoldValue = 4
+KnockbackResistance = 0.7
+FirstWave = 4
+SpawnWeight = 2.0
