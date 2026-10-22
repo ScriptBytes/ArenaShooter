@@ -151,7 +151,7 @@ public partial class Enemy : CharacterBody2D, IDamageable
         Health.TakeDamage(amount);
         _hitFlashLeft = 0.08f;
         _hitPop = 1f;
-        DamageNumber.Spawn(GetTree().CurrentScene, GlobalPosition + new Vector2(0, -Data.Size / 2f), amount, Colors.White, crit);
+        FloatingText.SpawnDamage(GetTree().CurrentScene, GlobalPosition + new Vector2(0, -Data.Size / 2f), amount, Colors.White, crit);
     }
 
     private void OnDied()

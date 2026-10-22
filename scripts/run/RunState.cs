@@ -10,9 +10,23 @@ public class RunState
 {
     public int Wave { get; set; }
     public int Gold { get; set; }
+
+    /// <summary>
+    /// Gold left on the floor at the end of a wave (Brotato's "bag"). Each pickup in later
+    /// waves draws the same amount again from the bag, doubling it, until the bag is empty.
+    /// </summary>
+    public int Bag { get; set; }
     public int Kills { get; set; }
     public PlayerStats Stats { get; } = new();
     public List<ItemData> Items { get; } = new();
+
+    /// <summary>Takes up to <paramref name="amount"/> from the bag and returns what was taken.</summary>
+    public int DrawFromBag(int amount)
+    {
+        int bonus = System.Math.Min(Bag, amount);
+        Bag -= bonus;
+        return bonus;
+    }
 
     public bool TrySpend(int amount)
     {

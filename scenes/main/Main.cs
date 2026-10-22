@@ -82,6 +82,7 @@ public partial class Main : Node2D
 
         Hud.SetWave(wave, TotalWaves);
         Hud.SetGold(_run.Gold);
+        Hud.SetBag(_run.Bag);
         Hud.SetTime(_timeLeft);
         Spawner.Begin(_wave);
 
@@ -90,6 +91,7 @@ public partial class Main : Node2D
 
     private void EndWave()
     {
+        BagFloorGold();
         Spawner.Clear();
         GetTree().CallGroup(Groups.Transient, Node.MethodName.QueueFree);
 
@@ -120,8 +122,26 @@ public partial class Main : Node2D
 
     private void OnGoldCollected(int amount)
     {
-        _run.Gold += amount;
+        int bonus = _run.DrawFromBag(amount);
+        _run.Gold += amount + bonus;
         Hud.SetGold(_run.Gold);
+
+        if (bonus > 0)
+        {
+            Hud.SetBag(_run.Bag);
+            FloatingText.Spawn(GetTree().CurrentScene, Player.GlobalPosition + new Vector2(0, -Player.Radius - 8f),
+                "x2", Coin.GoldColor, 16);
+        }
+    }
+
+    /// <summary>Moves the value of coins still on the floor into the bag, before they're cleared.</summary>
+    private void BagFloorGold()
+    {
+        foreach (var node in GetTree().GetNodesInGroup(Groups.Transient))
+        {
+            if (node is Coin coin && !coin.IsQueuedForDeletion())
+                _run.Bag += coin.Value;
+        }
     }
 
     private void Restart()

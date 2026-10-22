@@ -111,7 +111,7 @@ public partial class Player : CharacterBody2D, IDamageable
         Health.TakeDamage(taken);
         _invulnerableLeft = InvulnerabilityTime;
         Camera.AddTrauma(HurtShake);
-        DamageNumber.Spawn(GetTree().CurrentScene, GlobalPosition + new Vector2(0, -Radius), taken, new Color("ff5a5a"));
+        FloatingText.SpawnDamage(GetTree().CurrentScene, GlobalPosition + new Vector2(0, -Radius), taken, new Color("ff5a5a"));
     }
 
     // Enemies don't physically block the player; touching one hurts instead.

@@ -75,6 +75,16 @@ theme_override_colors/font_color = Color(0.96, 0.77, 0.26, 1)
 theme_override_font_sizes/font_size = 20
 text = "Gold: 0"
 
+[node name="BagLabel" type="Label" parent="."]
+visible = false
+offset_left = 16.0
+offset_top = 78.0
+offset_right = 256.0
+offset_bottom = 100.0
+theme_override_colors/font_color = Color(0.96, 0.77, 0.26, 0.75)
+theme_override_font_sizes/font_size = 16
+text = "Bag: 0"
+
 [node name="MessageLabel" type="Label" parent="."]
 visible = false
 anchors_preset = 8

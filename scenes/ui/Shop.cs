@@ -136,7 +136,9 @@ public partial class Shop : CanvasLayer
 
     private void Refresh()
     {
-        _gold.Text = $"Gold: {_run.Gold}";
+        _gold.Text = _run.Bag > 0
+            ? $"Gold: {_run.Gold}   ·   Bag: {_run.Bag} (doubles pickups next wave)"
+            : $"Gold: {_run.Gold}";
         _reroll.Text = $"Reroll ({_rerollCost})";
         _reroll.Disabled = _run.Gold < _rerollCost;
 

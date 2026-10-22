@@ -15,6 +15,7 @@ public partial class Hud : CanvasLayer
     private ProgressBar _healthBar;
     private Label _healthLabel;
     private Label _gold;
+    private Label _bag;
     private Label _message;
     private HBoxContainer _abilityBar;
 
@@ -25,6 +26,7 @@ public partial class Hud : CanvasLayer
         _healthBar = GetNode<ProgressBar>("HealthBar");
         _healthLabel = GetNode<Label>("HealthBar/HealthLabel");
         _gold = GetNode<Label>("GoldLabel");
+        _bag = GetNode<Label>("BagLabel");
         _message = GetNode<Label>("MessageLabel");
         _abilityBar = GetNode<HBoxContainer>("AbilityBar");
     }
@@ -44,6 +46,13 @@ public partial class Hud : CanvasLayer
     public void SetWave(int wave, int totalWaves) => _wave.Text = $"Wave {wave} / {totalWaves}";
 
     public void SetGold(int gold) => _gold.Text = $"Gold: {gold}";
+
+    /// <summary>Shows the bag of leftover gold; hidden when it's empty.</summary>
+    public void SetBag(int bag)
+    {
+        _bag.Text = $"Bag: {bag} (pickups x2)";
+        _bag.Visible = bag > 0;
+    }
 
     public void SetHealth(float current, float max)
     {

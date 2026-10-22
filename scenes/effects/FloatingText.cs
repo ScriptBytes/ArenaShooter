@@ -3,10 +3,10 @@ using Godot;
 namespace ArenaShooter;
 
 /// <summary>
-/// Floating number that pops up where damage landed, drifts upward and fades.
-/// Bigger hits draw bigger numbers. Purely visual.
+/// Text that pops up in the world, drifts upward and fades: damage numbers, pickup cues.
+/// Purely visual.
 /// </summary>
-public partial class DamageNumber : Node2D
+public partial class FloatingText : Node2D
 {
     private const float Duration = 0.65f;
     private const float PopTime = 0.1f;
@@ -20,22 +20,26 @@ public partial class DamageNumber : Node2D
     private Vector2 _velocity;
     private float _time;
 
-    /// <summary>
-    /// Adds a number to the world. Deferred so it's safe from physics callbacks.
-    /// Crits draw in yellow, larger, with a "!".
-    /// </summary>
-    public static void Spawn(Node world, Vector2 position, float amount, Color color, bool crit = false)
+    /// <summary>Adds text to the world. Deferred so it's safe from physics callbacks.</summary>
+    public static void Spawn(Node world, Vector2 position, string text, Color color, int fontSize)
+    {
+        var label = new FloatingText
+        {
+            Position = position + new Vector2((float)GD.RandRange(-6.0, 6.0), -10f),
+            Text = text,
+            Color = color,
+            FontSize = fontSize,
+        };
+        world.CallDeferred(Node.MethodName.AddChild, label);
+    }
+
+    /// <summary>Damage number: bigger hits draw bigger. Crits draw in yellow, larger, with a "!".</summary>
+    public static void SpawnDamage(Node world, Vector2 position, float amount, Color color, bool crit = false)
     {
         string text = amount < 1f ? amount.ToString("0.#") : Mathf.RoundToInt(amount).ToString();
         float fontSize = Mathf.Clamp(12f + amount * 0.4f, 14f, 28f);
-        var number = new DamageNumber
-        {
-            Position = position + new Vector2((float)GD.RandRange(-6.0, 6.0), -10f),
-            Text = crit ? text + "!" : text,
-            Color = crit ? CritColor : color,
-            FontSize = (int)(crit ? fontSize * 1.3f : fontSize),
-        };
-        world.CallDeferred(Node.MethodName.AddChild, number);
+        Spawn(world, position, crit ? text + "!" : text, crit ? CritColor : color,
+            (int)(crit ? fontSize * 1.3f : fontSize));
     }
 
     public override void _Ready()

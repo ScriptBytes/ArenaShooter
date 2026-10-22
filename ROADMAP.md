@@ -14,7 +14,8 @@ Where the project stands and what's next. `Goals.md` holds the vision and the de
 | Ground Slam is a real leap; abilities can default to manual cast | `c1bc250` |
 | Game feel: floating damage numbers (red on the player), enemy hit pop, Wand knockback, per-ability screen shake + shake when hurt, death pop, Brute health bars | `da42f55` |
 | No overkill: projectiles reserve their damage on the target, and auto-targeting skips enemies already doomed by shots in flight (wasted Fireballs ~1 in 6 → 0 on wave 1, wasted Wand bolts ~16% → 0) | `18dcf05` |
-| Crits: per-ability crit chance + multiplier, global Crit Chance stat, yellow "N!" crit numbers, 3 crit items (Rabbit's Foot, Assassin's Mark, Duelist's Gloves) | _this commit_ |
+| Crits: per-ability crit chance + multiplier, global Crit Chance stat, yellow "N!" crit numbers, 3 crit items (Rabbit's Foot, Assassin's Mark, Duelist's Gloves) | `cf1b975` |
+| Gold bag: floor gold at wave end goes into a bag; later pickups pay double from it (Brotato/Pickle Pete style), "x2" cue, bag shown in HUD and shop | _this commit_ |
 
 **Playtest status:** the user has beaten wave 5 with both classes and finds it fun so far. Balance hasn't been tuned on purpose yet.
 
@@ -31,7 +32,7 @@ Where the project stands and what's next. `Goals.md` holds the vision and the de
 - Element tags (fire, frost) that items and spells can scale with. Fire burns (damage over time), frost slows. Weapon × element = build variety.
 - Item rarity tiers and class-specific shop items.
 - Selling items; item drops during waves.
-- Brotato-style "bag" for gold left uncollected at wave end (bonus later) instead of losing it.
+- Vacuum pickup (Vampire Survivors): a rare drop that pulls all gold on screen to the player.
 - Hand-authored waves (`WaveData` Resources) replacing the `WaveSettings` formula; an elite or boss on the final wave.
 - More stats: cooldown reduction, life steal, crit, HP regen, dodge.
 - Pause menu (Esc), settings, fullscreen toggle, "retry same class" on the end screen.
@@ -42,7 +43,6 @@ Where the project stands and what's next. `Goals.md` holds the vision and the de
 - Career vs arcade progression: one, the other, or both? What carries over between runs?
 - When do spells get chosen: all at run start, unlocked during the run, or a mix?
 - Shop only, or shop plus drops? Can items be sold?
-- Is losing uncollected gold fun, or does it need a softer rule?
 
 ## Known issues and tuning notes
 

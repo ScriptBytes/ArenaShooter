@@ -4,13 +4,15 @@ namespace ArenaShooter;
 
 /// <summary>
 /// Gold dropped by enemies. Sits still until the player comes within their pickup range,
-/// then accelerates toward them. Uncollected coins are lost when the wave ends.
+/// then accelerates toward them. Coins left when the wave ends go into the bag (see RunState.Bag).
 /// </summary>
 public partial class Coin : Node2D
 {
     private const float CollectDistance = 18f;
     private const float Acceleration = 2400f;
     private const float MaxSpeed = 900f;
+
+    public static readonly Color GoldColor = new("f5c542");
 
     public int Value { get; set; } = 1;
 
@@ -52,6 +54,6 @@ public partial class Coin : Node2D
         const float s = 6f;
         DrawColoredPolygon(
             [new Vector2(0, -s), new Vector2(s, 0), new Vector2(0, s), new Vector2(-s, 0)],
-            new Color("f5c542"));
+            GoldColor);
     }
 }
