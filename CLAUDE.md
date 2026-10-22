@@ -61,7 +61,7 @@ Read a few PNGs (or tile crops into a contact sheet with ffmpeg) rather than ask
 
 ### In the cloud / headless
 
-The environment comes from `tools/cloud-setup.sh` (.NET SDK + Godot .NET binary as `godot`; tested on fresh Ubuntu 24.04, x86_64 and arm64, with net8.0 and net10.0). Run from the repo root, it reads the Godot and .NET versions from `ArenaShooter.csproj`. Its fallback defaults (used when it runs outside the repo) should match the `.csproj`. In a fresh session:
+The environment comes from `tools/cloud-setup.sh` (.NET SDK + Godot .NET binary as `godot`; tested on fresh Ubuntu 24.04, x86_64 and arm64, with net8.0 and net10.0). Run from the repo root, it reads the Godot and .NET versions from `ArenaShooter.csproj`. Its fallback defaults (used when it runs outside the repo) should match the `.csproj`. The cloud environment's network allowlist must include `github.com` (Godot), `dot.net` and `builds.dotnet.microsoft.com` (.NET), and `api.nuget.org` (the Godot SDK package, also needed at build time). Without them, setup fails with no clear error. In a fresh session:
 
 ```bash
 export GODOT=godot                     # the setup script also puts this in ~/.bashrc
