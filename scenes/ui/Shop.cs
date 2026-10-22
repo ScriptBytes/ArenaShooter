@@ -18,7 +18,7 @@ public partial class Shop : CanvasLayer
     [Export] public int RerollCostIncrease { get; set; } = 2;
     [Export] public float PriceIncreasePerWave { get; set; } = 0.1f;
 
-    private class Offer
+    public class Offer
     {
         public ItemData Item;
         public int Price;
@@ -27,6 +27,10 @@ public partial class Shop : CanvasLayer
     }
 
     private readonly List<Offer> _offers = new();
+
+    /// <summary>Current offers; Autoplay reads these to decide what to press.</summary>
+    public IReadOnlyList<Offer> Offers => _offers;
+    public Button ContinueButton => _continue;
     private RunState _run;
     private IReadOnlyList<ItemData> _pool;
     private int _rerollCost;

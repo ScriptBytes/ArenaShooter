@@ -8,6 +8,11 @@ namespace ArenaShooter;
 /// </summary>
 public partial class Main : Node2D
 {
+    [Signal] public delegate void RunStartedEventHandler(ClassData playerClass);
+    [Signal] public delegate void WaveStartedEventHandler(int wave);
+    [Signal] public delegate void WaveEndedEventHandler(int wave);
+    [Signal] public delegate void RunEndedEventHandler(bool victory);
+
     private enum GameState { ClassSelect, Wave, Shop, Victory, Defeat }
 
     private const int CameraPadding = 80;
@@ -26,6 +31,7 @@ public partial class Main : Node2D
     private GameState _state;
     private WaveSettings _wave;
     private float _timeLeft;
+    private AutoplayOptions _autoplay;
 
     public override void _Ready()
     {
@@ -43,6 +49,10 @@ public partial class Main : Node2D
         Hud.RestartRequested += Restart;
         ClassSelect.ClassChosen += StartRun;
 
+        _autoplay = AutoplayOptions.FromCommandLine();
+        if (_autoplay != null)
+            SetUpAutoplay();
+
         _state = GameState.ClassSelect;
         GetTree().Paused = true;
         ClassSelect.Open(Classes);
@@ -53,7 +63,41 @@ public partial class Main : Node2D
         Player.Setup(playerClass);
         Player.ApplyStats(_run.Stats);
         Hud.BindAbilities(Player.Abilities);
-        StartWave(1);
+        EmitSignal(SignalName.RunStarted, playerClass);
+        StartWave(_autoplay?.StartWave ?? 1);
+    }
+
+    /// <summary>Debug mode for unattended runs (headless/cloud testing). See AutoplayOptions.</summary>
+    private void SetUpAutoplay()
+    {
+        if (_autoplay.Seed is { } seed)
+            GD.Seed(seed);
+
+        var autoplay = new Autoplay
+        {
+            Options = _autoplay,
+            ClassSelect = ClassSelect,
+            Shop = Shop,
+            Player = Player,
+            Run = _run,
+            ArenaCenter = Arena.Size / 2f,
+        };
+        AddChild(autoplay);
+
+        RunStarted += autoplay.OnRunStarted;
+        WaveStarted += autoplay.OnWaveStarted;
+        WaveEnded += autoplay.OnWaveEnded;
+        RunEnded += autoplay.OnRunEnded;
+
+        // Run-start grants, applied before the class's first ApplyStats in StartRun.
+        Player.Invulnerable = _autoplay.God;
+        foreach (var (stat, value) in _autoplay.Stats)
+            _run.Stats.Add(stat, value);
+        foreach (var name in _autoplay.Items)
+        {
+            if (autoplay.FindItem(ItemCatalog, name) is { } item)
+                _run.AddItem(item);
+        }
     }
 
     public override void _Process(double delta)
@@ -87,6 +131,7 @@ public partial class Main : Node2D
         Spawner.Begin(_wave);
 
         GetTree().Paused = false;
+        EmitSignal(SignalName.WaveStarted, wave);
     }
 
     private void EndWave()
@@ -94,6 +139,7 @@ public partial class Main : Node2D
         BagFloorGold();
         Spawner.Clear();
         GetTree().CallGroup(Groups.Transient, Node.MethodName.QueueFree);
+        EmitSignal(SignalName.WaveEnded, _run.Wave);
 
         if (_run.Wave >= TotalWaves)
         {
@@ -118,6 +164,7 @@ public partial class Main : Node2D
             : $"Defeated on wave {_run.Wave}\n{_run.Kills} kills\nPress R to try again");
 
         GetTree().Paused = true;
+        EmitSignal(SignalName.RunEnded, result == GameState.Victory);
     }
 
     private void OnGoldCollected(int amount)

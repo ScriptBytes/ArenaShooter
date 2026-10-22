@@ -10,6 +10,10 @@ public partial class ClassSelect : CanvasLayer
     [Signal] public delegate void ClassChosenEventHandler(ClassData playerClass);
 
     private HBoxContainer _cards;
+    private readonly List<(ClassData Class, Button Button)> _choices = new();
+
+    /// <summary>Each class card's play button; Autoplay presses one to start a run.</summary>
+    public IReadOnlyList<(ClassData Class, Button Button)> Choices => _choices;
 
     public override void _Ready()
     {
@@ -22,10 +26,12 @@ public partial class ClassSelect : CanvasLayer
         foreach (var child in _cards.GetChildren())
             child.QueueFree();
 
+        _choices.Clear();
         Button first = null;
         foreach (var playerClass in classes)
         {
             var button = AddCard(playerClass);
+            _choices.Add((playerClass, button));
             first ??= button;
         }
 

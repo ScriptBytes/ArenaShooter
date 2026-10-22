@@ -15,7 +15,9 @@ Where the project stands and what's next. `Goals.md` holds the vision and the de
 | Game feel: floating damage numbers (red on the player), enemy hit pop, Wand knockback, per-ability screen shake + shake when hurt, death pop, Brute health bars | `da42f55` |
 | No overkill: projectiles reserve their damage on the target, and auto-targeting skips enemies already doomed by shots in flight (wasted Fireballs ~1 in 6 → 0 on wave 1, wasted Wand bolts ~16% → 0) | `18dcf05` |
 | Crits: per-ability crit chance + multiplier, global Crit Chance stat, yellow "N!" crit numbers, 3 crit items (Rabbit's Foot, Assassin's Mark, Duelist's Gloves) | `cf1b975` |
-| Gold bag: floor gold at wave end goes into a bag; later pickups pay double from it (Brotato/Pickle Pete style), "x2" cue, bag shown in HUD and shop | _this commit_ |
+| Gold bag: floor gold at wave end goes into a bag; later pickups pay double from it (Brotato/Pickle Pete style), "x2" cue, bag shown in HUD and shop | `560880e` |
+| Testing infrastructure: `--autoplay` debug mode (plays full runs through the real UI, seeded, logs events), cloud setup script `tools/cloud-setup.sh` (tested in Docker, x86_64 + arm64), local vs cloud testing notes in CLAUDE.md | _this commit_ |
+| Moved to .NET 10 (LTS): editor and `dotnet build` clean, 12/12 seeded Autoplay runs identical to .NET 8, cloud script verified with it | _this commit_ |
 
 **Playtest status:** the user has beaten wave 5 with both classes and finds it fun so far. Balance hasn't been tuned on purpose yet.
 
@@ -25,7 +27,8 @@ Where the project stands and what's next. `Goals.md` holds the vision and the de
 2. **Equipment slots:** main hand (weapon = basic attack), off hand (shield, tome, orb), armor, rings, trinkets. Weapons become items you can buy or swap. Two-handed weapons take both hand slots and are stronger.
 3. **Warlock and Necromancer:** Warlock needs life steal / drain (heal-on-damage hook, a LifeSteal stat). Necromancer needs a minion system (allied units with their own AI that target enemies).
 4. **Consumables:** potions bought in the shop or dropped by enemies, used from hotkeys 5+.
-5. **Progression modes:** "career" (persistent character growth between runs) vs "arcade" (fresh each run). Needs save data in an autoload or file, since `RunState` is thrown away on restart.
+5. **Placeholder sprites:** replace the `_Draw()` shapes with simple SVG sprites Claude authors (Mage, Fighter, the 4 enemies), starting with a Mage + Grunt sample to judge the look. Code side: an optional `Texture2D` on `ClassData`/`EnemyData`, drawn via `Sprite2D`, falling back to `_Draw()` when unset. Decide the art style (pixel vs vector, sprite size, view angle) first, since changing it later means redoing every asset. Kenney CC0 packs or commissioned art can swap in later through the same fields.
+6. **Progression modes:** "career" (persistent character growth between runs) vs "arcade" (fresh each run). Needs save data in an autoload or file, since `RunState` is thrown away on restart.
 
 ## Backlog (ideas, not yet scheduled)
 
@@ -45,6 +48,8 @@ Where the project stands and what's next. `Goals.md` holds the vision and the de
 - Shop only, or shop plus drops? Can items be sold?
 
 ## Known issues and tuning notes
+
+- Autoplay without `--god` dies by wave 2 with either class (it circles and doesn't dodge). It's a bot, but it may also hint that the early waves are tough for new players.
 
 - The HUD gold count behind the shop doesn't update on purchase. It's hidden by the shop and refreshed when the next wave starts.
 - Restart (R) always goes back to class select.

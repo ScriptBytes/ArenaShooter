@@ -34,6 +34,9 @@ public partial class Player : CharacterBody2D, IDamageable
 
     public bool IsLeaping => _leapLeft > 0f;
 
+    /// <summary>Debug: ignore all damage (Autoplay's --god).</summary>
+    public bool Invulnerable { get; set; }
+
     public override void _Ready()
     {
         AddToGroup(Groups.Player);
@@ -104,7 +107,7 @@ public partial class Player : CharacterBody2D, IDamageable
 
     public void TakeDamage(float amount)
     {
-        if (_invulnerableLeft > 0f || Health.IsDead)
+        if (Invulnerable || _invulnerableLeft > 0f || Health.IsDead)
             return;
 
         float taken = Mathf.Max(amount - Armor, 1f);

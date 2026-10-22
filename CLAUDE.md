@@ -16,32 +16,65 @@ Playable prototype: class select (Fighter, Mage) → 5-wave run with gold drops 
 
 - **Engine:** Godot 4.7, **.NET (C#) build** (`/Applications/Godot_mono.app`). Assembly name `ArenaShooter`. Write gameplay code in C#, not GDScript, unless there's a specific reason.
 - **Renderer:** currently `mobile`, with Jolt set for 3D physics (scaffold defaults). The game is 2D; revisit the renderer choice (Forward+ / Compatibility) before relying on renderer-specific features.
-- **.NET SDK:** 8.0.100 installed at `/usr/local/share/dotnet`.
+- **.NET:** the project targets `net10.0` (LTS, supported to Nov 2028). SDK 10.0.402 is installed at `/usr/local/share/dotnet`. The Godot editor builds with the SDK under `/usr/local/share/dotnet` even when `DOTNET_ROOT` points elsewhere, so a future .NET upgrade needs Microsoft's installer there. A user-local SDK isn't enough for the editor.
 
 ## Commands
 
-```bash
-GODOT=/Applications/Godot_mono.app/Contents/MacOS/Godot
+`$GODOT` is the Godot .NET binary: `/Applications/Godot_mono.app/Contents/MacOS/Godot` on the user's Mac, plain `godot` in the cloud (see below).
 
+```bash
 $GODOT -e --path .                  # open the editor on this project
 $GODOT --path .                     # run the main scene
 $GODOT --path . res://path/to/scene.tscn   # run a specific scene
-$GODOT --headless --path . --import # re-import assets / regenerate .godot cache
+$GODOT --headless --path . --import # re-import assets / regenerate .godot cache (needed once in a fresh clone)
 dotnet build                        # compile C#
 $GODOT --headless --path . --quit-after 400   # smoke test: surfaces runtime errors in stderr
-
-# Visual check without screen-capture permissions: Movie Maker writes every frame as PNG
-$GODOT --path . --write-movie <scratch>/f.png --fixed-fps 20 --quit-after 1250
 ```
 
-Use the Movie Maker command to look at gameplay yourself (read a few PNGs) rather than asking the user to check. At 20 fps, 1250 frames is about 60s of game time.
+## Testing
 
-`--headless --fixed-fps 60 --disable-vsync --quit-after N` runs the game uncapped, so a full 5-wave run takes about a second. To exercise flows that need input (shop purchases, continuing), add a temporary hook gated on `OS.GetCmdlineUserArgs()` (pass args after `--`), log with `GD.Print`, then remove it. No test framework is set up yet.
+No test framework yet. Verify features by running the game and reading logs. Check how you're running first: the user's Mac has the editor, a display and ffmpeg; a cloud session is headless Linux with only .NET and Godot.
+
+### Autoplay (works everywhere)
+
+`--autoplay` (after `--`) plays a whole run unattended through the real UI. It presses the class-select and shop buttons, circles the arena collecting coins, logs `[autoplay] event key=value` lines and quits when the run ends. A normal launch ignores it. Flags (full list in `scripts/debug/AutoplayOptions.cs`):
+
+```bash
+# Full 5-wave run in ~1-2s, uncapped. grep the log for results.
+$GODOT --headless --path . --fixed-fps 60 --disable-vsync --quit-after 20000 -- --autoplay --class=mage --seed=1
+#   --class=NAME|INDEX  --wave=N (start wave)  --seed=N (same seed = identical run, for before/after)
+#   --god  --shop=cheapest|first|skip  --move=circle|still  --autocast (all spells, incl. manual ones)
+#   --item="Rabbit's Foot" (repeatable)  --stat=CritChance:20 (repeatable)
+```
+
+`--quit-after 20000` is a safety net: Autoplay is C#, so if the C# assembly fails to load (build missing, wrong .NET), nothing quits the game. `run_start` logs the .NET runtime version. Events: `run_start`, `wave_start`, `wave_end` (kills, gold, bag, hp), `buy`, `run_end` (result, wave, kills, gold, items), `error`. Bad flags log `error` and exit with code 1. To measure something new, add a temporary `GD.Print` where it happens, run with fixed seeds before and after the change, compare, then remove the print. If a test needs control Autoplay doesn't offer yet, add a flag to `AutoplayOptions` rather than a throwaway hook.
+
+### Locally (user's Mac)
+
+Everything above, plus looking at the game. Movie Maker writes every frame as a PNG, which works without screen-capture permission (combine with `--autoplay` to skip the menus):
+
+```bash
+$GODOT --path . --write-movie <scratch>/f.png --fixed-fps 20 --quit-after 1250 -- --autoplay --god
+```
+
+Read a few PNGs (or tile crops into a contact sheet with ffmpeg) rather than asking the user to check. At 20 fps, 1250 frames is about 60s of game time. Docker is installed for testing Linux setups (start Docker Desktop first).
+
+### In the cloud / headless
+
+The environment comes from `tools/cloud-setup.sh` (.NET SDK + Godot .NET binary as `godot`; tested on fresh Ubuntu 24.04, x86_64 and arm64, with net8.0 and net10.0). Run from the repo root, it reads the Godot and .NET versions from `ArenaShooter.csproj`. Its fallback defaults (used when it runs outside the repo) should match the `.csproj`. In a fresh session:
+
+```bash
+export GODOT=godot                     # the setup script also puts this in ~/.bashrc
+$GODOT --headless --path . --import    # once, if .godot/ is missing
+dotnet build
+```
+
+Then `dotnet build`, the smoke test and Autoplay runs are the whole toolkit. There is no display or GPU, so no Movie Maker and no screenshots. Say so in the summary: visual changes are unverified until the user playtests. The user pulls the branch and playtests on the Mac.
 
 ## Architecture
 
 - `scenes/<feature>/` holds a `.tscn` scene paired with its `.cs` script. `scripts/` holds shared, scene-less code. `data/` holds `.tres` Resource files (game content).
-- `Main.cs` is the run controller and the only place signals get wired together. Its flow is ClassSelect → Wave → Shop → Wave … → Victory or Defeat. The tree is paused whenever a wave isn't running. The UI layers (`ClassSelect`, `Shop`, `Hud`) are `process_mode = Always`, so they still work while paused. Restart (R) reloads the scene.
+- `Main.cs` is the run controller and the only place signals get wired together. It emits `RunStarted`/`WaveStarted`/`WaveEnded`/`RunEnded`, and when launched with `--autoplay` it adds the `Autoplay` debug driver (`scripts/debug/`), which uses `ClassSelect.Choices` and `Shop.Offers`/`ContinueButton` to press real buttons. Its flow is ClassSelect → Wave → Shop → Wave … → Victory or Defeat. The tree is paused whenever a wave isn't running. The UI layers (`ClassSelect`, `Shop`, `Hud`) are `process_mode = Always`, so they still work while paused. Restart (R) reloads the scene.
 - **Classes:** `ClassData` Resource (`data/classes/`) holding base max HP, move speed and armor, a weapon, and up to 4 spells. `Player.Setup(classData)` must run before `ApplyStats`. Classes appear on the select screen only once they're listed in `Main.tscn`'s `Classes` array.
 - **Abilities:** each class's weapon is its always-on basic attack; spells are stronger attacks on longer cooldowns. Both are `AbilityData` Resources (`data/weapons/`, `data/spells/`). Each subclass holds both the tuning values and the behavior: `ProjectileAbility` (optionally explodes), `AreaAbility` (around the caster or at a target point), `MeleeArcAbility`. A new ability with existing behavior is a new `.tres`; a new kind of behavior is a new subclass that overrides `TryAutoTarget` and `Cast`. `LeapAbility` moves the player via `Player.Leap` (untouchable while airborne), then blasts where it lands. Abilities that move the player should set `AutoCastByDefault = false`. Resources are shared, so runtime state (cooldown, auto-cast on/off) lives in `AbilitySlot`.
 - **`AbilityCaster`** (child of Player) always auto-fires the weapon, and auto-casts each spell slot that has auto-cast on. Keys 1–4 (`ability_N` actions) cast manually, aiming at the mouse when `NeedsAim` is true. Shift+key or right-clicking a hotbar slot toggles auto-cast. Damage% applies to all abilities, AttackSpeed% only to the weapon's cooldown, and Range to all (melee gets half). Auto-targeting (`Combat.NearestEnemy`) skips enemies that are `IsDoomed`: a projectile cast at an enemy reserves its damage there (`Projectile.ReserveOn`) until it lands, so shots don't overkill. Hit side effects (slow, knockback) and crit odds are `HitEffects`, applied through `Combat.Hit` and `Combat.DamageArea`. Crit is rolled per enemy in `Combat.Hit` from the ability's `CritChance` (percent, plus the Crit Chance stat) and `CritMultiplier`; there's deliberately no global crit damage stat (see `Goals.md`).
