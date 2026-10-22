@@ -25,4 +25,6 @@ Other decisions I haven't decided on yet.
 - **Currency:** gold. Enemies drop it, and the player has to walk over it to collect it (Pickup Range is an upgradable stat). Gold left on the floor when a wave ends is lost.
 - **Between waves:** a shop offering 4 random items from a catalog, with rerolls that get more expensive each time and prices that rise slightly each wave. Items are permanent stat modifiers for the rest of the run. Item drops and selling aren't built yet.
 - **Run structure:** 5 waves of increasing length (30s up to 60s). Each wave increases the spawn rate and enemy health, damage and speed. HP refills at the start of each wave.
-- **Weapon:** auto-aims at the nearest enemy. Armor is a flat reduction to each hit (minimum 1 damage).
+- **Weapons and spells:** every class's equipped weapon is its basic attack and fires constantly on its own (aiming at the nearest enemy). Spells and abilities are stronger options on longer cooldowns, kept in hotkey slots 1–4. Each slot can auto-cast or be cast on demand (manual casts aim at the mouse). Slots after 4 are reserved for consumables later.
+- **Classes so far:** Fighter (Sword; Whirlwind, Ground Slam) and Mage (Wand; Fireball, Frost Nova). Each class's spells are fixed for now; picking 3–4 from a larger list at the start of a run comes later.
+- **Armor** is a flat reduction to each hit (minimum 1 damage).

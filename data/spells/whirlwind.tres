@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="AreaAbility" format=3]
+
+[ext_resource type="Script" path="res://scripts/abilities/AreaAbility.cs" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+DisplayName = "Whirlwind"
+Description = "Spin, striking and shoving back everything around you."
+IconColor = Color(0.722, 0.769, 0.839, 1)
+Cooldown = 5.0
+Damage = 12.0
+Range = 0.0
+Knockback = 350.0
+Radius = 120.0
+CenteredOnCaster = true
+MinTargets = 2

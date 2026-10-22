@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ClassData" format=3]
+
+[ext_resource type="Script" path="res://scripts/classes/ClassData.cs" id="1_class"]
+[ext_resource type="Script" path="res://scripts/abilities/AbilityData.cs" id="2_ability"]
+[ext_resource type="Resource" path="res://data/weapons/sword.tres" id="3_weapon"]
+[ext_resource type="Resource" path="res://data/spells/whirlwind.tres" id="spell_0"]
+[ext_resource type="Resource" path="res://data/spells/ground_slam.tres" id="spell_1"]
+
+[resource]
+script = ExtResource("1_class")
+DisplayName = "Fighter"
+Description = "A sturdy warrior who wades into the horde."
+Color = Color(0.878, 0.643, 0.345, 1)
+MaxHealth = 30.0
+MoveSpeed = 280.0
+Armor = 1.0
+Weapon = ExtResource("3_weapon")
+Spells = Array[ExtResource("2_ability")]([ExtResource("spell_0"), ExtResource("spell_1")])

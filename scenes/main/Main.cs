@@ -3,22 +3,24 @@ using Godot;
 namespace ArenaShooter;
 
 /// <summary>
-/// Run controller: wires the scene together and drives the wave → shop → wave loop.
-/// The tree is paused whenever a wave isn't running; Shop and Hud run while paused.
+/// Run controller: wires the scene together and drives class select → wave → shop → wave loop.
+/// The tree is paused whenever a wave isn't running; the UI layers run while paused.
 /// </summary>
 public partial class Main : Node2D
 {
-    private enum GameState { Wave, Shop, Victory, Defeat }
+    private enum GameState { ClassSelect, Wave, Shop, Victory, Defeat }
 
     private const int CameraPadding = 80;
 
     [Export] public int TotalWaves { get; set; } = 5;
+    [Export] public Godot.Collections.Array<ClassData> Classes { get; set; } = new();
     [Export] public ItemCatalog ItemCatalog { get; set; }
     [Export] public Arena Arena { get; set; }
     [Export] public Player Player { get; set; }
     [Export] public EnemySpawner Spawner { get; set; }
     [Export] public Hud Hud { get; set; }
     [Export] public Shop Shop { get; set; }
+    [Export] public ClassSelect ClassSelect { get; set; }
 
     private readonly RunState _run = new();
     private GameState _state;
@@ -39,8 +41,18 @@ public partial class Main : Node2D
         Shop.Purchased += () => Player.ApplyStats(_run.Stats);
         Shop.ContinueRequested += () => StartWave(_run.Wave + 1);
         Hud.RestartRequested += Restart;
+        ClassSelect.ClassChosen += StartRun;
 
+        _state = GameState.ClassSelect;
+        GetTree().Paused = true;
+        ClassSelect.Open(Classes);
+    }
+
+    private void StartRun(ClassData playerClass)
+    {
+        Player.Setup(playerClass);
         Player.ApplyStats(_run.Stats);
+        Hud.BindAbilities(Player.Abilities);
         StartWave(1);
     }
 
@@ -66,6 +78,7 @@ public partial class Main : Node2D
 
         Player.Position = Arena.Size / 2f;
         Player.Health.Refill();
+        Player.Abilities.ResetCooldowns();
 
         Hud.SetWave(wave, TotalWaves);
         Hud.SetGold(_run.Gold);

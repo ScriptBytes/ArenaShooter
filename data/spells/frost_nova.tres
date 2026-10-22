@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="AreaAbility" format=3]
+
+[ext_resource type="Script" path="res://scripts/abilities/AreaAbility.cs" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+DisplayName = "Frost Nova"
+Description = "Blast of cold around you that slows enemies."
+IconColor = Color(0.498, 0.784, 1, 1)
+Cooldown = 8.0
+Damage = 6.0
+Range = 0.0
+SlowMultiplier = 0.4
+SlowDuration = 2.5
+Radius = 160.0
+CenteredOnCaster = true
+MinTargets = 3

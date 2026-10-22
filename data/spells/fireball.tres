@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ProjectileAbility" format=3]
+
+[ext_resource type="Script" path="res://scripts/abilities/ProjectileAbility.cs" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/weapons/Projectile.tscn" id="2_projectile"]
+
+[resource]
+script = ExtResource("1_script")
+DisplayName = "Fireball"
+Description = "Hurls a fireball that explodes on impact."
+IconColor = Color(1, 0.541, 0.239, 1)
+Cooldown = 4.0
+Damage = 15.0
+Range = 450.0
+ProjectileSpeed = 450.0
+ProjectileRadius = 8.0
+ExplosionRadius = 80.0
+ProjectileScene = ExtResource("2_projectile")

@@ -46,7 +46,7 @@ public partial class Shop : CanvasLayer
         _stats = GetNode<Label>("%Stats");
         _reroll = GetNode<Button>("%RerollButton");
         _continue = GetNode<Button>("%ContinueButton");
-        GetNode<PanelContainer>("%StatsPanel").AddThemeStyleboxOverride("panel", PanelStyle());
+        GetNode<PanelContainer>("%StatsPanel").AddThemeStyleboxOverride("panel", UiStyles.Panel());
 
         _reroll.Pressed += Reroll;
         _continue.Pressed += () =>
@@ -94,37 +94,24 @@ public partial class Shop : CanvasLayer
     private Control BuildCard(Offer offer)
     {
         var card = new PanelContainer { CustomMinimumSize = new Vector2(190, 240) };
-        card.AddThemeStyleboxOverride("panel", PanelStyle());
+        card.AddThemeStyleboxOverride("panel", UiStyles.Panel());
         var content = new VBoxContainer();
         content.AddThemeConstantOverride("separation", 8);
         card.AddChild(content);
 
         content.AddChild(new ColorRect { Color = offer.Item.IconColor, CustomMinimumSize = new Vector2(0, 48) });
 
-        var name = new Label { Text = offer.Item.DisplayName, AutowrapMode = TextServer.AutowrapMode.WordSmart };
-        name.AddThemeFontSizeOverride("font_size", 20);
-        content.AddChild(name);
+        content.AddChild(UiStyles.WrappedLabel(offer.Item.DisplayName, 20));
 
-        content.AddChild(new Label
-        {
-            Text = offer.Item.Describe(),
-            AutowrapMode = TextServer.AutowrapMode.WordSmart,
-            SizeFlagsVertical = Control.SizeFlags.ExpandFill,
-        });
+        var description = UiStyles.WrappedLabel(offer.Item.Describe());
+        description.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
+        content.AddChild(description);
 
         offer.BuyButton = new Button { CustomMinimumSize = new Vector2(0, 40) };
         offer.BuyButton.Pressed += () => Buy(offer);
         content.AddChild(offer.BuyButton);
 
         return card;
-    }
-
-    private static StyleBoxFlat PanelStyle()
-    {
-        var style = new StyleBoxFlat { BgColor = new Color(0.12f, 0.12f, 0.15f) };
-        style.SetCornerRadiusAll(6);
-        style.SetContentMarginAll(12);
-        return style;
     }
 
     private void Buy(Offer offer)

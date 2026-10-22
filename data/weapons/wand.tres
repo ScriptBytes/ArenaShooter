@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ProjectileAbility" format=3]
+
+[ext_resource type="Script" path="res://scripts/abilities/ProjectileAbility.cs" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/weapons/Projectile.tscn" id="2_projectile"]
+
+[resource]
+script = ExtResource("1_script")
+DisplayName = "Wand"
+Description = "Fires quick, light bolts."
+IconColor = Color(0.902, 0.945, 1, 1)
+Cooldown = 0.35
+Damage = 4.0
+Range = 450.0
+ProjectileSpeed = 700.0
+ProjectileRadius = 4.0
+ProjectileScene = ExtResource("2_projectile")

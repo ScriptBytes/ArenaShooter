@@ -16,6 +16,7 @@ public partial class Hud : CanvasLayer
     private Label _healthLabel;
     private Label _gold;
     private Label _message;
+    private HBoxContainer _abilityBar;
 
     public override void _Ready()
     {
@@ -25,6 +26,17 @@ public partial class Hud : CanvasLayer
         _healthLabel = GetNode<Label>("HealthBar/HealthLabel");
         _gold = GetNode<Label>("GoldLabel");
         _message = GetNode<Label>("MessageLabel");
+        _abilityBar = GetNode<HBoxContainer>("AbilityBar");
+    }
+
+    /// <summary>Builds the 1–4 hotbar for the player's spells. Empty slots show as blanks.</summary>
+    public void BindAbilities(AbilityCaster caster)
+    {
+        foreach (var child in _abilityBar.GetChildren())
+            child.QueueFree();
+
+        for (int i = 0; i < AbilityCaster.SpellSlotCount; i++)
+            _abilityBar.AddChild(new AbilitySlotView { Index = i, Caster = caster });
     }
 
     public void SetTime(float secondsLeft) => _time.Text = Mathf.CeilToInt(secondsLeft).ToString();

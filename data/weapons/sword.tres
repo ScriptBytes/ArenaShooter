@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="MeleeArcAbility" format=3]
+
+[ext_resource type="Script" path="res://scripts/abilities/MeleeArcAbility.cs" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+DisplayName = "Sword"
+Description = "Sweeps an arc in front of you."
+IconColor = Color(0.847, 0.867, 0.902, 1)
+Cooldown = 0.6
+Damage = 8.0
+Range = 85.0
+Knockback = 120.0
+ArcDegrees = 140.0

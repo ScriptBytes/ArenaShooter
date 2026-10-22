@@ -8,15 +8,21 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/Hud.tscn" id="6_hud"]
 [ext_resource type="PackedScene" path="res://scenes/ui/Shop.tscn" id="7_shop"]
 [ext_resource type="Resource" path="res://data/ItemCatalog.tres" id="8_catalog"]
+[ext_resource type="PackedScene" path="res://scenes/ui/ClassSelect.tscn" id="9_class_select"]
+[ext_resource type="Script" path="res://scripts/classes/ClassData.cs" id="10_class_data"]
+[ext_resource type="Resource" path="res://data/classes/fighter.tres" id="11_fighter"]
+[ext_resource type="Resource" path="res://data/classes/mage.tres" id="12_mage"]
 
-[node name="Main" type="Node2D" node_paths=PackedStringArray("Arena", "Player", "Spawner", "Hud", "Shop")]
+[node name="Main" type="Node2D" node_paths=PackedStringArray("Arena", "Player", "Spawner", "Hud", "Shop", "ClassSelect")]
 script = ExtResource("1_main")
+Classes = Array[ExtResource("10_class_data")]([ExtResource("11_fighter"), ExtResource("12_mage")])
 ItemCatalog = ExtResource("8_catalog")
 Arena = NodePath("Arena")
 Player = NodePath("Player")
 Spawner = NodePath("Spawner")
 Hud = NodePath("Hud")
 Shop = NodePath("Shop")
+ClassSelect = NodePath("ClassSelect")
 
 [node name="Arena" type="Node2D" parent="."]
 script = ExtResource("2_arena")
@@ -31,3 +37,5 @@ Arena = NodePath("../Arena")
 [node name="Hud" parent="." instance=ExtResource("6_hud")]
 
 [node name="Shop" parent="." instance=ExtResource("7_shop")]
+
+[node name="ClassSelect" parent="." instance=ExtResource("9_class_select")]
