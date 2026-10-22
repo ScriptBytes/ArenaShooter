@@ -30,7 +30,7 @@ public partial class AbilityCaster : Node2D
         {
             if (_spells.Count == SpellSlotCount)
                 break;
-            _spells.Add(new AbilitySlot(spell, autoCast: true));
+            _spells.Add(new AbilitySlot(spell, spell.AutoCastByDefault));
         }
     }
 

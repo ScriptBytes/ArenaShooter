@@ -1,3 +1,4 @@
+using System;
 using Godot;
 
 namespace ArenaShooter;
@@ -24,6 +25,13 @@ public partial class Player : CharacterBody2D, IDamageable
     private Area2D _hurtbox;
     private float _invulnerableLeft;
     private float _basePickupRange;
+
+    private Vector2 _leapVelocity;
+    private float _leapLeft;
+    private float _leapDuration;
+    private Action _onLanded;
+
+    public bool IsLeaping => _leapLeft > 0f;
 
     public override void _Ready()
     {
@@ -52,17 +60,45 @@ public partial class Player : CharacterBody2D, IDamageable
 
     public void CollectGold(int amount) => EmitSignal(SignalName.GoldCollected, amount);
 
+    /// <summary>
+    /// Jumps to <paramref name="target"/> over <paramref name="duration"/> seconds, untouchable
+    /// while airborne, then calls <paramref name="onLanded"/>. Walls cut the leap short.
+    /// </summary>
+    public void Leap(Vector2 target, float duration, Action onLanded)
+    {
+        _leapDuration = _leapLeft = duration;
+        _leapVelocity = (target - GlobalPosition) / duration;
+        _onLanded = onLanded;
+        _invulnerableLeft = Mathf.Max(_invulnerableLeft, duration + 0.15f);
+    }
+
     public override void _PhysicsProcess(double delta)
     {
+        float dt = (float)delta;
+        _invulnerableLeft -= dt;
+        QueueRedraw();
+
+        if (IsLeaping)
+        {
+            Velocity = _leapVelocity;
+            MoveAndSlide();
+
+            _leapLeft -= dt;
+            if (!IsLeaping)
+            {
+                var onLanded = _onLanded;
+                _onLanded = null;
+                onLanded?.Invoke();
+            }
+            return;
+        }
+
         var input = Input.GetVector("move_left", "move_right", "move_up", "move_down");
         Velocity = input * Speed;
         MoveAndSlide();
 
-        _invulnerableLeft -= (float)delta;
         if (_invulnerableLeft <= 0f)
             ApplyContactDamage();
-
-        QueueRedraw();
     }
 
     public void TakeDamage(float amount)
@@ -91,8 +127,19 @@ public partial class Player : CharacterBody2D, IDamageable
 
     public override void _Draw()
     {
-        bool blink = _invulnerableLeft > 0f && (int)(_invulnerableLeft * 20f) % 2 == 0;
         var color = _class?.Color ?? new Color("4aa3ff");
+
+        if (IsLeaping)
+        {
+            // Fake height: a shadow stays on the ground while the body swells mid-air.
+            float t = 1f - _leapLeft / _leapDuration;
+            float lift = Mathf.Sin(Mathf.Pi * t);
+            DrawCircle(Vector2.Zero, Radius * 0.9f, new Color(0, 0, 0, 0.35f));
+            DrawCircle(new Vector2(0, -12f * lift), Radius * (1f + 0.35f * lift), color);
+            return;
+        }
+
+        bool blink = _invulnerableLeft > 0f && (int)(_invulnerableLeft * 20f) % 2 == 0;
         DrawCircle(Vector2.Zero, Radius, blink ? Colors.White : color);
     }
 }

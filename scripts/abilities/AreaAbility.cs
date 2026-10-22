@@ -29,7 +29,11 @@ public partial class AreaAbility : AbilityData
 
     public override void Cast(AbilityContext ctx, Vector2 target)
     {
-        var center = CenteredOnCaster ? ctx.Origin : ClampToRange(ctx, target);
+        Blast(ctx, CenteredOnCaster ? ctx.Origin : ClampToRange(ctx, target));
+    }
+
+    protected void Blast(AbilityContext ctx, Vector2 center)
+    {
         Combat.DamageArea(ctx.Tree, center, Radius, Damage * ctx.DamageMultiplier, Effects);
         AreaFlash.Spawn(ctx.World, center, Radius, IconColor);
     }

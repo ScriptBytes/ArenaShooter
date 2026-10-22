@@ -18,6 +18,9 @@ public partial class AbilityData : Resource
     [Export] public float Damage { get; set; } = 5f;
     [Export] public float Range { get; set; } = 300f;
 
+    /// <summary>Starting auto-cast state for spell slots. Off for abilities that move the player.</summary>
+    [Export] public bool AutoCastByDefault { get; set; } = true;
+
     [ExportGroup("On Hit")]
     [Export(PropertyHint.Range, "0,1,0.05")] public float SlowMultiplier { get; set; } = 1f;
     [Export] public float SlowDuration { get; set; }
