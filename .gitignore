@@ -1,0 +1,15 @@
+# Godot 4+ specific ignores
+.godot/
+/android/
+
+# .NET / IDE
+bin/
+obj/
+.vs/
+.idea/
+.vscode/
+*.user
+*.DotSettings.user
+
+# macOS
+.DS_Store

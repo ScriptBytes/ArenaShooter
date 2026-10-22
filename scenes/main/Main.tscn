@@ -1,0 +1,27 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/main/Main.cs" id="1_main"]
+[ext_resource type="Script" path="res://scenes/arena/Arena.cs" id="2_arena"]
+[ext_resource type="Script" path="res://scenes/enemies/EnemySpawner.cs" id="3_spawner"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/Enemy.tscn" id="4_enemy"]
+[ext_resource type="PackedScene" path="res://scenes/player/Player.tscn" id="5_player"]
+[ext_resource type="PackedScene" path="res://scenes/ui/Hud.tscn" id="6_hud"]
+
+[node name="Main" type="Node2D" node_paths=PackedStringArray("Arena", "Player", "Spawner", "Hud")]
+script = ExtResource("1_main")
+Arena = NodePath("Arena")
+Player = NodePath("Player")
+Spawner = NodePath("Spawner")
+Hud = NodePath("Hud")
+
+[node name="Arena" type="Node2D" parent="."]
+script = ExtResource("2_arena")
+
+[node name="Spawner" type="Node2D" parent="." node_paths=PackedStringArray("Arena")]
+script = ExtResource("3_spawner")
+EnemyScene = ExtResource("4_enemy")
+Arena = NodePath("../Arena")
+
+[node name="Player" parent="." instance=ExtResource("5_player")]
+
+[node name="Hud" parent="." instance=ExtResource("6_hud")]

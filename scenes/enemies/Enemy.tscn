@@ -1,0 +1,20 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/enemies/Enemy.cs" id="1_enemy"]
+[ext_resource type="Script" path="res://scripts/Health.cs" id="2_health"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_body"]
+size = Vector2(24, 24)
+
+[node name="Enemy" type="CharacterBody2D"]
+collision_layer = 4
+collision_mask = 5
+motion_mode = 1
+script = ExtResource("1_enemy")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_body")
+
+[node name="Health" type="Node" parent="."]
+script = ExtResource("2_health")
+Max = 10.0
