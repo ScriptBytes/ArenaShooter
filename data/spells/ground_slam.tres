@@ -12,6 +12,7 @@ Damage = 20.0
 Range = 300.0
 AutoCastByDefault = false
 Knockback = 500.0
+ScreenShake = 0.6
 Radius = 90.0
 CenteredOnCaster = false
 MinTargets = 1

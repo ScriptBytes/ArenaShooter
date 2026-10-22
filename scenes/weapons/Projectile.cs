@@ -17,6 +17,9 @@ public partial class Projectile : Area2D
     public float ExplosionRadius { get; set; }
     public HitEffects Effects { get; set; } = new();
 
+    /// <summary>Camera trauma added when an explosive projectile detonates.</summary>
+    public float ScreenShake { get; set; }
+
     private float _traveled;
     private bool _spent;
 
@@ -47,6 +50,8 @@ public partial class Projectile : Area2D
         {
             Combat.DamageArea(GetTree(), GlobalPosition, ExplosionRadius, Damage, Effects);
             AreaFlash.Spawn(GetParent(), GlobalPosition, ExplosionRadius, Color);
+            if (ScreenShake > 0f)
+                ShakeCamera.Shake(GetTree(), ScreenShake);
         }
         else if (body is Enemy enemy)
         {

@@ -11,6 +11,7 @@ public partial class Player : CharacterBody2D, IDamageable
     [Export] public float PickupRange { get; set; } = 80f;
     [Export] public float Radius { get; set; } = 16f;
     [Export] public float InvulnerabilityTime { get; set; } = 0.5f;
+    [Export] public float HurtShake { get; set; } = 0.4f;
 
     public float Speed { get; private set; } = 300f;
 
@@ -18,7 +19,7 @@ public partial class Player : CharacterBody2D, IDamageable
     public float Armor { get; private set; }
 
     public Health Health { get; private set; }
-    public Camera2D Camera { get; private set; }
+    public ShakeCamera Camera { get; private set; }
     public AbilityCaster Abilities { get; private set; }
 
     private ClassData _class;
@@ -37,7 +38,7 @@ public partial class Player : CharacterBody2D, IDamageable
     {
         AddToGroup(Groups.Player);
         Health = GetNode<Health>("Health");
-        Camera = GetNode<Camera2D>("Camera2D");
+        Camera = GetNode<ShakeCamera>("Camera2D");
         Abilities = GetNode<AbilityCaster>("Abilities");
         _hurtbox = GetNode<Area2D>("Hurtbox");
         _basePickupRange = PickupRange;
@@ -106,8 +107,11 @@ public partial class Player : CharacterBody2D, IDamageable
         if (_invulnerableLeft > 0f || Health.IsDead)
             return;
 
-        Health.TakeDamage(Mathf.Max(amount - Armor, 1f));
+        float taken = Mathf.Max(amount - Armor, 1f);
+        Health.TakeDamage(taken);
         _invulnerableLeft = InvulnerabilityTime;
+        Camera.AddTrauma(HurtShake);
+        DamageNumber.Spawn(GetTree().CurrentScene, GlobalPosition + new Vector2(0, -Radius), taken, new Color("ff5a5a"));
     }
 
     // Enemies don't physically block the player; touching one hurts instead.

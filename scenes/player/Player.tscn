@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://scenes/player/Player.cs" id="1_player"]
 [ext_resource type="Script" path="res://scripts/Health.cs" id="2_health"]
 [ext_resource type="Script" path="res://scenes/player/AbilityCaster.cs" id="3_abilities"]
+[ext_resource type="Script" path="res://scenes/player/ShakeCamera.cs" id="4_camera"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_body"]
 radius = 16.0
@@ -35,3 +36,4 @@ Max = 20.0
 script = ExtResource("3_abilities")
 
 [node name="Camera2D" type="Camera2D" parent="."]
+script = ExtResource("4_camera")

@@ -12,6 +12,7 @@ Damage = 6.0
 Range = 0.0
 SlowMultiplier = 0.4
 SlowDuration = 2.5
+ScreenShake = 0.3
 Radius = 160.0
 CenteredOnCaster = true
 MinTargets = 3

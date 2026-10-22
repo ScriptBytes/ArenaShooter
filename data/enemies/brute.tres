@@ -8,6 +8,7 @@ DisplayName = "Brute"
 Shape = 3
 Color = Color(0.659, 0.196, 0.431, 1)
 Size = 40.0
+ShowHealthBar = true
 MaxHealth = 45.0
 Speed = 55.0
 ContactDamage = 10.0

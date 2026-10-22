@@ -11,6 +11,7 @@ IconColor = Color(1, 0.541, 0.239, 1)
 Cooldown = 4.0
 Damage = 15.0
 Range = 450.0
+ScreenShake = 0.35
 ProjectileSpeed = 450.0
 ProjectileRadius = 8.0
 ExplosionRadius = 80.0

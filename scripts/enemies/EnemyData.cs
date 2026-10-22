@@ -23,6 +23,9 @@ public partial class EnemyData : Resource
     [Export] public Color Color { get; set; } = new("e5484d");
     [Export] public float Size { get; set; } = 24f;
 
+    /// <summary>Draws a health bar once damaged. For tanky types, where progress isn't obvious.</summary>
+    [Export] public bool ShowHealthBar { get; set; }
+
     [ExportGroup("Stats")]
     [Export] public float MaxHealth { get; set; } = 10f;
     [Export] public float Speed { get; set; } = 90f;

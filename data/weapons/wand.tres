@@ -11,6 +11,7 @@ IconColor = Color(0.902, 0.945, 1, 1)
 Cooldown = 0.35
 Damage = 4.0
 Range = 450.0
+Knockback = 40.0
 ProjectileSpeed = 700.0
 ProjectileRadius = 4.0
 ProjectileScene = ExtResource("2_projectile")

@@ -36,5 +36,7 @@ public partial class AreaAbility : AbilityData
     {
         Combat.DamageArea(ctx.Tree, center, Radius, Damage * ctx.DamageMultiplier, Effects);
         AreaFlash.Spawn(ctx.World, center, Radius, IconColor);
+        if (ScreenShake > 0f)
+            ShakeCamera.Shake(ctx.Tree, ScreenShake);
     }
 }

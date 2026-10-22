@@ -30,6 +30,7 @@ public partial class ProjectileAbility : AbilityData
         projectile.Color = IconColor;
         projectile.ExplosionRadius = ExplosionRadius;
         projectile.Effects = Effects;
+        projectile.ScreenShake = ScreenShake;
         projectile.MaxDistance = ExplosionRadius > 0f
             ? Mathf.Min(ctx.Origin.DistanceTo(target), range)
             : range * 1.25f;

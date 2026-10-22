@@ -11,6 +11,7 @@ public partial class Enemy : CharacterBody2D, IDamageable
     [Signal] public delegate void DiedEventHandler(Enemy enemy);
 
     private const float KnockbackDecay = 1800f;
+    private const float HitPopTime = 0.12f;
     private const uint ShotCollisionMask = 1 | 2; // world + player
     private static readonly Color ShotColor = new("ff6b6b");
 
@@ -27,6 +28,7 @@ public partial class Enemy : CharacterBody2D, IDamageable
     private float _shotCooldown;
     private Vector2 _facing = Vector2.Right;
     private float _hitFlashLeft;
+    private float _hitPop;
     private float _slowLeft;
     private float _slowMultiplier = 1f;
     private Vector2 _knockback;
@@ -84,6 +86,7 @@ public partial class Enemy : CharacterBody2D, IDamageable
         _knockback = _knockback.MoveToward(Vector2.Zero, KnockbackDecay * dt);
         _slowLeft = Mathf.Max(_slowLeft - dt, 0f);
         _hitFlashLeft = Mathf.Max(_hitFlashLeft - dt, 0f);
+        _hitPop = Mathf.Max(_hitPop - dt / HitPopTime, 0f);
         QueueRedraw();
     }
 
@@ -130,8 +133,13 @@ public partial class Enemy : CharacterBody2D, IDamageable
 
     public void TakeDamage(float amount)
     {
+        if (Health.IsDead || amount <= 0f)
+            return;
+
         Health.TakeDamage(amount);
         _hitFlashLeft = 0.08f;
+        _hitPop = 1f;
+        DamageNumber.Spawn(GetTree().CurrentScene, GlobalPosition + new Vector2(0, -Data.Size / 2f), amount, Colors.White);
     }
 
     private void OnDied()
@@ -139,6 +147,7 @@ public partial class Enemy : CharacterBody2D, IDamageable
         // Deferred: we're usually inside a physics callback, where adding nodes is unsafe.
         var coin = new Coin { Value = Data.GoldValue, Position = GlobalPosition };
         GetTree().CurrentScene.CallDeferred(Node.MethodName.AddChild, coin);
+        DeathPop.Spawn(GetTree().CurrentScene, GlobalPosition, Data.Color, Data.Size);
 
         EmitSignal(SignalName.Died, this);
         QueueFree();
@@ -153,6 +162,8 @@ public partial class Enemy : CharacterBody2D, IDamageable
             color = Colors.White;
 
         float r = Data.Size / 2f;
+        // Swells briefly when hit, so each hit reads even in a crowd.
+        DrawSetTransform(Vector2.Zero, 0f, Vector2.One * (1f + 0.25f * _hitPop));
         switch (Data.Shape)
         {
             case EnemyShape.Triangle:
@@ -174,5 +185,16 @@ public partial class Enemy : CharacterBody2D, IDamageable
                 DrawRect(new Rect2(-r, -r, r * 2f, r * 2f), color);
                 break;
         }
+
+        DrawSetTransform(Vector2.Zero);
+        if (Data.ShowHealthBar && Health.Current < Health.Max)
+            DrawHealthBar(r);
+    }
+
+    private void DrawHealthBar(float r)
+    {
+        var bar = new Rect2(-r, -r * 1.2f - 10f, r * 2f, 4f);
+        DrawRect(bar.Grow(1f), new Color(0f, 0f, 0f, 0.7f));
+        DrawRect(bar with { Size = new Vector2(bar.Size.X * Health.Current / Health.Max, bar.Size.Y) }, new Color("e5484d"));
     }
 }

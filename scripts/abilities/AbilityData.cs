@@ -26,6 +26,10 @@ public partial class AbilityData : Resource
     [Export] public float SlowDuration { get; set; }
     [Export] public float Knockback { get; set; }
 
+    [ExportGroup("Feel")]
+    /// <summary>Camera trauma (0–1) added when the ability lands. Keep it for big hits.</summary>
+    [Export(PropertyHint.Range, "0,1,0.05")] public float ScreenShake { get; set; }
+
     protected HitEffects Effects => new(SlowMultiplier, SlowDuration, Knockback);
 
     /// <summary>Manual casts aim at the mouse when true; otherwise they fire from the caster.</summary>

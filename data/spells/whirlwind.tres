@@ -11,6 +11,7 @@ Cooldown = 5.0
 Damage = 12.0
 Range = 0.0
 Knockback = 350.0
+ScreenShake = 0.3
 Radius = 120.0
 CenteredOnCaster = true
 MinTargets = 2
