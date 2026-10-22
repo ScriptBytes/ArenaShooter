@@ -65,7 +65,6 @@ public partial class Main : Node2D
         _state = GameState.Wave;
 
         Player.Position = Arena.Size / 2f;
-        Player.Camera.ResetSmoothing();
         Player.Health.Refill();
 
         Hud.SetWave(wave, TotalWaves);

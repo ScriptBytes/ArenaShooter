@@ -37,4 +37,3 @@ script = ExtResource("3_weapon")
 ProjectileScene = ExtResource("4_projectile")
 
 [node name="Camera2D" type="Camera2D" parent="."]
-position_smoothing_enabled = true
