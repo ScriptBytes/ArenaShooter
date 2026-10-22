@@ -15,7 +15,7 @@ public partial class ProjectileAbility : AbilityData
     [Export] public float ProjectileRadius { get; set; } = 5f;
     [Export] public float ExplosionRadius { get; set; }
 
-    public override void Cast(AbilityContext ctx, Vector2 target)
+    public override void Cast(AbilityContext ctx, Vector2 target, Enemy targetEnemy)
     {
         float range = EffectiveRange(ctx);
         var direction = ctx.Origin.DirectionTo(target);
@@ -38,5 +38,7 @@ public partial class ProjectileAbility : AbilityData
         // Projectiles live in the world, not under the caster, so they don't move with it.
         ctx.World.AddChild(projectile);
         projectile.GlobalPosition = ctx.Origin;
+        if (targetEnemy != null)
+            projectile.ReserveOn(targetEnemy);
     }
 }

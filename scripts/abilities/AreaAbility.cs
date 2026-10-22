@@ -18,16 +18,17 @@ public partial class AreaAbility : AbilityData
 
     public override bool NeedsAim => !CenteredOnCaster;
 
-    public override bool TryAutoTarget(AbilityContext ctx, out Vector2 target)
+    public override bool TryAutoTarget(AbilityContext ctx, out Vector2 target, out Enemy targetEnemy)
     {
         if (!CenteredOnCaster)
-            return base.TryAutoTarget(ctx, out target);
+            return base.TryAutoTarget(ctx, out target, out targetEnemy);
 
         target = ctx.Origin;
+        targetEnemy = null;
         return Combat.EnemiesInRadius(ctx.Tree, ctx.Origin, Radius).Count >= MinTargets;
     }
 
-    public override void Cast(AbilityContext ctx, Vector2 target)
+    public override void Cast(AbilityContext ctx, Vector2 target, Enemy targetEnemy)
     {
         Blast(ctx, CenteredOnCaster ? ctx.Origin : ClampToRange(ctx, target));
     }

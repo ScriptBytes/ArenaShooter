@@ -99,7 +99,7 @@ public partial class AbilityCaster : Node2D
 
         var slot = _spells[index];
         var target = slot.Ability.NeedsAim ? GetGlobalMousePosition() : GlobalPosition;
-        Cast(slot, target);
+        Cast(slot, target, null);
     }
 
     private static void Tick(AbilitySlot slot, float dt)
@@ -109,13 +109,13 @@ public partial class AbilityCaster : Node2D
 
     private void TryAutoCast(AbilitySlot slot)
     {
-        if (slot.IsReady && slot.Ability.TryAutoTarget(_context, out var target))
-            Cast(slot, target);
+        if (slot.IsReady && slot.Ability.TryAutoTarget(_context, out var target, out var targetEnemy))
+            Cast(slot, target, targetEnemy);
     }
 
-    private void Cast(AbilitySlot slot, Vector2 target)
+    private void Cast(AbilitySlot slot, Vector2 target, Enemy targetEnemy)
     {
-        slot.Ability.Cast(_context, target);
+        slot.Ability.Cast(_context, target, targetEnemy);
         slot.CooldownLeft = slot.EffectiveCooldown;
     }
 }

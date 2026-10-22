@@ -22,6 +22,12 @@ public partial class Enemy : CharacterBody2D, IDamageable
     public Health Health { get; private set; }
     public float ContactDamage { get; private set; }
 
+    /// <summary>Damage from projectiles already flying at this enemy (see <see cref="Projectile.ReserveOn"/>).</summary>
+    public float IncomingDamage { get; private set; }
+
+    /// <summary>Dead, or will be once the damage in flight lands. Auto-targeting skips these.</summary>
+    public bool IsDoomed => Health.Current <= IncomingDamage + 0.001f;
+
     private Node2D _target;
     private float _speed;
     private float _shotDamage;
@@ -65,6 +71,10 @@ public partial class Enemy : CharacterBody2D, IDamageable
         _slowMultiplier = _slowLeft > 0f ? Mathf.Min(_slowMultiplier, multiplier) : multiplier;
         _slowLeft = Mathf.Max(_slowLeft, duration);
     }
+
+    public void ReserveDamage(float amount) => IncomingDamage += amount;
+
+    public void ReleaseDamage(float amount) => IncomingDamage = Mathf.Max(IncomingDamage - amount, 0f);
 
     public void ApplyKnockback(Vector2 impulse)
     {

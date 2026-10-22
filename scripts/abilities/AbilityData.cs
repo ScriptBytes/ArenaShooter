@@ -37,16 +37,22 @@ public partial class AbilityData : Resource
 
     public float EffectiveRange(AbilityContext ctx) => Range + ctx.RangeBonus;
 
-    /// <summary>Picks a target for auto-casting. Returns false when there's nothing worth casting at.</summary>
-    public virtual bool TryAutoTarget(AbilityContext ctx, out Vector2 target)
+    /// <summary>
+    /// Picks a target for auto-casting. Returns false when there's nothing worth casting at.
+    /// <paramref name="targetEnemy"/> is the enemy aimed at, if any.
+    /// </summary>
+    public virtual bool TryAutoTarget(AbilityContext ctx, out Vector2 target, out Enemy targetEnemy)
     {
-        var enemy = Combat.NearestEnemy(ctx.Tree, ctx.Origin, EffectiveRange(ctx));
-        target = enemy?.GlobalPosition ?? ctx.Origin;
-        return enemy != null;
+        targetEnemy = Combat.NearestEnemy(ctx.Tree, ctx.Origin, EffectiveRange(ctx));
+        target = targetEnemy?.GlobalPosition ?? ctx.Origin;
+        return targetEnemy != null;
     }
 
-    /// <summary>Performs the ability toward <paramref name="target"/> (global position).</summary>
-    public virtual void Cast(AbilityContext ctx, Vector2 target)
+    /// <summary>
+    /// Performs the ability toward <paramref name="target"/> (global position).
+    /// <paramref name="targetEnemy"/> is set for auto-casts aimed at an enemy, null for manual casts.
+    /// </summary>
+    public virtual void Cast(AbilityContext ctx, Vector2 target, Enemy targetEnemy)
     {
     }
 

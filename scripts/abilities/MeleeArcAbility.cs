@@ -14,14 +14,14 @@ public partial class MeleeArcAbility : AbilityData
 
     private float Reach(AbilityContext ctx) => Range + ctx.RangeBonus * RangeBonusScale;
 
-    public override bool TryAutoTarget(AbilityContext ctx, out Vector2 target)
+    public override bool TryAutoTarget(AbilityContext ctx, out Vector2 target, out Enemy targetEnemy)
     {
-        var enemy = Combat.NearestEnemy(ctx.Tree, ctx.Origin, Reach(ctx));
-        target = enemy?.GlobalPosition ?? ctx.Origin;
-        return enemy != null;
+        targetEnemy = Combat.NearestEnemy(ctx.Tree, ctx.Origin, Reach(ctx));
+        target = targetEnemy?.GlobalPosition ?? ctx.Origin;
+        return targetEnemy != null;
     }
 
-    public override void Cast(AbilityContext ctx, Vector2 target)
+    public override void Cast(AbilityContext ctx, Vector2 target, Enemy targetEnemy)
     {
         float reach = Reach(ctx);
         float halfArc = Mathf.DegToRad(ArcDegrees) / 2f;

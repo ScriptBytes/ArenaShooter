@@ -12,7 +12,8 @@ Where the project stands and what's next. `Goals.md` holds the vision and the de
 | Classes + ability system: Fighter and Mage, weapon = always-on basic attack, spells in slots 1–4 with auto/manual cast, class select screen | `36cb37d` |
 | Enemy variety: Grunt, Runner, Archer (ranged), Brute; per-wave weighted spawn mix | `6ffd010` |
 | Ground Slam is a real leap; abilities can default to manual cast | `c1bc250` |
-| Game feel: floating damage numbers (red on the player), enemy hit pop, Wand knockback, per-ability screen shake + shake when hurt, death pop, Brute health bars | _this commit_ |
+| Game feel: floating damage numbers (red on the player), enemy hit pop, Wand knockback, per-ability screen shake + shake when hurt, death pop, Brute health bars | `da42f55` |
+| No overkill: projectiles reserve their damage on the target, and auto-targeting skips enemies already doomed by shots in flight (wasted Fireballs ~1 in 6 → 0 on wave 1, wasted Wand bolts ~16% → 0) | _this commit_ |
 
 **Playtest status:** the user has beaten wave 5 with both classes and finds it fun so far. Balance hasn't been tuned on purpose yet.
 

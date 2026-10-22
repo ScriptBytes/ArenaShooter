@@ -12,6 +12,7 @@ public readonly record struct HitEffects(float SlowMultiplier = 1f, float SlowDu
 /// </summary>
 public static class Combat
 {
+    /// <summary>Nearest enemy worth targeting: skips ones that damage already in flight will kill.</summary>
     public static Enemy NearestEnemy(SceneTree tree, Vector2 from, float range)
     {
         Enemy nearest = null;
@@ -19,7 +20,7 @@ public static class Combat
 
         foreach (var node in tree.GetNodesInGroup(Groups.Enemies))
         {
-            if (node is not Enemy enemy || enemy.Health.IsDead)
+            if (node is not Enemy enemy || enemy.IsDoomed)
                 continue;
 
             float distSq = from.DistanceSquaredTo(enemy.GlobalPosition);

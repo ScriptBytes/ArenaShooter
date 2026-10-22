@@ -22,11 +22,31 @@ public partial class Projectile : Area2D
 
     private float _traveled;
     private bool _spent;
+    private Enemy _reservedOn;
 
     public override void _Ready()
     {
         AddToGroup(Groups.Transient);
         BodyEntered += Impact;
+    }
+
+    /// <summary>
+    /// Marks <see cref="Damage"/> as incoming on <paramref name="enemy"/> so other abilities
+    /// don't waste shots on it. Released when this projectile lands or leaves the tree.
+    /// </summary>
+    public void ReserveOn(Enemy enemy)
+    {
+        _reservedOn = enemy;
+        enemy.ReserveDamage(Damage);
+    }
+
+    public override void _ExitTree() => ReleaseReservation();
+
+    private void ReleaseReservation()
+    {
+        if (IsInstanceValid(_reservedOn))
+            _reservedOn.ReleaseDamage(Damage);
+        _reservedOn = null;
     }
 
     public override void _PhysicsProcess(double delta)
@@ -45,6 +65,7 @@ public partial class Projectile : Area2D
         if (_spent)
             return;
         _spent = true;
+        ReleaseReservation();
 
         if (ExplosionRadius > 0f)
         {

@@ -14,14 +14,7 @@ public partial class LeapAbility : AreaAbility
 
     public override bool NeedsAim => true;
 
-    public override bool TryAutoTarget(AbilityContext ctx, out Vector2 target)
-    {
-        var enemy = Combat.NearestEnemy(ctx.Tree, ctx.Origin, EffectiveRange(ctx));
-        target = enemy?.GlobalPosition ?? ctx.Origin;
-        return enemy != null;
-    }
-
-    public override void Cast(AbilityContext ctx, Vector2 target)
+    public override void Cast(AbilityContext ctx, Vector2 target, Enemy targetEnemy)
     {
         var landing = ClampToRange(ctx, target);
 
