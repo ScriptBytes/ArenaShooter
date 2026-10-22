@@ -20,14 +20,27 @@ corner_radius_bottom_left = 4
 process_mode = 3
 script = ExtResource("1_hud")
 
+[node name="WaveLabel" type="Label" parent="."]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -80.0
+offset_top = 8.0
+offset_right = 80.0
+offset_bottom = 34.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 20
+text = "Wave 1"
+horizontal_alignment = 1
+
 [node name="TimeLabel" type="Label" parent="."]
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -80.0
-offset_top = 12.0
+offset_top = 30.0
 offset_right = 80.0
-offset_bottom = 62.0
+offset_bottom = 80.0
 grow_horizontal = 2
 theme_override_font_sizes/font_size = 40
 text = "60"
@@ -53,12 +66,14 @@ text = "HP"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="KillsLabel" type="Label" parent="."]
+[node name="GoldLabel" type="Label" parent="."]
 offset_left = 16.0
 offset_top = 52.0
 offset_right = 256.0
 offset_bottom = 78.0
-text = "Kills: 0"
+theme_override_colors/font_color = Color(0.96, 0.77, 0.26, 1)
+theme_override_font_sizes/font_size = 20
+text = "Gold: 0"
 
 [node name="MessageLabel" type="Label" parent="."]
 visible = false

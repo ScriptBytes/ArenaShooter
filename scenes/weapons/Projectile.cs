@@ -16,6 +16,7 @@ public partial class Projectile : Area2D
 
     public override void _Ready()
     {
+        AddToGroup(Groups.Transient);
         BodyEntered += OnBodyEntered;
     }
 
@@ -44,6 +45,6 @@ public partial class Projectile : Area2D
 
     public override void _Draw()
     {
-        DrawCircle(Vector2.Zero, Radius, new Color("ffd166"));
+        DrawCircle(Vector2.Zero, Radius, new Color("e6f1ff"));
     }
 }

@@ -8,4 +8,7 @@ public static class Groups
 {
     public const string Player = "player";
     public const string Enemies = "enemies";
+
+    /// <summary>Short-lived world objects (projectiles, coins) cleared when a wave ends.</summary>
+    public const string Transient = "transient";
 }

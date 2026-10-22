@@ -32,4 +32,13 @@ public partial class Health : Node
         if (IsDead)
             EmitSignal(SignalName.Died);
     }
+
+    public void SetMax(float max, bool refill)
+    {
+        Max = Mathf.Max(max, 1f);
+        Current = refill ? Max : Mathf.Min(Current, Max);
+        EmitSignal(SignalName.Changed, Current, Max);
+    }
+
+    public void Refill() => SetMax(Max, refill: true);
 }

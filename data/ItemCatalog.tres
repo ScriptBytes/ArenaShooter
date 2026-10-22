@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="ItemCatalog" format=3]
+
+[ext_resource type="Script" path="res://scripts/items/ItemCatalog.cs" id="1_catalog"]
+[ext_resource type="Script" path="res://scripts/items/ItemData.cs" id="2_item"]
+[ext_resource type="Resource" path="res://data/items/whetstone.tres" id="item_0"]
+[ext_resource type="Resource" path="res://data/items/quickdraw_gloves.tres" id="item_1"]
+[ext_resource type="Resource" path="res://data/items/berserker_charm.tres" id="item_2"]
+[ext_resource type="Resource" path="res://data/items/swift_quiver.tres" id="item_3"]
+[ext_resource type="Resource" path="res://data/items/heart_amulet.tres" id="item_4"]
+[ext_resource type="Resource" path="res://data/items/troll_heart.tres" id="item_5"]
+[ext_resource type="Resource" path="res://data/items/iron_buckler.tres" id="item_6"]
+[ext_resource type="Resource" path="res://data/items/chainmail.tres" id="item_7"]
+[ext_resource type="Resource" path="res://data/items/leather_boots.tres" id="item_8"]
+[ext_resource type="Resource" path="res://data/items/spyglass.tres" id="item_9"]
+[ext_resource type="Resource" path="res://data/items/magnet_ring.tres" id="item_10"]
+[ext_resource type="Resource" path="res://data/items/hunters_cloak.tres" id="item_11"]
+
+[resource]
+script = ExtResource("1_catalog")
+Items = Array[ExtResource("2_item")]([ExtResource("item_0"), ExtResource("item_1"), ExtResource("item_2"), ExtResource("item_3"), ExtResource("item_4"), ExtResource("item_5"), ExtResource("item_6"), ExtResource("item_7"), ExtResource("item_8"), ExtResource("item_9"), ExtResource("item_10"), ExtResource("item_11")])

@@ -6,13 +6,17 @@
 [ext_resource type="PackedScene" path="res://scenes/enemies/Enemy.tscn" id="4_enemy"]
 [ext_resource type="PackedScene" path="res://scenes/player/Player.tscn" id="5_player"]
 [ext_resource type="PackedScene" path="res://scenes/ui/Hud.tscn" id="6_hud"]
+[ext_resource type="PackedScene" path="res://scenes/ui/Shop.tscn" id="7_shop"]
+[ext_resource type="Resource" path="res://data/ItemCatalog.tres" id="8_catalog"]
 
-[node name="Main" type="Node2D" node_paths=PackedStringArray("Arena", "Player", "Spawner", "Hud")]
+[node name="Main" type="Node2D" node_paths=PackedStringArray("Arena", "Player", "Spawner", "Hud", "Shop")]
 script = ExtResource("1_main")
+ItemCatalog = ExtResource("8_catalog")
 Arena = NodePath("Arena")
 Player = NodePath("Player")
 Spawner = NodePath("Spawner")
 Hud = NodePath("Hud")
+Shop = NodePath("Shop")
 
 [node name="Arena" type="Node2D" parent="."]
 script = ExtResource("2_arena")
@@ -25,3 +29,5 @@ Arena = NodePath("../Arena")
 [node name="Player" parent="." instance=ExtResource("5_player")]
 
 [node name="Hud" parent="." instance=ExtResource("6_hud")]
+
+[node name="Shop" parent="." instance=ExtResource("7_shop")]

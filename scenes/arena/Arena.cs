@@ -17,6 +17,8 @@ public partial class Arena : Node2D
 
     public override void _Ready()
     {
+        ZIndex = -10; // floor draws beneath everything, including coins (ZIndex -1)
+
         var walls = new StaticBody2D { Name = "Walls", CollisionLayer = 1, CollisionMask = 0 };
         AddChild(walls);
 

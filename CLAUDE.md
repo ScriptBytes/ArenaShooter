@@ -12,7 +12,7 @@ Claude acts as **game design and programming partner**. The user is a software a
 
 ## Project state
 
-Playable prototype of the core loop: one 60s round, placeholder shapes drawn with `_Draw()`, no art. The repo is not under git yet.
+Playable prototype: a 5-wave run with gold drops and a between-wave shop of stat items. Shapes are placeholders drawn with `_Draw()`, no art.
 
 - **Engine:** Godot 4.7, **.NET (C#) build** (`/Applications/Godot_mono.app`). Assembly name `ArenaShooter`. Write gameplay code in C#, not GDScript, unless there's a specific reason.
 - **Renderer:** currently `mobile`, with Jolt set for 3D physics (scaffold defaults). The game is 2D; revisit the renderer choice (Forward+ / Compatibility) before relying on renderer-specific features.
@@ -34,12 +34,19 @@ $GODOT --headless --path . --quit-after 400   # smoke test: surfaces runtime err
 $GODOT --path . --write-movie <scratch>/f.png --fixed-fps 20 --quit-after 1250
 ```
 
-Use the Movie Maker command to look at gameplay yourself (read a few PNGs) rather than asking the user to check. At 20 fps, 1250 frames covers a full 60s round. No test framework is set up yet.
+Use the Movie Maker command to look at gameplay yourself (read a few PNGs) rather than asking the user to check. At 20 fps, 1250 frames is about 60s of game time.
+
+`--headless --fixed-fps 60 --disable-vsync --quit-after N` runs the game uncapped, so a full 5-wave run takes about a second. To exercise flows that need input (shop purchases, continuing), add a temporary hook gated on `OS.GetCmdlineUserArgs()` (pass args after `--`), log with `GD.Print`, then remove it. No test framework is set up yet.
 
 ## Architecture
 
-- `scenes/<feature>/` holds a `.tscn` scene paired with its `.cs` script. `scripts/` holds shared, scene-less code (`Health` component, `IDamageable`, `Groups` constants).
-- `Main.tscn` is the round controller. `Main.cs` wires everything together in `_Ready`: it positions the player, sets camera limits from `Arena.Size`, connects signals to the `Hud`, runs the round timer, and pauses the tree on win or loss. `Hud` is `process_mode = Always`, so it can catch the restart key (R) while paused. Restart reloads the scene.
+- `scenes/<feature>/` holds a `.tscn` scene paired with its `.cs` script. `scripts/` holds shared, scene-less code. `data/` holds `.tres` Resource files (game content).
+- `Main.cs` is the run controller and the only place signals get wired together. Its flow is Wave → Shop → Wave … → Victory or Defeat. The tree is paused whenever a wave isn't running. `Shop` and `Hud` are `process_mode = Always`, so they still work while paused. Restart (R) reloads the scene.
+- **Run state:** `RunState` is plain C#, owned by `Main`. It holds wave, gold, kills, owned items and `PlayerStats`. A scene reload discards it, so persistent "career" progress will need to live somewhere else, such as an autoload.
+- **Stats:** `StatType` enum plus `PlayerStats` (summed bonuses; percent stats stored as whole numbers). `Player.ApplyStats` and `Weapon.ApplyStats` treat their `[Export]` values as base stats (captured in `_Ready`) and layer the bonuses on top. Call `ApplyStats` again whenever stats change. `StatType` values are serialized as integers in `.tres` files: add new entries, but never renumber existing ones.
+- **Items:** `ItemData` (a `[GlobalClass]` Resource holding `StatModifier` sub-resources), one `.tres` per item in `data/items/`. An item only shows up in the shop once it's listed in `data/ItemCatalog.tres`.
+- **Waves:** `WaveSettings.For(wave)` is a formula giving duration, spawn rate and enemy health/damage/speed scaling. `EnemySpawner.Begin` takes the settings and `Enemy.ApplyWave` scales each spawn.
+- **Gold:** enemies drop a `Coin` when they die (added deferred, because death happens inside a physics callback). Coins fly to the player once they're within `PickupRange`. Coins and projectiles are in `Groups.Transient` and get cleared at wave end, so uncollected gold is lost.
 - Cross-entity lookups use **groups** (`Groups.Player`, `Groups.Enemies`), not node paths. Damage goes through `IDamageable`, and entities hand it to a child `Health` node that emits `Changed`/`Died`.
 - `Arena` is the single source of truth for play bounds: the rect from (0,0) to `Size`. It builds its own wall collision in code.
 - `EnemySpawner` places a `SpawnMarker` (a blinking X warning) first, then spawns the enemy as its own child. Spawn interval goes from `StartInterval` to `EndInterval` as `Progress` (0 to 1, set by `Main`) increases. `Clear()` removes everything.

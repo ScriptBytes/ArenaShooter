@@ -16,6 +16,25 @@ public partial class Weapon : Node2D
 
     private float _cooldown;
 
+    // Exported values are base stats; ApplyStats layers run bonuses on top.
+    private float _baseFireInterval;
+    private float _baseRange;
+    private float _baseDamage;
+
+    public override void _Ready()
+    {
+        _baseFireInterval = FireInterval;
+        _baseRange = Range;
+        _baseDamage = Damage;
+    }
+
+    public void ApplyStats(PlayerStats stats)
+    {
+        Damage = _baseDamage * stats.Multiplier(StatType.Damage);
+        FireInterval = _baseFireInterval / stats.Multiplier(StatType.AttackSpeed);
+        Range = Mathf.Max(_baseRange + stats.Get(StatType.Range), 50f);
+    }
+
     public override void _PhysicsProcess(double delta)
     {
         _cooldown -= (float)delta;

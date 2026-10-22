@@ -3,7 +3,7 @@ using Godot;
 namespace ArenaShooter;
 
 /// <summary>
-/// Spawns enemies at random points in the arena, speeding up as the round progresses.
+/// Spawns enemies at random points in the arena, speeding up as the wave progresses.
 /// Spawned enemies (and pending spawn markers) are children of this node.
 /// </summary>
 public partial class EnemySpawner : Node2D
@@ -21,10 +21,19 @@ public partial class EnemySpawner : Node2D
 
     public bool Active { get; set; }
 
-    /// <summary>Round progress from 0 (start) to 1 (end); drives spawn rate.</summary>
+    /// <summary>Wave progress from 0 (start) to 1 (end); drives spawn rate.</summary>
     public float Progress { get; set; }
 
+    private WaveSettings _wave = WaveSettings.For(1);
     private float _cooldown;
+
+    public void Begin(WaveSettings wave)
+    {
+        _wave = wave;
+        Progress = 0f;
+        _cooldown = 0.5f;
+        Active = true;
+    }
 
     public override void _Process(double delta)
     {
@@ -35,7 +44,7 @@ public partial class EnemySpawner : Node2D
         if (_cooldown > 0f)
             return;
 
-        _cooldown = Mathf.Lerp(StartInterval, EndInterval, Progress);
+        _cooldown = Mathf.Lerp(StartInterval, EndInterval, Progress) / _wave.SpawnRateMultiplier;
 
         var marker = new SpawnMarker { Position = PickSpawnPoint(), Duration = TelegraphTime };
         marker.Elapsed += SpawnEnemy;
@@ -74,5 +83,6 @@ public partial class EnemySpawner : Node2D
         enemy.Position = position;
         enemy.Died += _ => EmitSignal(SignalName.EnemyKilled);
         AddChild(enemy);
+        enemy.ApplyWave(_wave);
     }
 }

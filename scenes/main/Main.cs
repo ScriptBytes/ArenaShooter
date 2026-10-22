@@ -3,76 +3,113 @@ using Godot;
 namespace ArenaShooter;
 
 /// <summary>
-/// Round controller: wires the scene together, runs the round timer, and decides win/loss.
+/// Run controller: wires the scene together and drives the wave → shop → wave loop.
+/// The tree is paused whenever a wave isn't running; Shop and Hud run while paused.
 /// </summary>
 public partial class Main : Node2D
 {
-    private enum RoundState { Playing, Won, Lost }
+    private enum GameState { Wave, Shop, Victory, Defeat }
 
     private const int CameraPadding = 80;
 
-    [Export] public float RoundDuration { get; set; } = 60f;
+    [Export] public int TotalWaves { get; set; } = 5;
+    [Export] public ItemCatalog ItemCatalog { get; set; }
     [Export] public Arena Arena { get; set; }
     [Export] public Player Player { get; set; }
     [Export] public EnemySpawner Spawner { get; set; }
     [Export] public Hud Hud { get; set; }
+    [Export] public Shop Shop { get; set; }
 
-    private RoundState _state = RoundState.Playing;
+    private readonly RunState _run = new();
+    private GameState _state;
+    private WaveSettings _wave;
     private float _timeLeft;
-    private int _kills;
 
     public override void _Ready()
     {
-        Player.Position = Arena.Size / 2f;
         Player.Camera.LimitLeft = -CameraPadding;
         Player.Camera.LimitTop = -CameraPadding;
         Player.Camera.LimitRight = (int)Arena.Size.X + CameraPadding;
         Player.Camera.LimitBottom = (int)Arena.Size.Y + CameraPadding;
-        Player.Camera.ResetSmoothing();
 
         Player.Health.Changed += Hud.SetHealth;
-        Player.Health.Died += () => EndRound(RoundState.Lost);
-        Spawner.EnemyKilled += () => Hud.SetKills(++_kills);
+        Player.Health.Died += () => EndRun(GameState.Defeat);
+        Player.GoldCollected += OnGoldCollected;
+        Spawner.EnemyKilled += () => _run.Kills++;
+        Shop.Purchased += () => Player.ApplyStats(_run.Stats);
+        Shop.ContinueRequested += () => StartWave(_run.Wave + 1);
         Hud.RestartRequested += Restart;
 
-        _timeLeft = RoundDuration;
-        Hud.SetTime(_timeLeft);
-        Hud.SetHealth(Player.Health.Current, Player.Health.Max);
-        Hud.SetKills(0);
-        Spawner.Active = true;
+        Player.ApplyStats(_run.Stats);
+        StartWave(1);
     }
 
     public override void _Process(double delta)
     {
-        if (_state != RoundState.Playing)
+        if (_state != GameState.Wave)
             return;
 
         _timeLeft = Mathf.Max(_timeLeft - (float)delta, 0f);
-        Spawner.Progress = 1f - _timeLeft / RoundDuration;
+        Spawner.Progress = 1f - _timeLeft / _wave.Duration;
         Hud.SetTime(_timeLeft);
 
         if (_timeLeft <= 0f)
-            EndRound(RoundState.Won);
+            EndWave();
     }
 
-    private void EndRound(RoundState result)
+    private void StartWave(int wave)
     {
-        if (_state != RoundState.Playing)
+        _run.Wave = wave;
+        _wave = WaveSettings.For(wave);
+        _timeLeft = _wave.Duration;
+        _state = GameState.Wave;
+
+        Player.Position = Arena.Size / 2f;
+        Player.Camera.ResetSmoothing();
+        Player.Health.Refill();
+
+        Hud.SetWave(wave, TotalWaves);
+        Hud.SetGold(_run.Gold);
+        Hud.SetTime(_timeLeft);
+        Spawner.Begin(_wave);
+
+        GetTree().Paused = false;
+    }
+
+    private void EndWave()
+    {
+        Spawner.Clear();
+        GetTree().CallGroup(Groups.Transient, Node.MethodName.QueueFree);
+
+        if (_run.Wave >= TotalWaves)
+        {
+            EndRun(GameState.Victory);
+            return;
+        }
+
+        _state = GameState.Shop;
+        GetTree().Paused = true;
+        Shop.Open(_run, ItemCatalog.Items);
+    }
+
+    private void EndRun(GameState result)
+    {
+        if (_state is GameState.Victory or GameState.Defeat)
             return;
         _state = result;
+        Spawner.Active = false;
 
-        if (result == RoundState.Won)
-        {
-            Spawner.Clear();
-            Hud.ShowMessage($"Round complete!  Kills: {_kills}\nPress R to play again");
-        }
-        else
-        {
-            Spawner.Active = false;
-            Hud.ShowMessage("Defeated\nPress R to try again");
-        }
+        Hud.ShowMessage(result == GameState.Victory
+            ? $"Victory!\nSurvived all {TotalWaves} waves · {_run.Kills} kills\nPress R to play again"
+            : $"Defeated on wave {_run.Wave}\n{_run.Kills} kills\nPress R to try again");
 
         GetTree().Paused = true;
+    }
+
+    private void OnGoldCollected(int amount)
+    {
+        _run.Gold += amount;
+        Hud.SetGold(_run.Gold);
     }
 
     private void Restart()

@@ -9,6 +9,7 @@ public partial class Enemy : CharacterBody2D, IDamageable
     [Export] public float Speed { get; set; } = 90f;
     [Export] public float ContactDamage { get; set; } = 5f;
     [Export] public float Size { get; set; } = 24f;
+    [Export] public int GoldValue { get; set; } = 1;
 
     public Health Health { get; private set; }
 
@@ -21,6 +22,14 @@ public partial class Enemy : CharacterBody2D, IDamageable
         Health = GetNode<Health>("Health");
         Health.Died += OnDied;
         _target = GetTree().GetFirstNodeInGroup(Groups.Player) as Node2D;
+    }
+
+    /// <summary>Applies wave difficulty. Call after the enemy is in the tree.</summary>
+    public void ApplyWave(WaveSettings wave)
+    {
+        Health.SetMax(Health.Max * wave.EnemyHealthMultiplier, refill: true);
+        ContactDamage += wave.EnemyDamageBonus;
+        Speed *= wave.EnemySpeedMultiplier;
     }
 
     public override void _PhysicsProcess(double delta)
@@ -47,6 +56,10 @@ public partial class Enemy : CharacterBody2D, IDamageable
 
     private void OnDied()
     {
+        // Deferred: we're usually inside a physics callback, where adding nodes is unsafe.
+        var coin = new Coin { Value = GoldValue, Position = GlobalPosition };
+        GetTree().CurrentScene.CallDeferred(Node.MethodName.AddChild, coin);
+
         EmitSignal(SignalName.Died, this);
         QueueFree();
     }

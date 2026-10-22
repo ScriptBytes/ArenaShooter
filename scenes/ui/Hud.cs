@@ -10,24 +10,28 @@ public partial class Hud : CanvasLayer
 {
     [Signal] public delegate void RestartRequestedEventHandler();
 
+    private Label _wave;
     private Label _time;
     private ProgressBar _healthBar;
     private Label _healthLabel;
-    private Label _kills;
+    private Label _gold;
     private Label _message;
 
     public override void _Ready()
     {
+        _wave = GetNode<Label>("WaveLabel");
         _time = GetNode<Label>("TimeLabel");
         _healthBar = GetNode<ProgressBar>("HealthBar");
         _healthLabel = GetNode<Label>("HealthBar/HealthLabel");
-        _kills = GetNode<Label>("KillsLabel");
+        _gold = GetNode<Label>("GoldLabel");
         _message = GetNode<Label>("MessageLabel");
     }
 
     public void SetTime(float secondsLeft) => _time.Text = Mathf.CeilToInt(secondsLeft).ToString();
 
-    public void SetKills(int kills) => _kills.Text = $"Kills: {kills}";
+    public void SetWave(int wave, int totalWaves) => _wave.Text = $"Wave {wave} / {totalWaves}";
+
+    public void SetGold(int gold) => _gold.Text = $"Gold: {gold}";
 
     public void SetHealth(float current, float max)
     {
