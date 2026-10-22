@@ -65,13 +65,13 @@ Use the Movie Maker command to look at gameplay yourself (read a few PNGs) rathe
 - `[Export]` fields only appear in the editor after a C# build.
 - `.tscn`/`.tres` are text and can be edited directly, but keep `uid://` references and `ext_resource` ids consistent. Commit the `.uid` files Godot generates next to scripts/resources. `.godot/` is generated and ignored.
 
-## Game design direction
+## Game design and project tracking
 
-See `Goals.md`, which is a **rough, non-binding brainstorm**: treat it as a baseline, not a spec. Summary:
+Read both of these at the start of a session:
 
-- Fantasy arena-survivor (Brotato / Vampire Survivors style): short timed rounds (1–2 min), enemies spawn around the map, and players manage inventory/shop between rounds.
-- RPG layer: equipment slots (armor, rings, trinkets), consumable potions/buffs usable mid-round.
-- Distinct classes: Fighter (weapons, sturdy), Mage (magic, fragile, elemental builds like frost/fire), Warlock (life drain), Necromancer (minions). Each class picks 3–4 spells from a spell list or skill tree at run start.
-- Open questions: persistent progression vs. fresh runs (possibly both, "career" vs. "arcade" modes); what the currency is; pickup vs. auto-collected currency; shop vs. drops vs. both, with selling.
+- **`Goals.md`:** the original vision (a rough, non-binding brainstorm, so treat it as a baseline rather than a spec) plus a **"Decisions so far"** section. Once something is decided, record it there so it doesn't get debated again.
+- **`ROADMAP.md`:** what's done (with commits), the suggested next steps, the backlog of ideas, open design questions, and known issues.
 
-When decisions get made, record them in `Goals.md` (or a design doc) so they don't get re-litigated.
+The game in brief: a fantasy arena-survivor (Brotato / Vampire Survivors style) with an RPG layer of classes, spells, equipment slots and potions.
+
+**Workflow:** at the end of each feature, update `ROADMAP.md` (and the decisions in `Goals.md` if any were made) in the same commit as the feature.
