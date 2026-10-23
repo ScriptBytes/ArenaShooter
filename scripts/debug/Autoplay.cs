@@ -24,8 +24,12 @@ public partial class Autoplay : Node
     public RunState Run { get; set; }
     public Vector2 ArenaCenter { get; set; }
 
+    private const float DrinkCooldown = 0.5f;
+    private const int BuffPotionMinEnemies = 5;
+
     private float _moveAngle;
-    private int _potionWave;
+    private float _drinkWait;
+    private readonly HashSet<ConsumableData> _boughtThisShop = new();
     private bool _failed;
     private float _menuWait;
 
@@ -59,7 +63,7 @@ public partial class Autoplay : Node
         else if (!GetTree().Paused)
         {
             Move((float)delta);
-            MaybeDrinkPotion();
+            MaybeDrink((float)delta);
         }
     }
 
@@ -75,12 +79,28 @@ public partial class Autoplay : Node
         }
     }
 
-    public void OnWaveStarted(int wave) =>
-        Log($"wave_start wave={wave} gold={Run.Gold} bag={Run.Bag}");
+    public void OnWaveStarted(int wave)
+    {
+        _boughtThisShop.Clear();
+        Log($"wave_start wave={wave} gold={Run.Gold} bag={Run.Bag} {PotionSummary()}");
+    }
 
     public void OnWaveEnded(int wave) =>
         Log($"wave_end wave={wave} kills={Run.Kills} gold={Run.Gold} bag={Run.Bag} " +
-            $"hp={Player.Health.Current:0}/{Player.Health.Max:0}");
+            $"hp={Player.Health.Current:0}/{Player.Health.Max:0} {PotionSummary()}");
+
+    public void OnReserveFilled(float added) =>
+        Log($"heart added={added:0.#} reserve={Reserve()}");
+
+    private string Reserve() => $"{Run.Potions.Reserve:0.#}/{Run.Potions.ReserveCapacity:0}";
+
+    // Full health potions, the reserve, and each buff potion carried.
+    private string PotionSummary()
+    {
+        var potions = Run.Potions;
+        string buffs = string.Join(",", potions.Hotbar.Select(c => $"{c.DisplayName}:{potions.Count(c)}"));
+        return $"potions={potions.HealthPotions} reserve={Reserve()} buffs=\"{buffs}\"";
+    }
 
     public void OnRunEnded(bool victory)
     {
@@ -155,8 +175,27 @@ public partial class Autoplay : Node
     }
 
     // One action per frame, like a player clicking, so each press sees the refreshed shop.
+    // --buy-potion picks come first (one of each per visit), then the --shop strategy.
     private void ShopStep()
     {
+        foreach (var name in Options.BuyPotions)
+        {
+            var potion = Shop.PotionOffers.FirstOrDefault(o =>
+                Same(o.Item.DisplayName, name) || Same(o.Item.ResourcePath.GetFile().GetBaseName(), name));
+            if (potion == null)
+            {
+                Fail($"unknown potion '{name}' (shop has: {string.Join(", ", Shop.PotionOffers.Select(o => o.Item.DisplayName))})");
+                return;
+            }
+            if (_boughtThisShop.Contains(potion.Item) || potion.BuyButton.Disabled)
+                continue;
+
+            _boughtThisShop.Add(potion.Item);
+            Log($"buy item=\"{potion.Item.DisplayName}\" price={potion.Price} gold_left={Run.Gold - potion.Price} replaces=\"\"");
+            Press(potion.BuyButton);
+            return;
+        }
+
         var affordable = Shop.Offers.Where(o => !o.BuyButton.Disabled);
         var offer = Options.Shop switch
         {
@@ -180,19 +219,43 @@ public partial class Autoplay : Node
         Press(Shop.ContinueButton);
     }
 
-    // Drinks when the potion's full heal fits, or when low. Sends the real input action.
-    private void MaybeDrinkPotion()
+    // Health: drinks when the next potion's whole heal fits, or when under 35% HP (Space picks a full
+    // potion before the reserve). Buff potions: drinks one when a crowd is around and it isn't active.
+    // Sends the real input actions. The press is handled later in the frame, so wait a bit between them.
+    private void MaybeDrink(float delta)
     {
-        var health = Player.Health;
-        if (Player.PotionsLeft == 0 || health.IsDead || _potionWave == Run.Wave)
-            return;
-        if (health.Max - health.Current < Player.PotionHeal && health.Current >= health.Max * 0.35f)
+        if ((_drinkWait -= delta) > 0f || Player.Health.IsDead)
             return;
 
-        // One try per wave: the press is handled later in the frame, so don't send it twice.
-        _potionWave = Run.Wave;
-        Log($"potion hp_before={health.Current:0}/{health.Max:0}");
-        Input.ParseInputEvent(new InputEventAction { Action = "use_potion", Pressed = true });
+        var health = Player.Health;
+        var source = Player.NextPotion;
+        if (source != Player.PotionSource.None)
+        {
+            float heal = source == Player.PotionSource.Reserve ? Run.Potions.Reserve : Player.PotionHeal;
+            if (health.Max - health.Current >= heal || health.Current < health.Max * 0.35f)
+            {
+                _drinkWait = DrinkCooldown;
+                Log($"potion source={source.ToString().ToLower()} hp_before={health.Current:0}/{health.Max:0} " +
+                    $"heal={heal:0.#} reserve={Reserve()}");
+                Input.ParseInputEvent(new InputEventAction { Action = "use_potion", Pressed = true });
+                return;
+            }
+        }
+
+        var hotbar = Run.Potions.Hotbar;
+        int enemies = GetTree().GetNodesInGroup(Groups.Enemies).Count;
+        for (int i = 0; i < hotbar.Count; i++)
+        {
+            var potion = hotbar[i];
+            if (Run.Potions.Count(potion) == 0 || enemies < BuffPotionMinEnemies
+                || Player.Buffs.All.Any(b => b.Source == potion))
+                continue;
+
+            _drinkWait = DrinkCooldown;
+            Log($"drink item=\"{potion.DisplayName}\" enemies={enemies} left={Run.Potions.Count(potion) - 1}");
+            Input.ParseInputEvent(new InputEventAction { Action = $"consumable_{i + 1}", Pressed = true });
+            return;
+        }
     }
 
     private void Move(float delta)

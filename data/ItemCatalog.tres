@@ -33,7 +33,13 @@
 [ext_resource type="Resource" path="res://data/items/bone_charm.tres" id="item_28"]
 [ext_resource type="Resource" path="res://data/items/book_of_the_dead.tres" id="item_29"]
 [ext_resource type="Resource" path="res://data/items/phylactery.tres" id="item_30"]
+[ext_resource type="Resource" path="res://data/items/alchemists_flask.tres" id="item_31"]
+[ext_resource type="Script" path="res://scripts/items/ConsumableData.cs" id="3_consumable"]
+[ext_resource type="Resource" path="res://data/consumables/health_potion.tres" id="potion_0"]
+[ext_resource type="Resource" path="res://data/consumables/potion_of_fury.tres" id="potion_1"]
+[ext_resource type="Resource" path="res://data/consumables/potion_of_swiftness.tres" id="potion_2"]
 
 [resource]
 script = ExtResource("1_catalog")
-Items = Array[ExtResource("2_item")]([ExtResource("item_0"), ExtResource("item_1"), ExtResource("item_2"), ExtResource("item_3"), ExtResource("item_4"), ExtResource("item_5"), ExtResource("item_6"), ExtResource("item_7"), ExtResource("item_8"), ExtResource("item_9"), ExtResource("item_10"), ExtResource("item_11"), ExtResource("item_12"), ExtResource("item_13"), ExtResource("item_14"), ExtResource("item_15"), ExtResource("item_16"), ExtResource("item_17"), ExtResource("item_18"), ExtResource("item_19"), ExtResource("item_20"), ExtResource("item_21"), ExtResource("item_22"), ExtResource("item_23"), ExtResource("item_24"), ExtResource("item_25"), ExtResource("item_26"), ExtResource("item_27"), ExtResource("item_28"), ExtResource("item_29"), ExtResource("item_30")])
+Items = Array[ExtResource("2_item")]([ExtResource("item_0"), ExtResource("item_1"), ExtResource("item_2"), ExtResource("item_3"), ExtResource("item_4"), ExtResource("item_5"), ExtResource("item_6"), ExtResource("item_7"), ExtResource("item_8"), ExtResource("item_9"), ExtResource("item_10"), ExtResource("item_11"), ExtResource("item_12"), ExtResource("item_13"), ExtResource("item_14"), ExtResource("item_15"), ExtResource("item_16"), ExtResource("item_17"), ExtResource("item_18"), ExtResource("item_19"), ExtResource("item_20"), ExtResource("item_21"), ExtResource("item_22"), ExtResource("item_23"), ExtResource("item_24"), ExtResource("item_25"), ExtResource("item_26"), ExtResource("item_27"), ExtResource("item_28"), ExtResource("item_29"), ExtResource("item_30"), ExtResource("item_31")])
+Consumables = Array[ExtResource("3_consumable")]([ExtResource("potion_0"), ExtResource("potion_1"), ExtResource("potion_2")])

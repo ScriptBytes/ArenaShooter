@@ -31,11 +31,11 @@ public partial class ItemData : Resource
     /// <summary>Gold back when this gear is replaced.</summary>
     public int SellValue => Price / 2;
 
-    public string SlotLabel => !IsGear ? "Trinket · stacks"
+    public virtual string SlotLabel => !IsGear ? "Trinket · stacks"
         : TwoHanded ? "Main Hand · two-handed"
         : EquipSlotInfo.Label(Slot);
 
-    public string Describe()
+    public virtual string Describe()
     {
         var lines = new List<string>();
         if (Weapon != null)

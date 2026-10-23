@@ -27,3 +27,29 @@ Open questions, judgment calls and concerns from the unattended batch run (Warlo
 - Should enemies attack minions (taunt/tank gameplay), or keep minions as pure damage?
 - Should life steal stay available to every class, or be Warlock-flavored (class-specific items)?
 - Necromancer pet count: is 6 skeletons + 1 golem the right amount of screen clutter once real sprites arrive?
+
+## 2. Consumables and buffer potion
+
+**Judgment calls to revisit**
+- The heart "buffer" is called the **Reserve** in game. Capacity = one potion's heal (10, +Potion Heal). It keeps between waves and never turns into a regular charge; a full reserve is simply a second full potion.
+- A heart bigger than the room left tops the reserve up and the overflow is lost (only matters if heart values change; today 2 HP into a 10 HP reserve). A heart already flying to you drops back to the floor if another one fills the reserve first.
+- Hearts fill the reserve even at full HP (they no longer care about HP). Floor hearts are still cleared at wave end.
+- Space order: free charge → bought Health Potion → reserve. The reserve is always drunk whole, even if you're only missing 1 HP. Space does nothing at full HP.
+- Consumables sit on a fixed potion shelf below the 4 random offers instead of competing for offer slots (Brotato has no consumables to copy here). Carry limits: Health Potion 2, buff potions 3. `--item` grants ignore the limit.
+- Buff potions are bound to keys 5 and 6 in catalog order; the HUD always shows their slots (x0 when empty) so keys don't shift. A 3rd buff potion would take key 7 (needs a new `consumable_3` input action).
+- Drinking a buff potion that's already active refreshes its timer (wastes the rest), matching the spell-buff rule. Buffs still clear at wave start, so drinking in the last seconds is wasted.
+- "Bigger heal" is a stat (Potion Heal) on a trinket (Alchemist's Flask +4, 14 gold), not a consumable. It also grows the reserve, so the Flask makes hearts worth less relative to the reserve but the reserve holds more.
+
+**Balance concerns**
+- Health Potion at 10 gold is a strong buy for the Mage (+10 of 16 HP) and weak for the Fighter; same concern as the free potion. A percent-of-max heal would fix both.
+- Fury (+30% Damage for 10s, 8 gold) is cheap compared with permanent items; with 3 carried and a 30–60s wave, it's +5–10% damage for the wave. Swiftness's value depends on how much dodging matters.
+- Hearts now only feed the reserve, so a player who never presses Space gets nothing from them. Survival in Autoplay barely moved (see ROADMAP known issues).
+
+**Unverified**
+- Feel of pressing Space with an empty potion but a partial reserve (you get a small heal you might not expect). HUD readability of the reserve flask at a glance, the shop potion shelf's uneven card widths, and the "+2" pink pickup text: checked in Movie Maker frames only.
+- Keys 5/6 tested only through Autoplay's input actions, not a real keyboard.
+
+**Questions**
+- Should a full reserve become a regular charge (freeing room for more hearts), or should excess hearts heal directly when the reserve is full?
+- Should consumables also drop during waves (rare potion drop), or stay shop-only?
+- Should Space drink the reserve first when it's full, to make room for more hearts before using the free charge?

@@ -25,6 +25,7 @@ public enum MoveMode { Circle, Still }
 /// <item><c>--move=circle|still</c> circle the arena (collects coins) or stand in the middle (default circle).</item>
 /// <item><c>--autocast</c> turns auto-cast on for every spell, including manual-by-default ones.</item>
 /// <item><c>--item=NAME</c> grants an item at run start (display name or .tres file name). Repeatable.</item>
+/// <item><c>--buy-potion=NAME</c> buys one of this potion at every shop visit, before other purchases. Repeatable.</item>
 /// <item><c>--menu-delay=SECONDS</c> waits before each menu action, so Movie Maker can record the menus (default 0).</item>
 /// <item><c>--stat=STAT:VALUE</c> adds a stat bonus at run start, e.g. <c>--stat=CritChance:20</c>. Repeatable.</item>
 /// </list>
@@ -41,6 +42,7 @@ public sealed class AutoplayOptions
     public bool AutoCastAll { get; private set; }
     public float MenuDelay { get; private set; }
     public List<string> Items { get; } = new();
+    public List<string> BuyPotions { get; } = new();
     public List<(StatType Stat, float Value)> Stats { get; } = new();
 
     /// <summary>Problems with the flags. Autoplay logs them and quits with exit code 1.</summary>
@@ -94,6 +96,9 @@ public sealed class AutoplayOptions
                     break;
                 case "--item" when value != "":
                     options.Items.Add(value);
+                    break;
+                case "--buy-potion" when value != "":
+                    options.BuyPotions.Add(value);
                     break;
                 case "--stat" when TryParseStat(value, out var stat):
                     options.Stats.Add(stat);

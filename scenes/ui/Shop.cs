@@ -7,7 +7,8 @@ namespace ArenaShooter;
 /// <summary>
 /// Between-wave shop. Static layout lives in Shop.tscn; item cards are built in code.
 /// Mutates the RunState directly (gold, items) and signals Main to re-apply gear and stats.
-/// Gear that replaces something refunds half the old item's price.
+/// Gear that replaces something refunds half the old item's price. Below the random offers is a
+/// potion shelf: every consumable, always in stock, buyable until the player carries its MaxCarry.
 /// </summary>
 public partial class Shop : CanvasLayer
 {
@@ -33,10 +34,21 @@ public partial class Shop : CanvasLayer
         public VBoxContainer ButtonBox;
     }
 
+    /// <summary>A potion on the shelf. Not rerolled; the price rises with the wave like the offers.</summary>
+    public class PotionOffer
+    {
+        public ConsumableData Item;
+        public int Price;
+        public Button BuyButton;
+        public Label Carried;
+    }
+
     private readonly List<Offer> _offers = new();
+    private readonly List<PotionOffer> _potionOffers = new();
 
     /// <summary>Current offers; Autoplay reads these to decide what to press.</summary>
     public IReadOnlyList<Offer> Offers => _offers;
+    public IReadOnlyList<PotionOffer> PotionOffers => _potionOffers;
     public Button ContinueButton => _continue;
     private RunState _run;
     private IReadOnlyList<ItemData> _pool;
@@ -47,6 +59,7 @@ public partial class Shop : CanvasLayer
     private HBoxContainer _offerRow;
     private Label _stats;
     private VBoxContainer _equipment;
+    private HBoxContainer _potionShelf;
     private Button _reroll;
     private Button _continue;
 
@@ -57,6 +70,7 @@ public partial class Shop : CanvasLayer
         _offerRow = GetNode<HBoxContainer>("%Offers");
         _stats = GetNode<Label>("%Stats");
         _equipment = GetNode<VBoxContainer>("%Equipment");
+        _potionShelf = GetNode<HBoxContainer>("%PotionShelf");
         _reroll = GetNode<Button>("%RerollButton");
         _continue = GetNode<Button>("%ContinueButton");
         GetNode<PanelContainer>("%StatsPanel").AddThemeStyleboxOverride("panel", UiStyles.Panel());
@@ -83,6 +97,7 @@ public partial class Shop : CanvasLayer
         _title.Text = $"Wave {run.Wave} cleared";
         _continue.Text = $"Start Wave {run.Wave + 1}";
 
+        BuildPotionShelf();
         RollOffers();
         Show();
         _continue.GrabFocus();
@@ -99,7 +114,7 @@ public partial class Shop : CanvasLayer
 
         // Gear you're already wearing would only replace itself. Rings are the exception: you can wear two.
         var pool = _pool.Where(i => i.Slot == EquipSlot.Ring || !_run.Equipment.IsWorn(i)).ToList();
-        float priceScale = 1f + PriceIncreasePerWave * (_run.Wave - 1);
+        float priceScale = PriceScale;
         foreach (var item in PickRandom(pool, OfferCount))
         {
             var offer = new Offer { Item = item, Price = Mathf.RoundToInt(item.Price * priceScale) };
@@ -108,6 +123,90 @@ public partial class Shop : CanvasLayer
         }
 
         Refresh();
+    }
+
+    private float PriceScale => 1f + PriceIncreasePerWave * (_run.Wave - 1);
+
+    private void BuildPotionShelf()
+    {
+        foreach (var child in _potionShelf.GetChildren())
+        {
+            _potionShelf.RemoveChild(child);
+            child.QueueFree();
+        }
+        _potionOffers.Clear();
+
+        foreach (var item in _run.Potions.Catalog)
+        {
+            var offer = new PotionOffer { Item = item, Price = Mathf.RoundToInt(item.Price * PriceScale) };
+            _potionOffers.Add(offer);
+            _potionShelf.AddChild(BuildPotionCard(offer));
+        }
+    }
+
+    // Compact horizontal card: swatch, name and effect, carried count, buy button.
+    private Control BuildPotionCard(PotionOffer offer)
+    {
+        var card = new PanelContainer { CustomMinimumSize = new Vector2(250, 0), TooltipText = offer.Item.Describe() };
+        var style = UiStyles.Panel();
+        style.SetContentMarginAll(8);
+        card.AddThemeStyleboxOverride("panel", style);
+        card.Theme = UiStyles.TooltipTheme();
+
+        var row = new HBoxContainer();
+        row.AddThemeConstantOverride("separation", 8);
+        card.AddChild(row);
+
+        row.AddChild(new ColorRect
+        {
+            Color = offer.Item.IconColor,
+            CustomMinimumSize = new Vector2(14, 0),
+            MouseFilter = Control.MouseFilterEnum.Pass,
+        });
+
+        var text = new VBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        text.AddThemeConstantOverride("separation", 0);
+        row.AddChild(text);
+        var name = new Label { Text = offer.Item.DisplayName };
+        name.AddThemeFontSizeOverride("font_size", 15);
+        text.AddChild(name);
+        var effect = new Label { Text = ShortEffect(offer.Item) };
+        effect.AddThemeFontSizeOverride("font_size", 13);
+        effect.AddThemeColorOverride("font_color", UiStyles.Dim);
+        text.AddChild(effect);
+        offer.Carried = new Label();
+        offer.Carried.AddThemeFontSizeOverride("font_size", 13);
+        offer.Carried.AddThemeColorOverride("font_color", UiStyles.Dim);
+        text.AddChild(offer.Carried);
+
+        offer.BuyButton = new Button { CustomMinimumSize = new Vector2(76, 0) };
+        offer.BuyButton.Pressed += () => BuyPotion(offer);
+        row.AddChild(offer.BuyButton);
+        return card;
+    }
+
+    private static string ShortEffect(ConsumableData item) => item.HealthPotion
+        ? "+1 health potion (Space)"
+        : $"{string.Join(", ", item.Modifiers.Select(m => m.Describe()))}, {item.Duration:0}s";
+
+    private void BuyPotion(PotionOffer offer)
+    {
+        if (!_run.Potions.CanCarryMore(offer.Item) || !_run.TrySpend(offer.Price))
+            return;
+
+        _run.AddItem(offer.Item);
+        EmitSignal(SignalName.Purchased);
+        Refresh();
+    }
+
+    private void RefreshPotionOffer(PotionOffer offer)
+    {
+        var potions = _run.Potions;
+        int carried = potions.Count(offer.Item);
+        bool full = !potions.CanCarryMore(offer.Item);
+        offer.Carried.Text = $"Carrying {carried}/{offer.Item.MaxCarry}";
+        offer.BuyButton.Text = full ? "Full" : $"Buy ({offer.Price})";
+        offer.BuyButton.Disabled = full || _run.Gold < offer.Price;
     }
 
     private Control BuildCard(Offer offer)
@@ -171,6 +270,8 @@ public partial class Shop : CanvasLayer
 
         foreach (var offer in _offers)
             RefreshOffer(offer);
+        foreach (var offer in _potionOffers)
+            RefreshPotionOffer(offer);
 
         _stats.Text = "Your stats\n\n" + string.Join("\n",
             System.Enum.GetValues<StatType>().Select(s => StatInfo.Format(s, _run.Stats.Get(s))));

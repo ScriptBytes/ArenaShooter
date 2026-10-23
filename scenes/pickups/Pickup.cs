@@ -36,6 +36,12 @@ public abstract partial class Pickup : Node2D
         var target = Player.GlobalPosition;
         if (!_attracted && Wanted && GlobalPosition.DistanceTo(target) <= Player.PickupRange)
             _attracted = true;
+        else if (_attracted && !Wanted)
+        {
+            // Stopped being wanted mid-flight (another heart filled the reserve first): drop here.
+            _attracted = false;
+            _speed = 0f;
+        }
 
         if (!_attracted)
             return;

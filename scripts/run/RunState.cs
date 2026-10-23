@@ -27,6 +27,9 @@ public class RunState
     /// <summary>Slotless items. Copies stack.</summary>
     public List<ItemData> Trinkets { get; } = new();
 
+    /// <summary>Health potion charges, bought potions and the heart-filled reserve.</summary>
+    public PotionBelt Potions { get; } = new();
+
     // Bonuses that don't come from an item (Autoplay's --stat).
     private readonly PlayerStats _granted = new();
 
@@ -53,12 +56,18 @@ public class RunState
     }
 
     /// <summary>
-    /// Adds an item. Gear goes into <paramref name="position"/> (default: its first target, see
+    /// Adds an item. Consumables go into <see cref="Potions"/>. Gear goes into <paramref name="position"/> (default: its first target, see
     /// <see cref="Equipment.TargetsFor"/>). Returns the gear it replaced.
     /// </summary>
     public List<ItemData> AddItem(ItemData item, int position = -1)
     {
         var removed = new List<ItemData>();
+        if (item is ConsumableData consumable)
+        {
+            Potions.Add(consumable);
+            return removed;
+        }
+
         if (item.IsGear)
             removed = Equipment.Equip(item, position >= 0 ? position : Equipment.TargetsFor(item)[0]);
         else

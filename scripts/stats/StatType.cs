@@ -16,6 +16,7 @@ public enum StatType
     CritChance = 7,   // percent, added to each ability's own base chance
     LifeSteal = 8,    // percent of damage dealt healed back, added to each ability's own base
     MinionDamage = 9, // percent, stacks additively with Damage for minions only
+    PotionHeal = 10,  // flat HP added to the health potion's heal (and the reserve's size)
 }
 
 public static class StatInfo
@@ -32,6 +33,7 @@ public static class StatInfo
         StatType.CritChance => "Crit Chance",
         StatType.LifeSteal => "Life Steal",
         StatType.MinionDamage => "Minion Damage",
+        StatType.PotionHeal => "Potion Heal",
         _ => stat.ToString(),
     };
 

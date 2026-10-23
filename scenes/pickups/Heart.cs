@@ -3,18 +3,20 @@ using Godot;
 namespace ArenaShooter;
 
 /// <summary>
-/// Rare enemy drop that restores a little health. Ignores the player while they're at full
-/// health, so it waits on the floor until it's useful. Cleared at wave end like coins.
+/// Rare enemy drop that fills the potion reserve (see PotionBelt) instead of healing directly.
+/// Ignores the player while the reserve is full, so it waits on the floor until there's room.
+/// A heart worth more than the room left tops the reserve up and the rest is lost.
+/// Cleared at wave end like coins.
 /// </summary>
 public partial class Heart : Pickup
 {
     public static readonly Color HeartColor = new("ff5f7e");
 
-    public float HealAmount { get; set; } = 2f;
+    public float Value { get; set; } = 2f;
 
-    protected override bool Wanted => Player.Health.Current < Player.Health.Max;
+    protected override bool Wanted => !Player.Potions.ReserveFull;
 
-    protected override void Collect() => Player.Heal(HealAmount);
+    protected override void Collect() => Player.FillReserve(Value);
 
     public override void _Draw()
     {

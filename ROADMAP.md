@@ -22,15 +22,15 @@ Where the project stands and what's next. `Goals.md` holds the vision and the de
 | Healing: enemies sometimes drop a heart (+2 HP, 3% chance, Brutes 15%) that waits on the floor until you're hurt; a health potion on Space (+10 HP, once per wave) with a hotbar slot. Coins and hearts share a `Pickup` base. Autoplay drinks the potion when it would heal fully or HP is under 35% | `f9fac1c` |
 | Equipment slots: Main Hand, Off Hand, Armor, Ring ×2, Amulet, next to stackable trinkets. Weapons are main-hand items, so the basic attack changes with what you buy. New weapons Spear, Greatsword (2H) for the Fighter and Frost Scepter, Staff (2H) for the Mage. 13 new gear items, 5 existing items moved into slots. Replaced gear refunds half its price. The shop shows your equipment, what a purchase replaces, and a choice when both rings are full. Autoplay `--menu-delay` for recording menus | `1ab7ebf` |
 | Shop equipment panel: hovering a worn item or trinket shows its stats in a tooltip styled like the panels (`UiStyles.TooltipTheme`) | `110e08f` |
-| Warlock and Necromancer: 2 new classes with 5 spells and 3 weapons each. Life steal (per-ability % + Life Steal stat, capped 5 HP/s), damage over time, HP-cost buffs, a draining beam (`DrainAbility`), a minion system (`Minion`/`MinionData`, `SummonAbility`, raise-on-death marks), Minion Damage stat, 6 new shop items. Class select fits 4 cards | _this commit_ |
+| Warlock and Necromancer: 2 new classes with 5 spells and 3 weapons each. Life steal (per-ability % + Life Steal stat, capped 5 HP/s), damage over time, HP-cost buffs, a draining beam (`DrainAbility`), a minion system (`Minion`/`MinionData`, `SummonAbility`, raise-on-death marks), Minion Damage stat, 6 new shop items. Class select fits 4 cards | `9534b87` |
+| Consumables and reserve potion: hearts now fill a reserve potion (drunk by Space when no full potion is left, kept between waves; full reserve leaves hearts on the floor). Shop potion shelf: Health Potion, Potion of Fury (key 5), Potion of Swiftness (key 6), carried until drunk. Potion Heal stat + Alchemist's Flask. HUD potion slots with fill levels. Autoplay `--buy-potion`, `heart`/`drink` events | _this commit_ |
 
 **Playtest status:** the user has beaten wave 5 with both classes and finds it fun so far. Balance hasn't been tuned on purpose yet.
 
 ## Next up (suggested order)
 
-1. **More consumables:** the health potion (Space, once per wave) is in. Next: other potions bought in the shop (e.g. a damage potion reusing `ActiveBuffs`), and buying extra potion charges or a bigger heal.
-2. **Placeholder sprites:** replace the `_Draw()` shapes with simple SVG sprites Claude authors (Mage, Fighter, the 4 enemies), starting with a Mage + Grunt sample to judge the look. Code side: an optional `Texture2D` on `ClassData`/`EnemyData`/`MinionData`, drawn via `Sprite2D`, falling back to `_Draw()` when unset. Decide the art style (pixel vs vector, sprite size, view angle) first, since changing it later means redoing every asset. Kenney CC0 packs or commissioned art can swap in later through the same fields.
-3. **Progression modes:** "career" (persistent character growth between runs) vs "arcade" (fresh each run). Needs save data in an autoload or file, since `RunState` is thrown away on restart.
+1. **Placeholder sprites:** replace the `_Draw()` shapes with simple SVG sprites Claude authors (Mage, Fighter, the 4 enemies), starting with a Mage + Grunt sample to judge the look. Code side: an optional `Texture2D` on `ClassData`/`EnemyData`/`MinionData`, drawn via `Sprite2D`, falling back to `_Draw()` when unset. Decide the art style (pixel vs vector, sprite size, view angle) first, since changing it later means redoing every asset. Kenney CC0 packs or commissioned art can swap in later through the same fields.
+2. **Progression modes:** "career" (persistent character growth between runs) vs "arcade" (fresh each run). Needs save data in an autoload or file, since `RunState` is thrown away on restart.
 
 ## Backlog (ideas, not yet scheduled)
 
@@ -60,7 +60,8 @@ Where the project stands and what's next. `Goals.md` holds the vision and the de
 - The HUD gold count behind the shop doesn't update on purchase. It's hidden by the shop and refreshed when the next wave starts.
 - Restart (R) always goes back to class select.
 - Difficulty in waves 4–5 hasn't been tuned since the new enemy types were added.
-- Healing numbers are first guesses: heart +2 HP at 3% (Brutes 15%), potion +10 once per wave. A full run drops roughly 5–8 hearts. +10 is most of the Mage's 16 HP, so the potion may be strong for the Mage and weak for the Fighter (30 HP); a percent-of-max heal is an option.
+- Healing numbers are first guesses: heart +2 into the reserve at 3% (Brutes 15%), potion +10 once per wave. A full run drops roughly 5–8 hearts, about one full reserve. +10 is most of the Mage's 16 HP, so the potion may be strong for the Mage and weak for the Fighter (30 HP); a percent-of-max heal is an option.
+- Consumable prices (Health Potion 10, Fury 8, Swiftness 6) and effects are first guesses. Autoplay's default `cheapest` strategy never buys potions (use `--buy-potion`). Moving hearts into the reserve barely changed Autoplay survival (seeds 1–5, average death wave: Fighter 2.2 → 2.4, Mage 2.8 → 2.8, Warlock 3.0 → 2.6, Necromancer 2.4 → 2.4).
 - New spell numbers are first guesses, set by comparing with the existing four, not by playtest. War Cry (+40% Damage and Attack Speed for 6s, 15s cooldown) and Meteor (40 damage) are the likeliest to be too strong. Charge's drawn lane is narrower than its hit width (40 each side).
 - Auto-cast Charge picks a direction toward the nearest enemy and dashes the full range, which can carry you into a crowd. It's manual by default for that reason.
 - Crit item values are first guesses: crit chance is worth less per point than Damage% (+10% crit at ×1.5 ≈ +5% damage), so the items give bigger numbers.

@@ -41,11 +41,29 @@ public partial class Hud : CanvasLayer
             _abilityBar.AddChild(new AbilitySlotView { Index = i, Caster = caster });
     }
 
-    /// <summary>Adds the potion slot (Space) at the end of the hotbar.</summary>
-    public void BindPotion(Player player)
+    /// <summary>
+    /// Adds the potion slots after the spells: health potion (Space) and its heart-filled reserve,
+    /// then one per buff potion (keys 5, 6…), shown even when none are owned so the keys stay put.
+    /// </summary>
+    public void BindPotions(Player player)
     {
         _abilityBar.AddChild(new Control { CustomMinimumSize = new Vector2(12, 0) });
-        _abilityBar.AddChild(new PotionSlotView { Player = player });
+        _abilityBar.AddChild(new PotionSlotView { Player = player, Kind = PotionSlotView.SlotKind.Health });
+        _abilityBar.AddChild(new PotionSlotView { Player = player, Kind = PotionSlotView.SlotKind.Reserve });
+
+        if (player.Potions.Hotbar.Count == 0)
+            return;
+        _abilityBar.AddChild(new Control { CustomMinimumSize = new Vector2(12, 0) });
+        for (int i = 0; i < player.Potions.Hotbar.Count; i++)
+        {
+            _abilityBar.AddChild(new PotionSlotView
+            {
+                Player = player,
+                Kind = PotionSlotView.SlotKind.Buff,
+                Consumable = player.Potions.Hotbar[i],
+                Hotkey = AbilityCaster.SpellSlotCount + i + 1,
+            });
+        }
     }
 
     public void SetTime(float secondsLeft) => _time.Text = Mathf.CeilToInt(secondsLeft).ToString();

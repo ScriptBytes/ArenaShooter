@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ConsumableData" format=3]
+
+[ext_resource type="Script" path="res://scripts/items/ConsumableData.cs" id="1_consumable"]
+[ext_resource type="Script" path="res://scripts/items/StatModifier.cs" id="2_mod"]
+
+[sub_resource type="Resource" id="StatModifier_0"]
+script = ExtResource("2_mod")
+Stat = 2
+Value = 30.0
+
+[resource]
+script = ExtResource("1_consumable")
+Duration = 10.0
+DisplayName = "Potion of Fury"
+Price = 8
+IconColor = Color(0.95, 0.5, 0.15, 1)
+Modifiers = Array[ExtResource("2_mod")]([SubResource("StatModifier_0")])

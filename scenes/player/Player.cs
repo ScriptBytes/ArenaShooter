@@ -8,6 +8,12 @@ public partial class Player : CharacterBody2D, IDamageable
 {
     [Signal] public delegate void GoldCollectedEventHandler(int amount);
 
+    /// <summary>A heart poured <paramref name="added"/> HP into the potion reserve.</summary>
+    [Signal] public delegate void ReserveFilledEventHandler(float added);
+
+    /// <summary>Space, keys 5+: what drinking will do next.</summary>
+    public enum PotionSource { None, Charge, Bought, Reserve }
+
     // Base value; ApplyStats layers run bonuses on top. Other base stats come from ClassData.
     [Export] public float PickupRange { get; set; } = 80f;
     [Export] public float Radius { get; set; } = 16f;
@@ -17,14 +23,17 @@ public partial class Player : CharacterBody2D, IDamageable
     /// <summary>Most HP life steal can restore per second, whatever the source (Brotato caps it too).</summary>
     [Export] public float LifeStealCap { get; set; } = 5f;
 
+    /// <summary>Base heal of a health potion; the Potion Heal stat adds to it. Also the reserve's size.</summary>
     [ExportGroup("Potion")]
-    [Export] public float PotionHeal { get; set; } = 10f;
+    [Export] public float BasePotionHeal { get; set; } = 10f;
     [Export] public int PotionsPerWave { get; set; } = 1;
 
     public static readonly Color HealColor = new("5ee07a");
 
-    /// <summary>Potions left this wave. Refilled by <see cref="RefillPotions"/> at wave start.</summary>
-    public int PotionsLeft { get; private set; }
+    public float PotionHeal { get; private set; } = 10f;
+
+    /// <summary>Charges, bought potions and the reserve. Owned by RunState, set in <see cref="Setup"/>.</summary>
+    public PotionBelt Potions { get; private set; } = new();
 
     public float Speed { get; private set; } = 300f;
 
@@ -73,9 +82,10 @@ public partial class Player : CharacterBody2D, IDamageable
     }
 
     /// <summary><paramref name="spells"/> are the ones picked from the class's list, in slot order.</summary>
-    public void Setup(ClassData playerClass, IEnumerable<AbilityData> spells)
+    public void Setup(ClassData playerClass, IEnumerable<AbilityData> spells, PotionBelt potions)
     {
         _class = playerClass;
+        Potions = potions;
         Abilities.Setup(spells);
     }
 
@@ -114,6 +124,8 @@ public partial class Player : CharacterBody2D, IDamageable
         PickupRange = Mathf.Max(_basePickupRange + stats.Get(StatType.PickupRange), 0f);
         Armor = _class.Armor + stats.Get(StatType.Armor);
         Health.SetMax(_class.MaxHealth + stats.Get(StatType.MaxHealth), refill: false);
+        PotionHeal = Mathf.Max(BasePotionHeal + stats.Get(StatType.PotionHeal), 1f);
+        Potions.ReserveCapacity = PotionHeal;
         Abilities.ApplyStats(stats);
     }
 
@@ -159,26 +171,79 @@ public partial class Player : CharacterBody2D, IDamageable
         _lifeStealShown = 0f;
     }
 
-    public void RefillPotions() => PotionsLeft = PotionsPerWave;
+    public void RefillPotions() => Potions.RefillCharges(PotionsPerWave);
 
-    /// <summary>Drinks a potion (Space). Does nothing at full health, so a misclick doesn't waste it.</summary>
-    public bool UsePotion()
+    /// <summary>Called by a heart. Returns false (and the heart stays put) when the reserve is full.</summary>
+    public bool FillReserve(float amount)
     {
-        if (PotionsLeft <= 0 || Health.IsDead || Health.Current >= Health.Max)
+        float added = Potions.FillReserve(amount);
+        if (added <= 0f)
             return false;
 
-        PotionsLeft--;
-        Heal(PotionHeal);
+        FloatingText.Spawn(GetTree().CurrentScene, GlobalPosition + new Vector2(0, -Radius),
+            $"+{added:0.#}", Heart.HeartColor, 14);
+        EmitSignal(SignalName.ReserveFilled, added);
+        return true;
+    }
+
+    /// <summary>Which health potion Space would drink now (None at full health or with nothing left).</summary>
+    public PotionSource NextPotion =>
+        Health.IsDead || Health.Current >= Health.Max ? PotionSource.None
+        : Potions.Charges > 0 ? PotionSource.Charge
+        : Potions.HealthPotions > 0 ? PotionSource.Bought
+        : Potions.Reserve > 0f ? PotionSource.Reserve
+        : PotionSource.None;
+
+    /// <summary>
+    /// Drinks a health potion (Space): a full one if there is one (free charge, then bought), otherwise
+    /// the reserve, whatever its fill. Does nothing at full health, so a misclick doesn't waste it.
+    /// </summary>
+    public bool UsePotion()
+    {
+        switch (NextPotion)
+        {
+            case PotionSource.Charge:
+            case PotionSource.Bought:
+                Potions.TakeHealthPotion();
+                Heal(PotionHeal);
+                return true;
+            case PotionSource.Reserve:
+                Heal(Potions.DrainReserve());
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    /// <summary>Drinks a bought buff potion (keys 5+). Drinking one that's active refreshes its timer.</summary>
+    public bool UseConsumable(ConsumableData consumable)
+    {
+        if (Health.IsDead || !Potions.Take(consumable))
+            return false;
+
+        AddBuff(consumable, consumable.Modifiers, consumable.Duration, consumable.IconColor);
+        FloatingText.Spawn(GetTree().CurrentScene, GlobalPosition + new Vector2(0, -Radius - 12f),
+            consumable.DisplayName, consumable.IconColor, 16);
         return true;
     }
 
     public override void _UnhandledInput(InputEvent @event)
     {
-        if (!@event.IsActionPressed("use_potion"))
+        if (@event.IsActionPressed("use_potion"))
+        {
+            UsePotion();
+            GetViewport().SetInputAsHandled();
             return;
+        }
 
-        UsePotion();
-        GetViewport().SetInputAsHandled();
+        for (int i = 0; i < Potions.Hotbar.Count; i++)
+        {
+            if (!@event.IsActionPressed($"consumable_{i + 1}"))
+                continue;
+            UseConsumable(Potions.Hotbar[i]);
+            GetViewport().SetInputAsHandled();
+            return;
+        }
     }
 
     /// <summary>

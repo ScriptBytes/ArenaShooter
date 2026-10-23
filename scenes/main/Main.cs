@@ -38,7 +38,7 @@ public partial class Main : Node2D
     private Autoplay _autoplayDriver;
     private ClassData _class;
 
-    /// <summary>What the shop can offer: the shared catalog plus the class's own weapons.</summary>
+    /// <summary>What the shop can offer at random: the shared catalog plus the class's own weapons.</summary>
     private IEnumerable<ItemData> ShopPool => ItemCatalog.Items.Concat(_class.Weapons);
 
     public override void _Ready()
@@ -73,13 +73,14 @@ public partial class Main : Node2D
         _class = playerClass;
         _run.Equipment.StartingWeapon = playerClass.StartingWeapon;
         _run.AddItem(playerClass.StartingWeapon);
+        _run.Potions.SetCatalog(ItemCatalog.Consumables);
         if (_autoplay != null)
             GrantAutoplayItems();
 
-        Player.Setup(playerClass, spells);
+        Player.Setup(playerClass, spells, _run.Potions);
         ApplyLoadout();
         Hud.BindAbilities(Player.Abilities);
-        Hud.BindPotion(Player);
+        Hud.BindPotions(Player);
         EmitSignal(SignalName.RunStarted, playerClass);
         StartWave(_autoplay?.StartWave ?? 1);
     }
@@ -106,6 +107,7 @@ public partial class Main : Node2D
         WaveStarted += autoplay.OnWaveStarted;
         WaveEnded += autoplay.OnWaveEnded;
         RunEnded += autoplay.OnRunEnded;
+        Player.ReserveFilled += autoplay.OnReserveFilled;
 
         // Run-start grants, applied before the class's first ApplyStats in StartRun.
         Player.Invulnerable = _autoplay.God;
@@ -118,7 +120,7 @@ public partial class Main : Node2D
     {
         foreach (var name in _autoplay.Items)
         {
-            if (_autoplayDriver.FindItem(ShopPool, name) is { } item)
+            if (_autoplayDriver.FindItem(ShopPool.Concat(ItemCatalog.Consumables), name) is { } item)
                 _run.AddItem(item);
         }
     }
