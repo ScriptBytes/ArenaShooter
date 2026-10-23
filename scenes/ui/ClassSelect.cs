@@ -60,9 +60,8 @@ public partial class ClassSelect : CanvasLayer
         content.AddChild(UiStyles.WrappedLabel(playerClass.Weapon.Description, 14));
         content.AddChild(new HSeparator());
 
-        var spells = playerClass.Spells.Select((s, i) => $"{i + 1}. {s.DisplayName} — {s.Description}");
-        content.AddChild(UiStyles.WrappedLabel("Spells", 18));
-        content.AddChild(UiStyles.WrappedLabel(string.Join("\n", spells), 14));
+        content.AddChild(UiStyles.WrappedLabel($"Spells: pick {playerClass.SpellPicks} of {playerClass.Spells.Count}", 18));
+        content.AddChild(UiStyles.WrappedLabel(string.Join(", ", playerClass.Spells.Select(s => s.DisplayName)), 14));
 
         var button = new Button
         {

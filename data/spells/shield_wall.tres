@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="BuffAbility" format=3]
+
+[ext_resource type="Script" path="res://scripts/abilities/BuffAbility.cs" id="1_script"]
+[ext_resource type="Script" path="res://scripts/items/StatModifier.cs" id="2_mod"]
+
+[sub_resource type="Resource" id="StatModifier_0"]
+script = ExtResource("2_mod")
+Stat = 1
+Value = 3.0
+
+[resource]
+script = ExtResource("1_script")
+DisplayName = "Shield Wall"
+Description = "Brace and shove back nearby enemies. +3 Armor for 5 seconds."
+IconColor = Color(0.42, 0.65, 0.85, 1)
+Cooldown = 12.0
+Damage = 0.0
+Range = 0.0
+Knockback = 300.0
+ScreenShake = 0.2
+Radius = 110.0
+CenteredOnCaster = true
+MinTargets = 4
+Duration = 5.0
+Modifiers = Array[ExtResource("2_mod")]([SubResource("StatModifier_0")])

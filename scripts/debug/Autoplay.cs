@@ -17,6 +17,7 @@ public partial class Autoplay : Node
 
     public AutoplayOptions Options { get; set; }
     public ClassSelect ClassSelect { get; set; }
+    public SpellSelect SpellSelect { get; set; }
     public Shop Shop { get; set; }
     public Player Player { get; set; }
     public RunState Run { get; set; }
@@ -43,6 +44,8 @@ public partial class Autoplay : Node
 
         if (ClassSelect.Visible)
             PickClass();
+        else if (SpellSelect.Visible)
+            SpellStep();
         else if (Shop.Visible)
             ShopStep();
         else if (!GetTree().Paused)
@@ -51,8 +54,9 @@ public partial class Autoplay : Node
 
     public void OnRunStarted(ClassData playerClass)
     {
-        Log($"run_start class={playerClass.DisplayName} wave={Options.StartWave} seed={Options.Seed?.ToString() ?? "random"} " +
-            $"dotnet={System.Environment.Version}");
+        string spells = string.Join(",", Player.Abilities.Spells.Select(s => s.Ability.DisplayName));
+        Log($"run_start class={playerClass.DisplayName} spells=\"{spells}\" wave={Options.StartWave} " +
+            $"seed={Options.Seed?.ToString() ?? "random"} dotnet={System.Environment.Version}");
         if (Options.AutoCastAll)
         {
             foreach (var slot in Player.Abilities.Spells)
@@ -98,6 +102,43 @@ public partial class Autoplay : Node
         }
 
         Press(choice.Button);
+    }
+
+    // One pick per frame, like the shop. --spells picks those in order; otherwise the list's first N.
+    private void SpellStep()
+    {
+        var choices = SpellSelect.Choices.ToList();
+        var wanted = Options.Spells.Count > 0
+            ? Options.Spells.Select(name => choices.FirstOrDefault(c =>
+                Same(c.Spell.DisplayName, name) || Same(c.Spell.ResourcePath.GetFile().GetBaseName(), name))).ToList()
+            : choices.ToList();
+
+        int missing = wanted.FindIndex(c => c.Button == null);
+        if (missing >= 0)
+        {
+            Fail($"unknown spell '{Options.Spells[missing]}' (class has: " +
+                 $"{string.Join(", ", choices.Select(c => c.Spell.DisplayName))})");
+            return;
+        }
+
+        if (SpellSelect.StartButton.Disabled)
+        {
+            var next = wanted.FirstOrDefault(c => !SpellSelect.Picks.Contains(c.Spell));
+            if (next.Button == null || next.Button.Disabled)
+            {
+                Fail($"--spells needs exactly the class's pick count; got {Options.Spells.Count}");
+                return;
+            }
+            Press(next.Button);
+            return;
+        }
+
+        if (Options.Spells.Count > 0 && Options.Spells.Count != SpellSelect.Picks.Count)
+        {
+            Fail($"--spells needs exactly {SpellSelect.Picks.Count} spells; got {Options.Spells.Count}");
+            return;
+        }
+        Press(SpellSelect.StartButton);
     }
 
     // One action per frame, like a player clicking, so each press sees the refreshed shop.

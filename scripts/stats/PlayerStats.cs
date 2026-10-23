@@ -14,6 +14,14 @@ public class PlayerStats
 
     public void Add(StatType stat, float value) => _bonuses[stat] = Get(stat) + value;
 
+    public PlayerStats Copy()
+    {
+        var copy = new PlayerStats();
+        foreach (var (stat, value) in _bonuses)
+            copy._bonuses[stat] = value;
+        return copy;
+    }
+
     /// <summary>Multiplier for a percent stat, e.g. +15 → 1.15. Floored so stats can't go negative.</summary>
     public float Multiplier(StatType stat, float floor = 0.1f) =>
         System.MathF.Max(1f + Get(stat) / 100f, floor);

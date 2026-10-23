@@ -17,6 +17,7 @@ public enum MoveMode { Circle, Still }
 /// <list type="bullet">
 /// <item><c>--autoplay</c> turns the mode on; without it every other flag is ignored.</item>
 /// <item><c>--class=NAME|INDEX</c> class to pick on the select screen (default: the first).</item>
+/// <item><c>--spells=A,B,C</c> spells to pick, in slot order (display or .tres file names; default: the list's first N).</item>
 /// <item><c>--wave=N</c> wave to start on (default 1).</item>
 /// <item><c>--seed=N</c> fixes the random seed, so before/after comparisons see the same run.</item>
 /// <item><c>--god</c> the player takes no damage.</item>
@@ -30,6 +31,7 @@ public enum MoveMode { Circle, Still }
 public sealed class AutoplayOptions
 {
     public string ClassName { get; private set; }
+    public List<string> Spells { get; } = new();
     public int StartWave { get; private set; } = 1;
     public ulong? Seed { get; private set; }
     public bool God { get; private set; }
@@ -63,6 +65,9 @@ public sealed class AutoplayOptions
                     break;
                 case "--class":
                     options.ClassName = value;
+                    break;
+                case "--spells" when value != "":
+                    options.Spells.AddRange(value.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries));
                     break;
                 case "--wave" when int.TryParse(value, out int wave) && wave >= 1:
                     options.StartWave = wave;

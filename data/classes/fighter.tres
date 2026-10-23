@@ -5,6 +5,9 @@
 [ext_resource type="Resource" path="res://data/weapons/sword.tres" id="3_weapon"]
 [ext_resource type="Resource" path="res://data/spells/whirlwind.tres" id="spell_0"]
 [ext_resource type="Resource" path="res://data/spells/ground_slam.tres" id="spell_1"]
+[ext_resource type="Resource" path="res://data/spells/charge.tres" id="spell_2"]
+[ext_resource type="Resource" path="res://data/spells/shield_wall.tres" id="spell_3"]
+[ext_resource type="Resource" path="res://data/spells/war_cry.tres" id="spell_4"]
 
 [resource]
 script = ExtResource("1_class")
@@ -15,4 +18,4 @@ MaxHealth = 30.0
 MoveSpeed = 280.0
 Armor = 1.0
 Weapon = ExtResource("3_weapon")
-Spells = Array[ExtResource("2_ability")]([ExtResource("spell_0"), ExtResource("spell_1")])
+Spells = Array[ExtResource("2_ability")]([ExtResource("spell_0"), ExtResource("spell_1"), ExtResource("spell_2"), ExtResource("spell_3"), ExtResource("spell_4")])

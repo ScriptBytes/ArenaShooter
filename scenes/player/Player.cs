@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Godot;
 
 namespace ArenaShooter;
@@ -22,7 +23,11 @@ public partial class Player : CharacterBody2D, IDamageable
     public ShakeCamera Camera { get; private set; }
     public AbilityCaster Abilities { get; private set; }
 
+    /// <summary>Timed bonuses from spells, layered on the run's stats. Cleared each wave.</summary>
+    public ActiveBuffs Buffs { get; } = new();
+
     private ClassData _class;
+    private PlayerStats _runStats = new();
     private Area2D _hurtbox;
     private float _invulnerableLeft;
     private float _basePickupRange;
@@ -30,6 +35,7 @@ public partial class Player : CharacterBody2D, IDamageable
     private Vector2 _leapVelocity;
     private float _leapLeft;
     private float _leapDuration;
+    private bool _leapAirborne;
     private Action _onLanded;
 
     public bool IsLeaping => _leapLeft > 0f;
@@ -47,14 +53,41 @@ public partial class Player : CharacterBody2D, IDamageable
         _basePickupRange = PickupRange;
     }
 
-    public void Setup(ClassData playerClass)
+    /// <summary><paramref name="spells"/> are the ones picked from the class's list, in slot order.</summary>
+    public void Setup(ClassData playerClass, IEnumerable<AbilityData> spells)
     {
         _class = playerClass;
-        Abilities.Setup(playerClass.Weapon, playerClass.Spells);
+        Abilities.Setup(playerClass.Weapon, spells);
     }
 
-    public void ApplyStats(PlayerStats stats)
+    /// <summary>Sets the run's stat bonuses and applies them, plus any active buffs.</summary>
+    public void ApplyStats(PlayerStats runStats)
     {
+        _runStats = runStats;
+        RefreshStats();
+    }
+
+    public void AddBuff(Resource source, IReadOnlyList<StatModifier> modifiers, float duration, Color color)
+    {
+        Buffs.Add(source, modifiers, duration, color);
+        RefreshStats();
+    }
+
+    public void ClearBuffs()
+    {
+        Buffs.Clear();
+        RefreshStats();
+    }
+
+    private void RefreshStats()
+    {
+        var stats = _runStats;
+        if (Buffs.All.Count > 0)
+        {
+            stats = _runStats.Copy();
+            Buffs.AddTo(stats);
+        }
+
         Speed = _class.MoveSpeed * stats.Multiplier(StatType.MoveSpeed, floor: 0.3f);
         PickupRange = Mathf.Max(_basePickupRange + stats.Get(StatType.PickupRange), 0f);
         Armor = _class.Armor + stats.Get(StatType.Armor);
@@ -66,10 +99,12 @@ public partial class Player : CharacterBody2D, IDamageable
 
     /// <summary>
     /// Jumps to <paramref name="target"/> over <paramref name="duration"/> seconds, untouchable
-    /// while airborne, then calls <paramref name="onLanded"/>. Walls cut the leap short.
+    /// while moving, then calls <paramref name="onLanded"/>. Walls cut the leap short.
+    /// <paramref name="airborne"/> only changes the look: a jump arc, or a dash along the ground.
     /// </summary>
-    public void Leap(Vector2 target, float duration, Action onLanded)
+    public void Leap(Vector2 target, float duration, Action onLanded, bool airborne = true)
     {
+        _leapAirborne = airborne;
         _leapDuration = _leapLeft = duration;
         _leapVelocity = (target - GlobalPosition) / duration;
         _onLanded = onLanded;
@@ -80,6 +115,8 @@ public partial class Player : CharacterBody2D, IDamageable
     {
         float dt = (float)delta;
         _invulnerableLeft -= dt;
+        if (Buffs.Tick(dt))
+            RefreshStats();
         QueueRedraw();
 
         if (IsLeaping)
@@ -135,6 +172,17 @@ public partial class Player : CharacterBody2D, IDamageable
     public override void _Draw()
     {
         var color = _class?.Color ?? new Color("4aa3ff");
+        DrawBuffRings();
+
+        if (IsLeaping && !_leapAirborne)
+        {
+            // Dash: fading afterimages trail behind the body.
+            var back = -_leapVelocity.Normalized();
+            for (int i = 3; i >= 1; i--)
+                DrawCircle(back * Radius * 0.9f * i, Radius * (1f - 0.12f * i), new Color(color, 0.5f - 0.12f * i));
+            DrawCircle(Vector2.Zero, Radius, color);
+            return;
+        }
 
         if (IsLeaping)
         {
@@ -148,5 +196,17 @@ public partial class Player : CharacterBody2D, IDamageable
 
         bool blink = _invulnerableLeft > 0f && (int)(_invulnerableLeft * 20f) % 2 == 0;
         DrawCircle(Vector2.Zero, Radius, blink ? Colors.White : color);
+    }
+
+    // One ring per active buff; the arc shrinks as the buff runs out.
+    private void DrawBuffRings()
+    {
+        for (int i = 0; i < Buffs.All.Count; i++)
+        {
+            var buff = Buffs.All[i];
+            float r = Radius + 5f + 5f * i;
+            float sweep = Mathf.Tau * Mathf.Clamp(buff.TimeLeft / buff.Duration, 0f, 1f);
+            DrawArc(Vector2.Zero, r, -Mathf.Pi / 2f, -Mathf.Pi / 2f + sweep, 32, buff.Color, 3f);
+        }
     }
 }

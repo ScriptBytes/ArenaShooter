@@ -3,7 +3,7 @@ using Godot;
 namespace ArenaShooter;
 
 /// <summary>
-/// Run controller: wires the scene together and drives class select → wave → shop → wave loop.
+/// Run controller: wires the scene together and drives class select → spell select → wave → shop → wave loop.
 /// The tree is paused whenever a wave isn't running; the UI layers run while paused.
 /// </summary>
 public partial class Main : Node2D
@@ -26,6 +26,7 @@ public partial class Main : Node2D
     [Export] public Hud Hud { get; set; }
     [Export] public Shop Shop { get; set; }
     [Export] public ClassSelect ClassSelect { get; set; }
+    [Export] public SpellSelect SpellSelect { get; set; }
 
     private readonly RunState _run = new();
     private GameState _state;
@@ -47,7 +48,9 @@ public partial class Main : Node2D
         Shop.Purchased += () => Player.ApplyStats(_run.Stats);
         Shop.ContinueRequested += () => StartWave(_run.Wave + 1);
         Hud.RestartRequested += Restart;
-        ClassSelect.ClassChosen += StartRun;
+        ClassSelect.ClassChosen += SpellSelect.Open;
+        SpellSelect.BackRequested += () => ClassSelect.Open(Classes);
+        SpellSelect.SpellsChosen += StartRun;
 
         _autoplay = AutoplayOptions.FromCommandLine();
         if (_autoplay != null)
@@ -58,9 +61,9 @@ public partial class Main : Node2D
         ClassSelect.Open(Classes);
     }
 
-    private void StartRun(ClassData playerClass)
+    private void StartRun(ClassData playerClass, Godot.Collections.Array<AbilityData> spells)
     {
-        Player.Setup(playerClass);
+        Player.Setup(playerClass, spells);
         Player.ApplyStats(_run.Stats);
         Hud.BindAbilities(Player.Abilities);
         EmitSignal(SignalName.RunStarted, playerClass);
@@ -77,6 +80,7 @@ public partial class Main : Node2D
         {
             Options = _autoplay,
             ClassSelect = ClassSelect,
+            SpellSelect = SpellSelect,
             Shop = Shop,
             Player = Player,
             Run = _run,
@@ -121,6 +125,7 @@ public partial class Main : Node2D
         _state = GameState.Wave;
 
         Player.Position = Arena.Size / 2f;
+        Player.ClearBuffs();
         Player.Health.Refill();
         Player.Abilities.ResetCooldowns();
 

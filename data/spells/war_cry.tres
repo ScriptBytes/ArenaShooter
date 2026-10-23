@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="BuffAbility" format=3]
+
+[ext_resource type="Script" path="res://scripts/abilities/BuffAbility.cs" id="1_script"]
+[ext_resource type="Script" path="res://scripts/items/StatModifier.cs" id="2_mod"]
+
+[sub_resource type="Resource" id="StatModifier_0"]
+script = ExtResource("2_mod")
+Stat = 2
+Value = 40.0
+
+[sub_resource type="Resource" id="StatModifier_1"]
+script = ExtResource("2_mod")
+Stat = 3
+Value = 40.0
+
+[resource]
+script = ExtResource("1_script")
+DisplayName = "War Cry"
+Description = "A roar that staggers nearby enemies. +40% Damage and +40% Attack Speed for 6 seconds."
+IconColor = Color(0.93, 0.27, 0.27, 1)
+Cooldown = 15.0
+Damage = 0.0
+Range = 0.0
+Knockback = 150.0
+ScreenShake = 0.25
+Radius = 150.0
+CenteredOnCaster = true
+MinTargets = 3
+Duration = 6.0
+Modifiers = Array[ExtResource("2_mod")]([SubResource("StatModifier_0"), SubResource("StatModifier_1")])

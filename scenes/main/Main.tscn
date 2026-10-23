@@ -17,8 +17,9 @@
 [ext_resource type="Resource" path="res://data/enemies/runner.tres" id="15_runner"]
 [ext_resource type="Resource" path="res://data/enemies/archer.tres" id="16_archer"]
 [ext_resource type="Resource" path="res://data/enemies/brute.tres" id="17_brute"]
+[ext_resource type="PackedScene" path="res://scenes/ui/SpellSelect.tscn" id="18_spell_select"]
 
-[node name="Main" type="Node2D" node_paths=PackedStringArray("Arena", "Player", "Spawner", "Hud", "Shop", "ClassSelect")]
+[node name="Main" type="Node2D" node_paths=PackedStringArray("Arena", "Player", "Spawner", "Hud", "Shop", "ClassSelect", "SpellSelect")]
 script = ExtResource("1_main")
 Classes = Array[ExtResource("10_class_data")]([ExtResource("11_fighter"), ExtResource("12_mage")])
 ItemCatalog = ExtResource("8_catalog")
@@ -28,6 +29,7 @@ Spawner = NodePath("Spawner")
 Hud = NodePath("Hud")
 Shop = NodePath("Shop")
 ClassSelect = NodePath("ClassSelect")
+SpellSelect = NodePath("SpellSelect")
 
 [node name="Arena" type="Node2D" parent="."]
 script = ExtResource("2_arena")
@@ -45,3 +47,5 @@ Arena = NodePath("../Arena")
 [node name="Shop" parent="." instance=ExtResource("7_shop")]
 
 [node name="ClassSelect" parent="." instance=ExtResource("9_class_select")]
+
+[node name="SpellSelect" parent="." instance=ExtResource("18_spell_select")]

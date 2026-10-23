@@ -3,8 +3,9 @@ using Godot;
 namespace ArenaShooter;
 
 /// <summary>
-/// Instant circular blast, either around the caster (Whirlwind, Frost Nova) or at a
-/// target point within range (Ground Slam).
+/// Circular blast, either around the caster (Whirlwind, Frost Nova) or at a target point
+/// within range (Ground Slam, Meteor). With a <see cref="Delay"/> the spot is telegraphed
+/// first and the blast lands later, so enemies can walk out of it.
 /// </summary>
 [GlobalClass]
 public partial class AreaAbility : AbilityData
@@ -16,12 +17,20 @@ public partial class AreaAbility : AbilityData
     /// <summary>Auto-cast waits until at least this many enemies would be hit.</summary>
     [Export] public int MinTargets { get; set; } = 1;
 
+    /// <summary>Seconds between casting and the blast landing. 0 = instant.</summary>
+    [Export] public float Delay { get; set; }
+
     public override bool NeedsAim => !CenteredOnCaster;
 
     public override bool TryAutoTarget(AbilityContext ctx, out Vector2 target, out Enemy targetEnemy)
     {
         if (!CenteredOnCaster)
-            return base.TryAutoTarget(ctx, out target, out targetEnemy);
+        {
+            // Aim at the thickest part of the crowd, not just the nearest enemy.
+            targetEnemy = Combat.DensestEnemy(ctx.Tree, ctx.Origin, EffectiveRange(ctx), Radius, out int count);
+            target = targetEnemy?.GlobalPosition ?? ctx.Origin;
+            return targetEnemy != null && count >= MinTargets;
+        }
 
         target = ctx.Origin;
         targetEnemy = null;
@@ -30,7 +39,11 @@ public partial class AreaAbility : AbilityData
 
     public override void Cast(AbilityContext ctx, Vector2 target, Enemy targetEnemy)
     {
-        Blast(ctx, CenteredOnCaster ? ctx.Origin : ClampToRange(ctx, target));
+        var center = CenteredOnCaster ? ctx.Origin : ClampToRange(ctx, target);
+        if (Delay > 0f)
+            DelayedBlast.Spawn(ctx.World, center, Radius, IconColor, Delay, () => Blast(ctx, center));
+        else
+            Blast(ctx, center);
     }
 
     protected void Blast(AbilityContext ctx, Vector2 center)

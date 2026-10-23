@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ProjectileAbility" format=3]
+
+[ext_resource type="Script" path="res://scripts/abilities/ProjectileAbility.cs" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/weapons/Projectile.tscn" id="2_projectile"]
+
+[resource]
+script = ExtResource("1_script")
+DisplayName = "Ice Bolt"
+Description = "A shard of ice that hits hard and leaves its target crawling."
+IconColor = Color(0.627, 0.894, 1, 1)
+Cooldown = 2.5
+Damage = 10.0
+Range = 450.0
+SlowMultiplier = 0.3
+SlowDuration = 3.0
+ProjectileSpeed = 600.0
+ProjectileRadius = 6.0
+ProjectileScene = ExtResource("2_projectile")
