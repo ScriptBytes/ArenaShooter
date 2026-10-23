@@ -50,12 +50,11 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(220, 0)
 layout_mode = 2
 
-[node name="Equipment" type="Label" parent="Center/Layout/Body/EquipmentPanel"]
+[node name="Equipment" type="VBoxContainer" parent="Center/Layout/Body/EquipmentPanel"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 0
-theme_override_font_sizes/font_size = 15
-text = "Equipment"
+theme_override_constants/separation = 0
 
 [node name="Offers" type="HBoxContainer" parent="Center/Layout/Body"]
 unique_name_in_owner = true

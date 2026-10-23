@@ -46,7 +46,7 @@ public partial class Shop : CanvasLayer
     private Label _gold;
     private HBoxContainer _offerRow;
     private Label _stats;
-    private Label _equipment;
+    private VBoxContainer _equipment;
     private Button _reroll;
     private Button _continue;
 
@@ -56,11 +56,14 @@ public partial class Shop : CanvasLayer
         _gold = GetNode<Label>("%Gold");
         _offerRow = GetNode<HBoxContainer>("%Offers");
         _stats = GetNode<Label>("%Stats");
-        _equipment = GetNode<Label>("%Equipment");
+        _equipment = GetNode<VBoxContainer>("%Equipment");
         _reroll = GetNode<Button>("%RerollButton");
         _continue = GetNode<Button>("%ContinueButton");
         GetNode<PanelContainer>("%StatsPanel").AddThemeStyleboxOverride("panel", UiStyles.Panel());
-        GetNode<PanelContainer>("%EquipmentPanel").AddThemeStyleboxOverride("panel", UiStyles.Panel());
+        var equipmentPanel = GetNode<PanelContainer>("%EquipmentPanel");
+        equipmentPanel.AddThemeStyleboxOverride("panel", UiStyles.Panel());
+        // Tooltips take their look from the theme of the control they're hovering.
+        equipmentPanel.Theme = UiStyles.TooltipTheme();
 
         _reroll.Pressed += Reroll;
         _continue.Pressed += () =>
@@ -171,7 +174,7 @@ public partial class Shop : CanvasLayer
 
         _stats.Text = "Your stats\n\n" + string.Join("\n",
             System.Enum.GetValues<StatType>().Select(s => StatInfo.Format(s, _run.Stats.Get(s))));
-        _equipment.Text = DescribeEquipment();
+        BuildEquipment();
     }
 
     // Buying one item can change what another replaces (e.g. the first ring fills the empty slot),
@@ -224,25 +227,43 @@ public partial class Shop : CanvasLayer
         return text;
     }
 
-    private string DescribeEquipment()
+    // One row per slot and per trinket, so each can show the item's stats on hover.
+    private void BuildEquipment()
     {
+        foreach (var child in _equipment.GetChildren())
+        {
+            _equipment.RemoveChild(child);
+            child.QueueFree();
+        }
+
         var equipment = _run.Equipment;
-        var lines = new List<string> { "Equipment", "" };
+        AddEquipmentRow("Equipment\n", null);
         for (int i = 0; i < Equipment.Layout.Length; i++)
         {
             var slot = Equipment.Layout[i];
             string name = equipment[i]?.DisplayName
                 ?? (slot == EquipSlot.OffHand && equipment.IsTwoHanding ? "(two-handed)" : "-");
-            lines.Add($"{EquipSlotInfo.Label(slot)}: {name}");
+            AddEquipmentRow($"{EquipSlotInfo.Label(slot)}: {name}", equipment[i]);
         }
 
-        lines.Add("");
-        lines.Add("Trinkets");
+        AddEquipmentRow("\nTrinkets", null);
         if (_run.Trinkets.Count == 0)
-            lines.Add("-");
+            AddEquipmentRow("-", null);
         foreach (var group in _run.Trinkets.GroupBy(t => t))
-            lines.Add(group.Count() > 1 ? $"{group.Key.DisplayName} x{group.Count()}" : group.Key.DisplayName);
-        return string.Join("\n", lines);
+            AddEquipmentRow(group.Count() > 1 ? $"{group.Key.DisplayName} x{group.Count()}" : group.Key.DisplayName, group.Key);
+    }
+
+    private void AddEquipmentRow(string text, ItemData item)
+    {
+        var row = new Label { Text = text };
+        row.AddThemeFontSizeOverride("font_size", 15);
+        if (item != null)
+        {
+            row.TooltipText = $"{item.DisplayName}\n{item.Describe()}";
+            // Labels ignore the mouse by default, which would also stop the tooltip.
+            row.MouseFilter = Control.MouseFilterEnum.Pass;
+        }
+        _equipment.AddChild(row);
     }
 
     private static IEnumerable<ItemData> PickRandom(IReadOnlyList<ItemData> pool, int count)

@@ -16,6 +16,21 @@ public static class UiStyles
         return style;
     }
 
+    /// <summary>Hover tooltips styled like the panels. Set it as the Theme of a container to cover its children.</summary>
+    public static Theme TooltipTheme()
+    {
+        var style = Panel();
+        style.BgColor = new Color(0.18f, 0.18f, 0.22f);
+        style.BorderColor = Dim;
+        style.SetBorderWidthAll(1);
+        style.SetContentMarginAll(8);
+
+        var theme = new Theme();
+        theme.SetStylebox("panel", "TooltipPanel", style);
+        theme.SetFontSize("font_size", "TooltipLabel", 15);
+        return theme;
+    }
+
     public static Label WrappedLabel(string text, int fontSize = 16)
     {
         var label = new Label { Text = text, AutowrapMode = TextServer.AutowrapMode.WordSmart };
