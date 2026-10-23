@@ -14,6 +14,8 @@ public enum StatType
     Range = 5,
     PickupRange = 6,
     CritChance = 7,   // percent, added to each ability's own base chance
+    LifeSteal = 8,    // percent of damage dealt healed back, added to each ability's own base
+    MinionDamage = 9, // percent, stacks additively with Damage for minions only
 }
 
 public static class StatInfo
@@ -28,11 +30,14 @@ public static class StatInfo
         StatType.Range => "Range",
         StatType.PickupRange => "Pickup Range",
         StatType.CritChance => "Crit Chance",
+        StatType.LifeSteal => "Life Steal",
+        StatType.MinionDamage => "Minion Damage",
         _ => stat.ToString(),
     };
 
     public static bool IsPercent(StatType stat) =>
-        stat is StatType.Damage or StatType.AttackSpeed or StatType.MoveSpeed or StatType.CritChance;
+        stat is StatType.Damage or StatType.AttackSpeed or StatType.MoveSpeed or StatType.CritChance
+            or StatType.LifeSteal or StatType.MinionDamage;
 
     /// <summary>Formats a bonus like "+15% Damage" or "-3 Max HP".</summary>
     public static string Format(StatType stat, float value)

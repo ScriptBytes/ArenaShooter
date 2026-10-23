@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="AreaAbility" format=3]
+
+[ext_resource type="Script" path="res://scripts/abilities/AreaAbility.cs" id="1_script"]
+[ext_resource type="Resource" path="res://data/minions/skeleton.tres" id="3_minion"]
+
+[resource]
+script = ExtResource("1_script")
+DisplayName = "Grave Curse"
+Description = "Curses the thickest crowd for 3 damage per second over 5 seconds. Cursed enemies that die rise as skeletons."
+IconColor = Color(0.45, 0.85, 0.6, 1)
+Cooldown = 8.0
+Damage = 3.0
+Range = 400.0
+DotDamage = 3.0
+DotDuration = 5.0
+RaiseChance = 100.0
+RaiseWindow = 5.0
+Radius = 120.0
+CenteredOnCaster = false
+MinTargets = 3
+RaiseMinion = ExtResource("3_minion")

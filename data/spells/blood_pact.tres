@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="BuffAbility" format=3]
+
+[ext_resource type="Script" path="res://scripts/abilities/BuffAbility.cs" id="1_script"]
+[ext_resource type="Script" path="res://scripts/items/StatModifier.cs" id="2_mod"]
+
+[sub_resource type="Resource" id="StatModifier_0"]
+script = ExtResource("2_mod")
+Stat = 2
+Value = 50.0
+
+[sub_resource type="Resource" id="StatModifier_1"]
+script = ExtResource("2_mod")
+Stat = 8
+Value = 15.0
+
+[resource]
+script = ExtResource("1_script")
+DisplayName = "Blood Pact"
+Description = "Pay 4 HP: +50% Damage and +15% Life Steal for 8 seconds. Auto-cast waits until you're above half health."
+IconColor = Color(1, 0.35, 0.25, 1)
+Cooldown = 18.0
+Damage = 0.0
+Range = 0.0
+ScreenShake = 0.2
+Radius = 140.0
+CenteredOnCaster = true
+MinTargets = 3
+Duration = 8.0
+HealthCost = 4.0
+Modifiers = Array[ExtResource("2_mod")]([SubResource("StatModifier_0"), SubResource("StatModifier_1")])

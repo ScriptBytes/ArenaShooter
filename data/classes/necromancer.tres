@@ -1,0 +1,25 @@
+[gd_resource type="Resource" script_class="ClassData" format=3]
+
+[ext_resource type="Script" path="res://scripts/classes/ClassData.cs" id="1_class"]
+[ext_resource type="Script" path="res://scripts/abilities/AbilityData.cs" id="2_ability"]
+[ext_resource type="Script" path="res://scripts/items/ItemData.cs" id="4_item"]
+[ext_resource type="Resource" path="res://data/items/bone_wand.tres" id="3_weapon"]
+[ext_resource type="Resource" path="res://data/items/reapers_sickle.tres" id="weapon_0"]
+[ext_resource type="Resource" path="res://data/items/skull_staff.tres" id="weapon_1"]
+[ext_resource type="Resource" path="res://data/spells/raise_skeletons.tres" id="spell_0"]
+[ext_resource type="Resource" path="res://data/spells/bone_golem.tres" id="spell_1"]
+[ext_resource type="Resource" path="res://data/spells/grave_curse.tres" id="spell_2"]
+[ext_resource type="Resource" path="res://data/spells/bone_spear.tres" id="spell_3"]
+[ext_resource type="Resource" path="res://data/spells/bone_nova.tres" id="spell_4"]
+
+[resource]
+script = ExtResource("1_class")
+DisplayName = "Necromancer"
+Description = "Frail, but never alone: raises the dead to fight in its place."
+Color = Color(0.35, 0.8, 0.7, 1)
+MaxHealth = 18.0
+MoveSpeed = 300.0
+Armor = 0.0
+StartingWeapon = ExtResource("3_weapon")
+Weapons = Array[ExtResource("4_item")]([ExtResource("weapon_0"), ExtResource("weapon_1")])
+Spells = Array[ExtResource("2_ability")]([ExtResource("spell_0"), ExtResource("spell_1"), ExtResource("spell_2"), ExtResource("spell_3"), ExtResource("spell_4")])

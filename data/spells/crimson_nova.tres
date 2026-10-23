@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="AreaAbility" format=3]
+
+[ext_resource type="Script" path="res://scripts/abilities/AreaAbility.cs" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+DisplayName = "Crimson Nova"
+Description = "A burst of blood around you that shoves enemies back and heals you for 25% of the damage."
+IconColor = Color(0.85, 0.12, 0.25, 1)
+Cooldown = 7.0
+Damage = 10.0
+Range = 0.0
+Knockback = 200.0
+LifeSteal = 25.0
+ScreenShake = 0.3
+Radius = 140.0
+CenteredOnCaster = true
+MinTargets = 3

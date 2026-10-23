@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SummonAbility" format=3]
+
+[ext_resource type="Script" path="res://scripts/abilities/SummonAbility.cs" id="1_script"]
+[ext_resource type="Resource" path="res://data/minions/bone_golem.tres" id="3_minion"]
+
+[resource]
+script = ExtResource("1_script")
+DisplayName = "Bone Golem"
+Description = "Raises a slow, tough golem whose slams hit everything around its target. Lasts 25 seconds; one at a time."
+IconColor = Color(0.82, 0.79, 0.69, 1)
+Cooldown = 20.0
+Damage = 0.0
+Range = 450.0
+Count = 1
+Minion = ExtResource("3_minion")

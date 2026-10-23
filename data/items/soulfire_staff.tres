@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/items/ItemData.cs" id="1_item"]
+[ext_resource type="Resource" path="res://data/weapons/soulfire_staff.tres" id="3_weapon"]
+
+[resource]
+script = ExtResource("1_item")
+DisplayName = "Soulfire Staff"
+Price = 50
+IconColor = Color(0.5, 0.95, 0.4, 1)
+Slot = 1
+Weapon = ExtResource("3_weapon")
+TwoHanded = true

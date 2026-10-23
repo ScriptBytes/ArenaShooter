@@ -6,10 +6,15 @@ namespace ArenaShooter;
 /// <summary>
 /// Everything a hit does beyond its base damage: crit odds and secondary effects.
 /// <see cref="CritChance"/> is 0–1; a crit multiplies the damage by <see cref="CritMultiplier"/>.
+/// <see cref="LifeSteal"/> (0–1) heals the player for that share of the damage that landed.
+/// <see cref="DotDamage"/> is per second. <see cref="RaiseChance"/> (0–1) is the odds a marked
+/// enemy rises as <see cref="RaiseMinion"/> if it dies within <see cref="RaiseWindow"/> seconds.
 /// </summary>
 public readonly record struct HitEffects(
     float SlowMultiplier = 1f, float SlowDuration = 0f, float Knockback = 0f,
-    float CritChance = 0f, float CritMultiplier = 1f);
+    float CritChance = 0f, float CritMultiplier = 1f, float LifeSteal = 0f,
+    float DotDamage = 0f, float DotDuration = 0f, Color DotColor = default,
+    MinionData RaiseMinion = null, float RaiseChance = 0f, float RaiseWindow = 0f);
 
 /// <summary>
 /// Shared targeting and damage helpers. Uses simple distance checks against the enemies
@@ -121,9 +126,29 @@ public static class Combat
             enemy.ApplyKnockback(source.DirectionTo(enemy.GlobalPosition) * effects.Knockback);
         if (effects.SlowDuration > 0f)
             enemy.ApplySlow(effects.SlowMultiplier, effects.SlowDuration);
+        if (effects.DotDamage > 0f && effects.DotDuration > 0f)
+            enemy.ApplyDot(effects.DotDamage, effects.DotDuration, effects.LifeSteal, effects.DotColor);
+        // Marked before the damage lands, so the killing blow itself can raise the enemy.
+        if (effects.RaiseMinion != null && effects.RaiseChance > 0f)
+            enemy.MarkForRaising(effects.RaiseMinion, effects.RaiseChance, effects.RaiseWindow);
 
         bool crit = GD.Randf() < effects.CritChance;
-        enemy.TakeDamage(crit ? damage * effects.CritMultiplier : damage, crit);
+        Deal(enemy, crit ? damage * effects.CritMultiplier : damage, effects.LifeSteal, crit);
+    }
+
+    /// <summary>
+    /// Damages an enemy with no side effects, and heals the player for <paramref name="lifeSteal"/>
+    /// (0–1) of the damage that landed (overkill doesn't count). The life steal hook: every
+    /// player hit, DoT tick included, ends up here.
+    /// </summary>
+    public static void Deal(Enemy enemy, float damage, float lifeSteal, bool crit = false, Color? color = null)
+    {
+        float landed = Mathf.Min(damage, enemy.Health.Current);
+        var player = lifeSteal > 0f ? enemy.GetTree().GetFirstNodeInGroup(Groups.Player) as Player : null;
+
+        enemy.TakeDamage(damage, crit, color);
+        if (player != null && landed > 0f)
+            player.StealLife(landed * lifeSteal);
     }
 
     public static void DamageArea(SceneTree tree, Vector2 center, float radius, float damage, HitEffects effects)

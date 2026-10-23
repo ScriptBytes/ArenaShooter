@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="ProjectileAbility" format=3]
+
+[ext_resource type="Script" path="res://scripts/abilities/ProjectileAbility.cs" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/weapons/Projectile.tscn" id="2_projectile"]
+
+[resource]
+script = ExtResource("1_script")
+DisplayName = "Shadow Bolt"
+Description = "A bolt of shadow that bursts on impact and leaves enemies burning for 3 damage per second."
+IconColor = Color(0.6, 0.25, 0.85, 1)
+Cooldown = 4.5
+Damage = 14.0
+Range = 450.0
+DotDamage = 3.0
+DotDuration = 4.0
+ScreenShake = 0.25
+ProjectileSpeed = 500.0
+ProjectileRadius = 8.0
+ExplosionRadius = 70.0
+ProjectileScene = ExtResource("2_projectile")

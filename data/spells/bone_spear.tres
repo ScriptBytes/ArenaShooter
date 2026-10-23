@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ProjectileAbility" format=3]
+
+[ext_resource type="Script" path="res://scripts/abilities/ProjectileAbility.cs" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/weapons/Projectile.tscn" id="2_projectile"]
+
+[resource]
+script = ExtResource("1_script")
+DisplayName = "Bone Spear"
+Description = "A fast, heavy spear of bone."
+IconColor = Color(0.95, 0.93, 0.85, 1)
+Cooldown = 3.0
+Damage = 18.0
+Range = 500.0
+Knockback = 120.0
+CritMultiplier = 2.0
+ProjectileSpeed = 850.0
+ProjectileRadius = 6.0
+ProjectileScene = ExtResource("2_projectile")

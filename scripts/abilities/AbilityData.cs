@@ -26,6 +26,22 @@ public partial class AbilityData : Resource
     [Export] public float SlowDuration { get; set; }
     [Export] public float Knockback { get; set; }
 
+    /// <summary>Percent of the damage dealt that heals the caster. The Life Steal stat adds to it.</summary>
+    [Export(PropertyHint.Range, "0,100,1")] public float LifeSteal { get; set; }
+
+    /// <summary>Damage over time (per second, scaled by Damage%) for <see cref="DotDuration"/> seconds.</summary>
+    [Export] public float DotDamage { get; set; }
+    [Export] public float DotDuration { get; set; }
+
+    /// <summary>
+    /// Necromancy: enemies hit become marked for <see cref="RaiseWindow"/> seconds; one that dies
+    /// while marked rises as this minion with <see cref="RaiseChance"/> percent odds.
+    /// </summary>
+    [ExportGroup("On Kill")]
+    [Export] public MinionData RaiseMinion { get; set; }
+    [Export(PropertyHint.Range, "0,100,1")] public float RaiseChance { get; set; } = 100f;
+    [Export] public float RaiseWindow { get; set; } = 1f;
+
     /// <summary>Base crit chance in percent; the player's Crit Chance stat adds to it.</summary>
     [ExportGroup("Crit")]
     [Export(PropertyHint.Range, "0,100,1")] public float CritChance { get; set; } = 5f;
@@ -40,8 +56,13 @@ public partial class AbilityData : Resource
     public float EffectiveCritChance(AbilityContext ctx) =>
         Mathf.Clamp((CritChance + ctx.CritChanceBonus) / 100f, 0f, 1f);
 
+    public float EffectiveLifeSteal(AbilityContext ctx) =>
+        Mathf.Clamp((LifeSteal + ctx.LifeStealBonus) / 100f, 0f, 1f);
+
     protected HitEffects Effects(AbilityContext ctx) =>
-        new(SlowMultiplier, SlowDuration, Knockback, EffectiveCritChance(ctx), CritMultiplier);
+        new(SlowMultiplier, SlowDuration, Knockback, EffectiveCritChance(ctx), CritMultiplier,
+            EffectiveLifeSteal(ctx), DotDamage * ctx.DamageMultiplier, DotDuration, IconColor,
+            RaiseMinion, RaiseMinion == null ? 0f : RaiseChance / 100f, RaiseWindow);
 
     /// <summary>Manual casts aim at the mouse when true; otherwise they fire from the caster.</summary>
     public virtual bool NeedsAim => true;

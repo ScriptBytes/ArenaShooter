@@ -14,6 +14,9 @@ public partial class AbilityCaster : Node2D
     public AbilitySlot Weapon { get; private set; }
     public IReadOnlyList<AbilitySlot> Spells => _spells;
 
+    /// <summary>The caster's current stat modifiers. Minions read it to scale their hits.</summary>
+    public AbilityContext Context => _context;
+
     private readonly List<AbilitySlot> _spells = new();
     private AbilityContext _context;
     private float _weaponCooldownMultiplier = 1f;
@@ -47,6 +50,9 @@ public partial class AbilityCaster : Node2D
         _context.DamageMultiplier = stats.Multiplier(StatType.Damage);
         _context.RangeBonus = stats.Get(StatType.Range);
         _context.CritChanceBonus = stats.Get(StatType.CritChance);
+        _context.LifeStealBonus = stats.Get(StatType.LifeSteal);
+        _context.MinionDamageMultiplier = Mathf.Max(
+            1f + (stats.Get(StatType.Damage) + stats.Get(StatType.MinionDamage)) / 100f, 0.1f);
         _weaponCooldownMultiplier = 1f / stats.Multiplier(StatType.AttackSpeed);
         if (Weapon != null)
             Weapon.CooldownMultiplier = _weaponCooldownMultiplier;

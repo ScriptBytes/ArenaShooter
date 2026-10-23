@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="DrainAbility" format=3]
+
+[ext_resource type="Script" path="res://scripts/abilities/DrainAbility.cs" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+DisplayName = "Drain Life"
+Description = "A beam that drains an enemy for 8 damage per second over 3 seconds, healing you for 40% of it. Jumps to the next enemy if the target dies."
+IconColor = Color(0.9, 0.2, 0.35, 1)
+Cooldown = 5.0
+Damage = 8.0
+Range = 350.0
+LifeSteal = 40.0
+Duration = 3.0
+TickInterval = 0.25

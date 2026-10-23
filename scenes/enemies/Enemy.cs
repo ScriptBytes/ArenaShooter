@@ -12,6 +12,7 @@ public partial class Enemy : CharacterBody2D, IDamageable
 
     private const float KnockbackDecay = 1800f;
     private const float HitPopTime = 0.12f;
+    private const float DotTickInterval = 0.5f;
     private const uint ShotCollisionMask = 1 | 2; // world + player
     private static readonly Color ShotColor = new("ff6b6b");
 
@@ -38,6 +39,16 @@ public partial class Enemy : CharacterBody2D, IDamageable
     private float _slowLeft;
     private float _slowMultiplier = 1f;
     private Vector2 _knockback;
+
+    private float _dotDps;
+    private float _dotLeft;
+    private float _dotTick;
+    private float _dotLifeSteal;
+    private Color _dotColor;
+
+    private MinionData _raiseMinion;
+    private float _raiseChance;
+    private float _raiseLeft;
 
     public override void _Ready()
     {
@@ -72,6 +83,34 @@ public partial class Enemy : CharacterBody2D, IDamageable
         _slowLeft = Mathf.Max(_slowLeft, duration);
     }
 
+    /// <summary>
+    /// Damage over time, ticking every half second. The strongest DoT wins; a weaker one
+    /// doesn't replace or extend it. Ticks heal the player for <paramref name="lifeSteal"/> (0–1).
+    /// </summary>
+    public void ApplyDot(float dps, float duration, float lifeSteal, Color color)
+    {
+        if (_dotLeft > 0f && dps < _dotDps)
+            return;
+        if (_dotLeft <= 0f)
+            _dotTick = DotTickInterval;
+
+        _dotDps = dps;
+        _dotLifeSteal = lifeSteal;
+        _dotColor = color;
+        _dotLeft = Mathf.Max(_dotLeft, duration);
+    }
+
+    /// <summary>If this enemy dies within <paramref name="window"/> seconds, it may rise as a minion.</summary>
+    public void MarkForRaising(MinionData minion, float chance, float window)
+    {
+        if (_raiseLeft > 0f && chance < _raiseChance)
+            return;
+
+        _raiseMinion = minion;
+        _raiseChance = chance;
+        _raiseLeft = Mathf.Max(_raiseLeft, window);
+    }
+
     public void ReserveDamage(float amount) => IncomingDamage += amount;
 
     public void ReleaseDamage(float amount) => IncomingDamage = Mathf.Max(IncomingDamage - amount, 0f);
@@ -97,7 +136,23 @@ public partial class Enemy : CharacterBody2D, IDamageable
         _slowLeft = Mathf.Max(_slowLeft - dt, 0f);
         _hitFlashLeft = Mathf.Max(_hitFlashLeft - dt, 0f);
         _hitPop = Mathf.Max(_hitPop - dt / HitPopTime, 0f);
+        _raiseLeft = Mathf.Max(_raiseLeft - dt, 0f);
         QueueRedraw();
+
+        // Last, since a tick can kill.
+        if (_dotLeft > 0f)
+            TickDot(dt);
+    }
+
+    private void TickDot(float dt)
+    {
+        _dotTick -= dt;
+        if (_dotTick <= 0f)
+        {
+            _dotTick += DotTickInterval;
+            Combat.Deal(this, _dotDps * DotTickInterval, _dotLifeSteal, color: _dotColor.Lightened(0.35f));
+        }
+        _dotLeft -= dt;
     }
 
     private void Move(Vector2 toTarget)
@@ -143,7 +198,8 @@ public partial class Enemy : CharacterBody2D, IDamageable
 
     public void TakeDamage(float amount) => TakeDamage(amount, crit: false);
 
-    public void TakeDamage(float amount, bool crit)
+    /// <summary><paramref name="color"/> tints the damage number (DoT ticks); white by default.</summary>
+    public void TakeDamage(float amount, bool crit, Color? color = null)
     {
         if (Health.IsDead || amount <= 0f)
             return;
@@ -151,7 +207,7 @@ public partial class Enemy : CharacterBody2D, IDamageable
         Health.TakeDamage(amount);
         _hitFlashLeft = 0.08f;
         _hitPop = 1f;
-        FloatingText.SpawnDamage(GetTree().CurrentScene, GlobalPosition + new Vector2(0, -Data.Size / 2f), amount, Colors.White, crit);
+        FloatingText.SpawnDamage(GetTree().CurrentScene, GlobalPosition + new Vector2(0, -Data.Size / 2f), amount, color ?? Colors.White, crit);
     }
 
     private void OnDied()
@@ -165,6 +221,8 @@ public partial class Enemy : CharacterBody2D, IDamageable
             GetTree().CurrentScene.CallDeferred(Node.MethodName.AddChild, heart);
         }
         DeathPop.Spawn(GetTree().CurrentScene, GlobalPosition, Data.Color, Data.Size);
+        if (_raiseLeft > 0f && GD.Randf() < _raiseChance)
+            Minion.Spawn(GetTree().CurrentScene, _raiseMinion, GlobalPosition);
 
         EmitSignal(SignalName.Died, this);
         QueueFree();
@@ -175,6 +233,8 @@ public partial class Enemy : CharacterBody2D, IDamageable
         var color = Data.Color;
         if (_slowLeft > 0f)
             color = color.Lerp(new Color("7fc8ff"), 0.6f);
+        if (_dotLeft > 0f)
+            color = color.Lerp(_dotColor, 0.5f);
         if (_hitFlashLeft > 0f)
             color = Colors.White;
 
@@ -204,6 +264,9 @@ public partial class Enemy : CharacterBody2D, IDamageable
         }
 
         DrawSetTransform(Vector2.Zero);
+        // Marked for raising: a ring in the minion's glow color.
+        if (_raiseLeft > 0f && _raiseMinion != null)
+            DrawArc(Vector2.Zero, r + 5f, 0f, Mathf.Tau, 24, new Color(_raiseMinion.GlowColor, 0.8f), 2f);
         if (Data.ShowHealthBar && Health.Current < Health.Max)
             DrawHealthBar(r);
     }

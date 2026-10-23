@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ChainAbility" format=3]
+
+[ext_resource type="Script" path="res://scripts/abilities/ChainAbility.cs" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+DisplayName = "Soulfire Staff"
+Description = "Soulfire leaps between up to 3 enemies, stealing life from each."
+IconColor = Color(0.5, 0.95, 0.4, 1)
+Cooldown = 0.7
+Damage = 6.0
+Range = 380.0
+LifeSteal = 8.0
+Jumps = 2
+JumpRange = 150.0
+JumpFalloff = 0.75

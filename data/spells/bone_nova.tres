@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="AreaAbility" format=3]
+
+[ext_resource type="Script" path="res://scripts/abilities/AreaAbility.cs" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+DisplayName = "Bone Nova"
+Description = "Shards of bone burst out around you, shoving enemies away and slowing them."
+IconColor = Color(0.75, 0.9, 0.85, 1)
+Cooldown = 7.0
+Damage = 8.0
+Range = 0.0
+SlowMultiplier = 0.6
+SlowDuration = 1.5
+Knockback = 320.0
+ScreenShake = 0.3
+Radius = 140.0
+CenteredOnCaster = true
+MinTargets = 3

@@ -41,7 +41,7 @@ public partial class ClassSelect : CanvasLayer
 
     private Button AddCard(ClassData playerClass)
     {
-        var card = new PanelContainer { CustomMinimumSize = new Vector2(320, 0) };
+        var card = new PanelContainer { CustomMinimumSize = new Vector2(270, 0) };
         card.AddThemeStyleboxOverride("panel", UiStyles.Panel());
         _cards.AddChild(card);
 

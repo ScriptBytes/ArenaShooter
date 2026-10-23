@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="MinionData" format=3]
+
+[ext_resource type="Script" path="res://scripts/minions/MinionData.cs" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+DisplayName = "Skeleton"
+Color = Color(0.922, 0.898, 0.812, 1)
+GlowColor = Color(0.435, 0.878, 0.753, 1)
+Size = 18.0
+MaxHealth = 14.0
+Speed = 230.0
+Lifetime = 18.0
+MaxAlive = 6
+Damage = 4.0
+AttackCooldown = 0.7
+AttackReach = 6.0
+Knockback = 30.0

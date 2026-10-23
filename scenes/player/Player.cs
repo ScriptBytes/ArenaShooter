@@ -14,6 +14,9 @@ public partial class Player : CharacterBody2D, IDamageable
     [Export] public float InvulnerabilityTime { get; set; } = 0.5f;
     [Export] public float HurtShake { get; set; } = 0.4f;
 
+    /// <summary>Most HP life steal can restore per second, whatever the source (Brotato caps it too).</summary>
+    [Export] public float LifeStealCap { get; set; } = 5f;
+
     [ExportGroup("Potion")]
     [Export] public float PotionHeal { get; set; } = 10f;
     [Export] public int PotionsPerWave { get; set; } = 1;
@@ -46,6 +49,13 @@ public partial class Player : CharacterBody2D, IDamageable
     private float _leapDuration;
     private bool _leapAirborne;
     private Action _onLanded;
+
+    // Life steal: a token bucket that refills at LifeStealCap per second, plus healing not yet
+    // shown, so a stream of tiny heals becomes one "+N" every few tenths of a second.
+    private const float LifeStealTextInterval = 0.4f;
+    private float _lifeStealBudget;
+    private float _lifeStealShown;
+    private float _lifeStealTextLeft;
 
     public bool IsLeaping => _leapLeft > 0f;
 
@@ -117,6 +127,38 @@ public partial class Player : CharacterBody2D, IDamageable
                 $"+{healed:0.#}", HealColor, 16);
     }
 
+    /// <summary>Heals from life steal, limited to <see cref="LifeStealCap"/> HP per second.</summary>
+    public void StealLife(float amount)
+    {
+        float healed = Health.Heal(Mathf.Min(amount, _lifeStealBudget));
+        _lifeStealBudget -= healed;
+        _lifeStealShown += healed;
+    }
+
+    /// <summary>Spends HP on a spell (Blood Pact). Never kills: leaves at least 1 HP.</summary>
+    public void PayHealth(float amount)
+    {
+        float paid = Mathf.Min(amount, Health.Current - 1f);
+        if (paid <= 0f)
+            return;
+
+        Health.TakeDamage(paid);
+        FloatingText.SpawnDamage(GetTree().CurrentScene, GlobalPosition + new Vector2(0, -Radius), paid, new Color("ff5a5a"));
+    }
+
+    private void UpdateLifeSteal(float dt)
+    {
+        _lifeStealBudget = Mathf.Min(_lifeStealBudget + LifeStealCap * dt, LifeStealCap);
+        _lifeStealTextLeft -= dt;
+        if (_lifeStealTextLeft > 0f || _lifeStealShown < 0.1f)
+            return;
+
+        _lifeStealTextLeft = LifeStealTextInterval;
+        FloatingText.Spawn(GetTree().CurrentScene, GlobalPosition + new Vector2(0, -Radius),
+            $"+{_lifeStealShown:0.#}", HealColor, 14);
+        _lifeStealShown = 0f;
+    }
+
     public void RefillPotions() => PotionsLeft = PotionsPerWave;
 
     /// <summary>Drinks a potion (Space). Does nothing at full health, so a misclick doesn't waste it.</summary>
@@ -159,6 +201,7 @@ public partial class Player : CharacterBody2D, IDamageable
         _invulnerableLeft -= dt;
         if (Buffs.Tick(dt))
             RefreshStats();
+        UpdateLifeSteal(dt);
         QueueRedraw();
 
         if (IsLeaping)

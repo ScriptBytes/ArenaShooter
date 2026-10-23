@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="MeleeArcAbility" format=3]
+
+[ext_resource type="Script" path="res://scripts/abilities/MeleeArcAbility.cs" id="1_script"]
+[ext_resource type="Resource" path="res://data/minions/skeleton.tres" id="3_minion"]
+
+[resource]
+script = ExtResource("1_script")
+DisplayName = "Reaper's Sickle"
+Description = "A close slash. Enemies it kills have a 30% chance to rise as skeletons."
+IconColor = Color(0.6, 0.95, 0.8, 1)
+Cooldown = 0.6
+Damage = 7.0
+Range = 90.0
+Knockback = 80.0
+CritMultiplier = 2.0
+RaiseChance = 30.0
+RaiseWindow = 0.5
+ArcDegrees = 140.0
+RaiseMinion = ExtResource("3_minion")
