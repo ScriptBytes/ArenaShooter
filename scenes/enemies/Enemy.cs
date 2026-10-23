@@ -159,6 +159,11 @@ public partial class Enemy : CharacterBody2D, IDamageable
         // Deferred: we're usually inside a physics callback, where adding nodes is unsafe.
         var coin = new Coin { Value = Data.GoldValue, Position = GlobalPosition };
         GetTree().CurrentScene.CallDeferred(Node.MethodName.AddChild, coin);
+        if (GD.Randf() < Data.HeartDropChance)
+        {
+            var heart = new Heart { Position = GlobalPosition + new Vector2(10f, 6f) };
+            GetTree().CurrentScene.CallDeferred(Node.MethodName.AddChild, heart);
+        }
         DeathPop.Spawn(GetTree().CurrentScene, GlobalPosition, Data.Color, Data.Size);
 
         EmitSignal(SignalName.Died, this);

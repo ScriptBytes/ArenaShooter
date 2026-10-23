@@ -41,6 +41,13 @@ public partial class Hud : CanvasLayer
             _abilityBar.AddChild(new AbilitySlotView { Index = i, Caster = caster });
     }
 
+    /// <summary>Adds the potion slot (Space) at the end of the hotbar.</summary>
+    public void BindPotion(Player player)
+    {
+        _abilityBar.AddChild(new Control { CustomMinimumSize = new Vector2(12, 0) });
+        _abilityBar.AddChild(new PotionSlotView { Player = player });
+    }
+
     public void SetTime(float secondsLeft) => _time.Text = Mathf.CeilToInt(secondsLeft).ToString();
 
     public void SetWave(int wave, int totalWaves) => _wave.Text = $"Wave {wave} / {totalWaves}";

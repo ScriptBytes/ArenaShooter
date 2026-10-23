@@ -66,6 +66,7 @@ public partial class Main : Node2D
         Player.Setup(playerClass, spells);
         Player.ApplyStats(_run.Stats);
         Hud.BindAbilities(Player.Abilities);
+        Hud.BindPotion(Player);
         EmitSignal(SignalName.RunStarted, playerClass);
         StartWave(_autoplay?.StartWave ?? 1);
     }
@@ -126,6 +127,7 @@ public partial class Main : Node2D
 
         Player.Position = Arena.Size / 2f;
         Player.ClearBuffs();
+        Player.RefillPotions();
         Player.Health.Refill();
         Player.Abilities.ResetCooldowns();
 

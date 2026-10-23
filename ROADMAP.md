@@ -18,7 +18,8 @@ Where the project stands and what's next. `Goals.md` holds the vision and the de
 | Gold bag: floor gold at wave end goes into a bag; later pickups pay double from it (Brotato/Pickle Pete style), "x2" cue, bag shown in HUD and shop | `560880e` |
 | Testing infrastructure: `--autoplay` debug mode (plays full runs through the real UI, seeded, logs events), cloud setup script `tools/cloud-setup.sh` (tested in Docker, x86_64 + arm64), local vs cloud testing notes in CLAUDE.md | `1473151` |
 | Moved to .NET 10 (LTS): editor and `dotnet build` clean, 12/12 seeded Autoplay runs identical to .NET 8, cloud script verified with it | `1473151` |
-| Spell selection: each class has 5 spells and picks 3 on a new screen after class select (pick order = hotkeys). New spells: Ice Bolt, Chain Lightning, Meteor (Mage); Charge, Shield Wall, War Cry (Fighter). Timed stat buffs (`ActiveBuffs`), delayed telegraphed blasts, area spells aim at the densest crowd, Autoplay `--spells` | _this commit_ |
+| Spell selection: each class has 5 spells and picks 3 on a new screen after class select (pick order = hotkeys). New spells: Ice Bolt, Chain Lightning, Meteor (Mage); Charge, Shield Wall, War Cry (Fighter). Timed stat buffs (`ActiveBuffs`), delayed telegraphed blasts, area spells aim at the densest crowd, Autoplay `--spells` | `f29e9a8` |
+| Healing: enemies sometimes drop a heart (+2 HP, 3% chance, Brutes 15%) that waits on the floor until you're hurt; a health potion on Space (+10 HP, once per wave) with a hotbar slot. Coins and hearts share a `Pickup` base. Autoplay drinks the potion when it would heal fully or HP is under 35% | _this commit_ |
 
 **Playtest status:** the user has beaten wave 5 with both classes and finds it fun so far. Balance hasn't been tuned on purpose yet.
 
@@ -26,7 +27,7 @@ Where the project stands and what's next. `Goals.md` holds the vision and the de
 
 1. **Equipment slots:** main hand (weapon = basic attack), off hand (shield, tome, orb), armor, rings, trinkets. Weapons become items you can buy or swap. Two-handed weapons take both hand slots and are stronger.
 2. **Warlock and Necromancer:** Warlock needs life steal / drain (heal-on-damage hook, a LifeSteal stat). Necromancer needs a minion system (allied units with their own AI that target enemies).
-3. **Consumables:** potions bought in the shop or dropped by enemies, used from hotkeys 5+. Timed potion effects (e.g. a damage potion) can reuse `ActiveBuffs`.
+3. **More consumables:** the health potion (Space, once per wave) is in. Next: other potions bought in the shop (e.g. a damage potion reusing `ActiveBuffs`), and buying extra potion charges or a bigger heal.
 4. **Placeholder sprites:** replace the `_Draw()` shapes with simple SVG sprites Claude authors (Mage, Fighter, the 4 enemies), starting with a Mage + Grunt sample to judge the look. Code side: an optional `Texture2D` on `ClassData`/`EnemyData`, drawn via `Sprite2D`, falling back to `_Draw()` when unset. Decide the art style (pixel vs vector, sprite size, view angle) first, since changing it later means redoing every asset. Kenney CC0 packs or commissioned art can swap in later through the same fields.
 5. **Progression modes:** "career" (persistent character growth between runs) vs "arcade" (fresh each run). Needs save data in an autoload or file, since `RunState` is thrown away on restart.
 
@@ -55,6 +56,7 @@ Where the project stands and what's next. `Goals.md` holds the vision and the de
 - The HUD gold count behind the shop doesn't update on purchase. It's hidden by the shop and refreshed when the next wave starts.
 - Restart (R) always goes back to class select.
 - Difficulty in waves 4–5 hasn't been tuned since the new enemy types were added.
+- Healing numbers are first guesses: heart +2 HP at 3% (Brutes 15%), potion +10 once per wave. A full run drops roughly 5–8 hearts. +10 is most of the Mage's 16 HP, so the potion may be strong for the Mage and weak for the Fighter (30 HP); a percent-of-max heal is an option.
 - New spell numbers are first guesses, set by comparing with the existing four, not by playtest. War Cry (+40% Damage and Attack Speed for 6s, 15s cooldown) and Meteor (40 damage) are the likeliest to be too strong. Charge's drawn lane is narrower than its hit width (40 each side).
 - Auto-cast Charge picks a direction toward the nearest enemy and dashes the full range, which can carry you into a crowd. It's manual by default for that reason.
 - Crit item values are first guesses: crit chance is worth less per point than Damage% (+10% crit at ×1.5 ≈ +5% damage), so the items give bigger numbers.

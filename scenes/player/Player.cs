@@ -14,6 +14,15 @@ public partial class Player : CharacterBody2D, IDamageable
     [Export] public float InvulnerabilityTime { get; set; } = 0.5f;
     [Export] public float HurtShake { get; set; } = 0.4f;
 
+    [ExportGroup("Potion")]
+    [Export] public float PotionHeal { get; set; } = 10f;
+    [Export] public int PotionsPerWave { get; set; } = 1;
+
+    public static readonly Color HealColor = new("5ee07a");
+
+    /// <summary>Potions left this wave. Refilled by <see cref="RefillPotions"/> at wave start.</summary>
+    public int PotionsLeft { get; private set; }
+
     public float Speed { get; private set; } = 300f;
 
     /// <summary>Flat reduction to each hit taken (minimum 1 damage).</summary>
@@ -96,6 +105,36 @@ public partial class Player : CharacterBody2D, IDamageable
     }
 
     public void CollectGold(int amount) => EmitSignal(SignalName.GoldCollected, amount);
+
+    public void Heal(float amount)
+    {
+        float healed = Health.Heal(amount);
+        if (healed > 0f)
+            FloatingText.Spawn(GetTree().CurrentScene, GlobalPosition + new Vector2(0, -Radius),
+                $"+{healed:0.#}", HealColor, 16);
+    }
+
+    public void RefillPotions() => PotionsLeft = PotionsPerWave;
+
+    /// <summary>Drinks a potion (Space). Does nothing at full health, so a misclick doesn't waste it.</summary>
+    public bool UsePotion()
+    {
+        if (PotionsLeft <= 0 || Health.IsDead || Health.Current >= Health.Max)
+            return false;
+
+        PotionsLeft--;
+        Heal(PotionHeal);
+        return true;
+    }
+
+    public override void _UnhandledInput(InputEvent @event)
+    {
+        if (!@event.IsActionPressed("use_potion"))
+            return;
+
+        UsePotion();
+        GetViewport().SetInputAsHandled();
+    }
 
     /// <summary>
     /// Jumps to <paramref name="target"/> over <paramref name="duration"/> seconds, untouchable

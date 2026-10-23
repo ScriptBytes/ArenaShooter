@@ -24,6 +24,7 @@ public partial class Autoplay : Node
     public Vector2 ArenaCenter { get; set; }
 
     private float _moveAngle;
+    private int _potionWave;
     private bool _failed;
 
     public static void Log(string message) => GD.Print($"[autoplay] {message}");
@@ -49,7 +50,10 @@ public partial class Autoplay : Node
         else if (Shop.Visible)
             ShopStep();
         else if (!GetTree().Paused)
+        {
             Move((float)delta);
+            MaybeDrinkPotion();
+        }
     }
 
     public void OnRunStarted(ClassData playerClass)
@@ -160,6 +164,21 @@ public partial class Autoplay : Node
         }
 
         Press(Shop.ContinueButton);
+    }
+
+    // Drinks when the potion's full heal fits, or when low. Sends the real input action.
+    private void MaybeDrinkPotion()
+    {
+        var health = Player.Health;
+        if (Player.PotionsLeft == 0 || health.IsDead || _potionWave == Run.Wave)
+            return;
+        if (health.Max - health.Current < Player.PotionHeal && health.Current >= health.Max * 0.35f)
+            return;
+
+        // One try per wave: the press is handled later in the frame, so don't send it twice.
+        _potionWave = Run.Wave;
+        Log($"potion hp_before={health.Current:0}/{health.Max:0}");
+        Input.ParseInputEvent(new InputEventAction { Action = "use_potion", Pressed = true });
     }
 
     private void Move(float delta)

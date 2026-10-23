@@ -33,6 +33,9 @@ public partial class EnemyData : Resource
     [Export] public int GoldValue { get; set; } = 1;
     [Export(PropertyHint.Range, "0,1,0.05")] public float KnockbackResistance { get; set; }
 
+    /// <summary>Chance (0–1) to also drop a heart on death.</summary>
+    [Export(PropertyHint.Range, "0,1,0.01")] public float HeartDropChance { get; set; } = 0.03f;
+
     [ExportGroup("Spawning")]
     [Export] public int FirstWave { get; set; } = 1;
     [Export] public float SpawnWeight { get; set; } = 10f;

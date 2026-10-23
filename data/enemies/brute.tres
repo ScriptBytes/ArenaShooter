@@ -13,6 +13,7 @@ MaxHealth = 45.0
 Speed = 55.0
 ContactDamage = 10.0
 GoldValue = 4
+HeartDropChance = 0.15
 KnockbackResistance = 0.7
 FirstWave = 4
 SpawnWeight = 2.0
