@@ -8,6 +8,7 @@ namespace ArenaShooter;
 public partial class ClassSelect : CanvasLayer
 {
     [Signal] public delegate void ClassChosenEventHandler(ClassData playerClass);
+    [Signal] public delegate void BackRequestedEventHandler();
 
     private HBoxContainer _cards;
     private readonly List<(ClassData Class, Button Button)> _choices = new();
@@ -18,10 +19,16 @@ public partial class ClassSelect : CanvasLayer
     public override void _Ready()
     {
         _cards = GetNode<HBoxContainer>("%Cards");
+        GetNode<Button>("%BackButton").Pressed += () =>
+        {
+            Hide();
+            EmitSignal(SignalName.BackRequested);
+        };
         Hide();
     }
 
-    public void Open(IEnumerable<ClassData> classes)
+    /// <param name="badge">Optional extra line per card (career mode: the character's level).</param>
+    public void Open(IEnumerable<ClassData> classes, System.Func<ClassData, string> badge = null)
     {
         foreach (var child in _cards.GetChildren())
             child.QueueFree();
@@ -30,7 +37,7 @@ public partial class ClassSelect : CanvasLayer
         Button first = null;
         foreach (var playerClass in classes)
         {
-            var button = AddCard(playerClass);
+            var button = AddCard(playerClass, badge?.Invoke(playerClass));
             _choices.Add((playerClass, button));
             first ??= button;
         }
@@ -39,7 +46,7 @@ public partial class ClassSelect : CanvasLayer
         first?.GrabFocus();
     }
 
-    private Button AddCard(ClassData playerClass)
+    private Button AddCard(ClassData playerClass, string badge)
     {
         var card = new PanelContainer { CustomMinimumSize = new Vector2(270, 0) };
         card.AddThemeStyleboxOverride("panel", UiStyles.Panel());
@@ -51,6 +58,12 @@ public partial class ClassSelect : CanvasLayer
 
         content.AddChild(new ColorRect { Color = playerClass.Color, CustomMinimumSize = new Vector2(0, 8) });
         content.AddChild(UiStyles.WrappedLabel(playerClass.DisplayName, 30));
+        if (badge != null)
+        {
+            var label = UiStyles.WrappedLabel(badge, 16);
+            label.AddThemeColorOverride("font_color", UiStyles.Gold);
+            content.AddChild(label);
+        }
         content.AddChild(UiStyles.WrappedLabel(playerClass.Description));
         content.AddChild(UiStyles.WrappedLabel(
             $"HP {playerClass.MaxHealth:0}  ·  Armor {playerClass.Armor:0}  ·  Speed {playerClass.MoveSpeed:0}", 14));

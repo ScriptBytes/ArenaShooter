@@ -9,6 +9,10 @@ public enum ShopStrategy { Cheapest, First, Skip }
 
 public enum MoveMode { Circle, Still }
 
+public enum TalentStrategy { Spread, None }
+
+public enum HeirloomStrategy { Priciest, Keep }
+
 /// <summary>
 /// Command-line flags for <see cref="Autoplay"/>. Pass them after "--" so Godot hands them to the game:
 /// <code>
@@ -27,6 +31,12 @@ public enum MoveMode { Circle, Still }
 /// <item><c>--item=NAME</c> grants an item at run start (display name or .tres file name). Repeatable.</item>
 /// <item><c>--buy-potion=NAME</c> buys one of this potion at every shop visit, before other purchases. Repeatable.</item>
 /// <item><c>--menu-delay=SECONDS</c> waits before each menu action, so Movie Maker can record the menus (default 0).</item>
+/// <item><c>--mode=arcade|career</c> mode to pick on the mode select screen (default arcade).</item>
+/// <item><c>--save=PATH</c> career save file (default user://career_autoplay.json, never the real save).</item>
+/// <item><c>--reset-career</c> deletes that save file before the first run.</item>
+/// <item><c>--runs=N</c> plays N runs in a row through the real end-of-run restart (default 1); run k uses seed+k.</item>
+/// <item><c>--talents=spread|none</c> career: spend free points one at a time on the lowest-rank talent (default spread).</item>
+/// <item><c>--heirloom=priciest|keep</c> career victory: keep the priciest worn gear (default) or the current heirloom.</item>
 /// <item><c>--stat=STAT:VALUE</c> adds a stat bonus at run start, e.g. <c>--stat=CritChance:20</c>. Repeatable.</item>
 /// </list>
 /// </summary>
@@ -44,6 +54,12 @@ public sealed class AutoplayOptions
     public List<string> Items { get; } = new();
     public List<string> BuyPotions { get; } = new();
     public List<(StatType Stat, float Value)> Stats { get; } = new();
+    public GameMode Mode { get; private set; } = GameMode.Arcade;
+    public string SavePath { get; private set; } = "user://career_autoplay.json";
+    public bool ResetCareer { get; private set; }
+    public int Runs { get; private set; } = 1;
+    public TalentStrategy Talents { get; private set; } = TalentStrategy.Spread;
+    public HeirloomStrategy Heirloom { get; private set; } = HeirloomStrategy.Priciest;
 
     /// <summary>Problems with the flags. Autoplay logs them and quits with exit code 1.</summary>
     public List<string> Errors { get; } = new();
@@ -99,6 +115,24 @@ public sealed class AutoplayOptions
                     break;
                 case "--buy-potion" when value != "":
                     options.BuyPotions.Add(value);
+                    break;
+                case "--mode" when Enum.TryParse(value, ignoreCase: true, out GameMode mode) && Enum.IsDefined(mode) && mode != GameMode.None:
+                    options.Mode = mode;
+                    break;
+                case "--save" when value != "":
+                    options.SavePath = value;
+                    break;
+                case "--reset-career":
+                    options.ResetCareer = true;
+                    break;
+                case "--runs" when int.TryParse(value, out int runs) && runs >= 1:
+                    options.Runs = runs;
+                    break;
+                case "--talents" when Enum.TryParse(value, ignoreCase: true, out TalentStrategy talents):
+                    options.Talents = talents;
+                    break;
+                case "--heirloom" when Enum.TryParse(value, ignoreCase: true, out HeirloomStrategy heirloom):
+                    options.Heirloom = heirloom;
                     break;
                 case "--stat" when TryParseStat(value, out var stat):
                     options.Stats.Add(stat);

@@ -23,14 +23,15 @@ Where the project stands and what's next. `Goals.md` holds the vision and the de
 | Equipment slots: Main Hand, Off Hand, Armor, Ring ×2, Amulet, next to stackable trinkets. Weapons are main-hand items, so the basic attack changes with what you buy. New weapons Spear, Greatsword (2H) for the Fighter and Frost Scepter, Staff (2H) for the Mage. 13 new gear items, 5 existing items moved into slots. Replaced gear refunds half its price. The shop shows your equipment, what a purchase replaces, and a choice when both rings are full. Autoplay `--menu-delay` for recording menus | `1ab7ebf` |
 | Shop equipment panel: hovering a worn item or trinket shows its stats in a tooltip styled like the panels (`UiStyles.TooltipTheme`) | `110e08f` |
 | Warlock and Necromancer: 2 new classes with 5 spells and 3 weapons each. Life steal (per-ability % + Life Steal stat, capped 5 HP/s), damage over time, HP-cost buffs, a draining beam (`DrainAbility`), a minion system (`Minion`/`MinionData`, `SummonAbility`, raise-on-death marks), Minion Damage stat, 6 new shop items. Class select fits 4 cards | `9534b87` |
-| Consumables and reserve potion: hearts now fill a reserve potion (drunk by Space when no full potion is left, kept between waves; full reserve leaves hearts on the floor). Shop potion shelf: Health Potion, Potion of Fury (key 5), Potion of Swiftness (key 6), carried until drunk. Potion Heal stat + Alchemist's Flask. HUD potion slots with fill levels. Autoplay `--buy-potion`, `heart`/`drink` events | _this commit_ |
+| Consumables and reserve potion: hearts now fill a reserve potion (drunk by Space when no full potion is left, kept between waves; full reserve leaves hearts on the floor). Shop potion shelf: Health Potion, Potion of Fury (key 5), Potion of Swiftness (key 6), carried until drunk. Potion Heal stat + Alchemist's Flask. HUD potion slots with fill levels. Autoplay `--buy-potion`, `heart`/`drink` events | `257eecd` |
+| Career vs arcade: mode select screen; career characters per class with XP/levels from every run, talent points for permanent stat bonuses (7 talents, free reset), and one heirloom gear piece kept after a victory. `Career` autoload + versioned JSON save (`user://career.json`) that survives restarts and moves corrupt/newer files aside. Career talents screen and end-of-run summary. Autoplay `--mode`, `--save`, `--reset-career`, `--runs`, `--talents`, `--heirloom` | _this commit_ |
 
 **Playtest status:** the user has beaten wave 5 with both classes and finds it fun so far. Balance hasn't been tuned on purpose yet.
 
 ## Next up (suggested order)
 
 1. **Placeholder sprites:** replace the `_Draw()` shapes with simple SVG sprites Claude authors (Mage, Fighter, the 4 enemies), starting with a Mage + Grunt sample to judge the look. Code side: an optional `Texture2D` on `ClassData`/`EnemyData`/`MinionData`, drawn via `Sprite2D`, falling back to `_Draw()` when unset. Decide the art style (pixel vs vector, sprite size, view angle) first, since changing it later means redoing every asset. Kenney CC0 packs or commissioned art can swap in later through the same fields.
-2. **Progression modes:** "career" (persistent character growth between runs) vs "arcade" (fresh each run). Needs save data in an autoload or file, since `RunState` is thrown away on restart.
+2. **Career follow-ups** (see `FOLLOWUPS.md` §3): difficulty tiers unlocked by career victories to offset talent power, heirloom upgrades, an "unlocks" layer (spells/items gated by level).
 
 ## Backlog (ideas, not yet scheduled)
 
@@ -50,7 +51,6 @@ Where the project stands and what's next. `Goals.md` holds the vision and the de
 
 ## Open design questions
 
-- Career vs arcade progression: one, the other, or both? What carries over between runs?
 - Shop only, or shop plus drops? Can items be sold outright (beyond the half refund when gear is replaced)?
 
 ## Known issues and tuning notes
@@ -58,7 +58,8 @@ Where the project stands and what's next. `Goals.md` holds the vision and the de
 - Autoplay without `--god` dies by wave 2 with either class (it circles and doesn't dodge). It's a bot, but it may also hint that the early waves are tough for new players.
 
 - The HUD gold count behind the shop doesn't update on purchase. It's hidden by the shop and refreshed when the next wave starts.
-- Restart (R) always goes back to class select.
+- Restart (R) goes back to class select in the same mode; the Back button there returns to mode select. There's no way to abandon a run mid-wave (no pause menu yet).
+- Career balance is unplayed: talents only add power and waves don't scale with career level (see `FOLLOWUPS.md` §3). Autoplay Fighter, `--god`, seed 2, same seed each run: 184 → 215 kills once talents and an heirloom kicked in.
 - Difficulty in waves 4–5 hasn't been tuned since the new enemy types were added.
 - Healing numbers are first guesses: heart +2 into the reserve at 3% (Brutes 15%), potion +10 once per wave. A full run drops roughly 5–8 hearts, about one full reserve. +10 is most of the Mage's 16 HP, so the potion may be strong for the Mage and weak for the Fighter (30 HP); a percent-of-max heal is an option.
 - Consumable prices (Health Potion 10, Fury 8, Swiftness 6) and effects are first guesses. Autoplay's default `cheapest` strategy never buys potions (use `--buy-potion`). Moving hearts into the reserve barely changed Autoplay survival (seeds 1–5, average death wave: Fighter 2.2 → 2.4, Mage 2.8 → 2.8, Warlock 3.0 → 2.6, Necromancer 2.4 → 2.4).
@@ -69,6 +70,6 @@ Where the project stands and what's next. `Goals.md` holds the vision and the de
 - Gear and new weapon numbers are first guesses. With seed 2, no shop and `--god`, kills over a full run were: Sword 182, Spear 229, Greatsword 223, Wand 235, Frost Scepter 241, Staff 253. The upgrades beat the starters, but Spear and Greatsword are close, though the Greatsword also costs the off hand.
 - Autoplay's `cheapest` shop strategy happily buys a weapon or armor that's worse than what it wears. That's fine for a test bot, but don't read balance into which gear it ends up with.
 - Warlock/Necromancer numbers are first guesses. God-mode, no-shop runs (seed 2), total damage dealt over 5 waves: Fighter ~3.5k, Mage 4.1k–6.5k by spell pick, Warlock 4.2k–5.4k, Necromancer 4.0k–5.9k (minions 0.7k–3.3k of it; Bone Golem alone ~2.1k). Without `--god` over seeds 1–5, Autoplay's average death wave: Fighter 2.2, Necromancer 2.4, Mage 2.8, Warlock 3.0 (3.6 with Crimson Nova + Blood Pact + Drain Life, ~100 HP stolen per run). The Warlock is the most survivable, which fits it, but watch it.
-- Necromancer runs with both Bone Golem and Grave Curse aren't exactly reproducible with the same `--seed` (kills vary ~±3%). Every other class and spell pair tested was. Cause not found; it isn't minion-minion collisions (ruled out). Use other spell picks for before/after comparisons.
+- Necromancer runs with both Bone Golem and Grave Curse aren't exactly reproducible with the same `--seed` (kills vary ~±3%). Every other class and spell pair tested was. Cause not found; it isn't minion-minion collisions (ruled out). Use other spell picks for before/after comparisons. Seen once more without Bone Golem or Grave Curse: Raise Skeletons + Bone Spear + Bone Nova, seed 1, `--god` gave 231 or 234 kills on the same build, so it's probably any minion.
 - Minions don't scale with waves (fixed HP, damage only from the player's stats). Skeletons (14 HP) die in 2–3 contact hits by wave 4.
 - Enemies can pile up on top of each other. Fine for now; a separation behavior would help once there's art.

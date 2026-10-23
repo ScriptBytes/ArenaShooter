@@ -20,8 +20,12 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/SpellSelect.tscn" id="18_spell_select"]
 [ext_resource type="Resource" path="res://data/classes/warlock.tres" id="19_warlock"]
 [ext_resource type="Resource" path="res://data/classes/necromancer.tres" id="20_necromancer"]
+[ext_resource type="PackedScene" path="res://scenes/ui/ModeSelect.tscn" id="21_mode_select"]
+[ext_resource type="PackedScene" path="res://scenes/ui/CareerScreen.tscn" id="22_career_screen"]
+[ext_resource type="PackedScene" path="res://scenes/ui/CareerSummary.tscn" id="23_career_summary"]
+[ext_resource type="Resource" path="res://data/career/CareerSettings.tres" id="24_career_settings"]
 
-[node name="Main" type="Node2D" node_paths=PackedStringArray("Arena", "Player", "Spawner", "Hud", "Shop", "ClassSelect", "SpellSelect")]
+[node name="Main" type="Node2D" node_paths=PackedStringArray("Arena", "Player", "Spawner", "Hud", "Shop", "ClassSelect", "SpellSelect", "ModeSelect", "CareerScreen", "CareerSummary")]
 script = ExtResource("1_main")
 Classes = Array[ExtResource("10_class_data")]([ExtResource("11_fighter"), ExtResource("12_mage"), ExtResource("19_warlock"), ExtResource("20_necromancer")])
 ItemCatalog = ExtResource("8_catalog")
@@ -32,6 +36,10 @@ Hud = NodePath("Hud")
 Shop = NodePath("Shop")
 ClassSelect = NodePath("ClassSelect")
 SpellSelect = NodePath("SpellSelect")
+ModeSelect = NodePath("ModeSelect")
+CareerScreen = NodePath("CareerScreen")
+CareerSummary = NodePath("CareerSummary")
+CareerSettings = ExtResource("24_career_settings")
 
 [node name="Arena" type="Node2D" parent="."]
 script = ExtResource("2_arena")
@@ -51,3 +59,9 @@ Arena = NodePath("../Arena")
 [node name="ClassSelect" parent="." instance=ExtResource("9_class_select")]
 
 [node name="SpellSelect" parent="." instance=ExtResource("18_spell_select")]
+
+[node name="ModeSelect" parent="." instance=ExtResource("21_mode_select")]
+
+[node name="CareerScreen" parent="." instance=ExtResource("22_career_screen")]
+
+[node name="CareerSummary" parent="." instance=ExtResource("23_career_summary")]

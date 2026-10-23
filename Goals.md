@@ -16,7 +16,7 @@ I think game play is similar to Brotato. There are maybe rounds that last maybe 
 
 Other decisions I haven't decided on yet.
 
-1. should every single new game be a start from scratch, or should the character be improved incrementally over time so they get stronger and stronger. I like both options, and maybe even would provide both options. Career mode vs arcade or something like that.
+1. ~~should every single new game be a start from scratch, or should the character be improved incrementally over time so they get stronger and stronger. I like both options, and maybe even would provide both options. Career mode vs arcade or something like that.~~ Decided: both (see "Progression modes" below).
 2. What the currency is
 3. Whether currency has to be picked up, or if it is auto-accrued.
 
@@ -43,4 +43,9 @@ Other decisions I haven't decided on yet.
   - The shop doesn't offer gear you're already wearing (except rings).
 - **Armor** is a flat reduction to each hit (minimum 1 damage).
 - **Crits (Brotato-style):** each weapon and spell has its own base crit chance (5% default) and crit multiplier (×1.5 default; heavy hits like Sword and Ground Slam ×2). The player has a global **Crit Chance** stat only, added to every ability's base and capped at 100%. No global crit damage stat: fast and slow weapons need different multipliers, and chance × damage both being buyable runs away in a shop where items stack. Revisit a D3-style additive Crit Damage stat if equipment slots add a gear budget. Crit is rolled per enemy on impact; damage reservations use the non-crit damage.
+- **Progression modes:** a mode select screen comes first. **Arcade** is a single fresh run with nothing saved. **Career** gives each class one persistent character (one save file, `user://career.json`, slot-less for now). Career runs keep the same 5-wave structure and difficulty.
+  - **XP and levels:** every career run banks XP, win or lose: 1 per kill, 20 per wave cleared, +50 for a victory (a won run is ~350–450 XP, an early death ~70–110). Level 2 costs 60 XP and each level 40 more than the last; max level 25. Each level after the first is one **talent point**.
+  - **Talents:** permanent stat bonuses for that class's career runs, 1 point per rank: Toughness +2 Max HP, Might +3% Damage, Haste +3% Attack Speed, Fleet Foot +3% Move Speed (5 ranks each), Iron Skin +1 Armor (3), Precision +2% Crit Chance, Magnetism +12 Pickup Range (5 each). 33 ranks but only 24 points at the cap, so a maxed character still chooses. Reset is free at any time (no respec cost), so experimenting is safe.
+  - **Heirloom:** after a career victory the player may keep one worn piece of gear (not the starting weapon); it starts equipped in every later run of that class until replaced. One heirloom per character. Defeat keeps XP and record but never changes the heirloom.
+  - Abandoning a run (quitting the app) banks nothing. Gold, trinkets and potions never carry over.
 - **Enemy roster so far:** Grunt (basic chaser), Runner (fast and fragile, from wave 2), Archer (keeps its distance and shoots dodgeable bolts, from wave 3), Brute (slow, tanky, resists knockback, hits hard, from wave 4). Each spawn is a weighted random pick from the types unlocked so far.

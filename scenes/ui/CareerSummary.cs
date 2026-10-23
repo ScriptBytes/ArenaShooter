@@ -1,0 +1,151 @@
+using System.Collections.Generic;
+using System.Linq;
+using Godot;
+
+namespace ArenaShooter;
+
+/// <summary>
+/// End of a career run (instead of the HUD's end message): XP earned and its breakdown, level-ups,
+/// and after a victory a choice of one worn piece of gear to keep as the heirloom. Continue (or R)
+/// restarts into class select. The XP is already saved when this opens. Built in code.
+/// </summary>
+public partial class CareerSummary : CanvasLayer
+{
+    [Signal] public delegate void HeirloomChosenEventHandler(ItemData item);
+    [Signal] public delegate void ContinueRequestedEventHandler();
+
+    private Label _title;
+    private Label _breakdown;
+    private Label _level;
+    private ProgressBar _xpBar;
+    private VBoxContainer _heirloomBox;
+    private Label _heirloomLabel;
+    private HBoxContainer _heirloomButtons;
+    private Button _continue;
+
+    private readonly List<(ItemData Item, Button Button)> _heirloomChoices = new();
+
+    /// <summary>"Keep" buttons for the worn gear after a victory (empty otherwise); Autoplay presses one (--heirloom).</summary>
+    public IReadOnlyList<(ItemData Item, Button Button)> HeirloomChoices => _heirloomChoices;
+    public Button ContinueButton => _continue;
+
+    public override void _Ready()
+    {
+        var layout = UiStyles.ScreenLayout(this, 14);
+        layout.CustomMinimumSize = new Vector2(640, 0);
+
+        _title = UiStyles.Title("", 40);
+        layout.AddChild(_title);
+        _breakdown = UiStyles.DimLabel("", 16);
+        _breakdown.HorizontalAlignment = HorizontalAlignment.Center;
+        layout.AddChild(_breakdown);
+        _level = UiStyles.WrappedLabel("", 22);
+        _level.HorizontalAlignment = HorizontalAlignment.Center;
+        layout.AddChild(_level);
+        _xpBar = UiStyles.XpBar();
+        layout.AddChild(_xpBar);
+
+        var panel = new PanelContainer();
+        panel.AddThemeStyleboxOverride("panel", UiStyles.Panel());
+        layout.AddChild(panel);
+        _heirloomBox = new VBoxContainer();
+        _heirloomBox.AddThemeConstantOverride("separation", 10);
+        panel.AddChild(_heirloomBox);
+        _heirloomLabel = UiStyles.WrappedLabel("", 17);
+        _heirloomBox.AddChild(_heirloomLabel);
+        _heirloomButtons = new HBoxContainer();
+        _heirloomButtons.AddThemeConstantOverride("separation", 8);
+        _heirloomBox.AddChild(_heirloomButtons);
+
+        _continue = new Button
+        {
+            Text = "Continue (R)",
+            CustomMinimumSize = new Vector2(240, 44),
+            SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter,
+        };
+        _continue.Pressed += () => EmitSignal(SignalName.ContinueRequested);
+        layout.AddChild(_continue);
+        Hide();
+    }
+
+    public void Open(ClassData playerClass, CareerSettings settings, CareerCharacter character,
+        CareerSettings.Reward reward, int levelBefore, int wave, ItemData heirloom, IEnumerable<ItemData> keepable)
+    {
+        _title.Text = reward.Victory ? "Victory!" : $"Defeated on wave {wave}";
+
+        var parts = new List<string> { $"{reward.Kills} kills +{reward.KillXp}", $"{reward.WavesCleared} waves cleared +{reward.WaveXp}" };
+        if (reward.Victory)
+            parts.Add($"victory +{reward.VictoryXp}");
+        _breakdown.Text = $"+{reward.Total} XP   ({string.Join("  ·  ", parts)})";
+
+        int level = settings.LevelFor(character.Xp);
+        int gained = level - levelBefore;
+        _level.Text = gained > 0
+            ? $"{playerClass.DisplayName} reached level {level}!  +{gained} talent point{(gained > 1 ? "s" : "")}"
+            : $"{playerClass.DisplayName}  ·  Level {level}";
+        _level.AddThemeColorOverride("font_color", gained > 0 ? UiStyles.Gold : Colors.White);
+        if (level >= settings.MaxLevel)
+        {
+            _xpBar.MaxValue = 1;
+            _xpBar.Value = 1;
+        }
+        else
+        {
+            _xpBar.MaxValue = settings.XpToNext(level);
+            _xpBar.Value = character.Xp - settings.XpForLevel(level);
+        }
+
+        BuildHeirloomChoices(reward.Victory, reward.Victory ? keepable.ToList() : new List<ItemData>(), heirloom);
+        Show();
+        _continue.GrabFocus();
+    }
+
+    private void BuildHeirloomChoices(bool victory, List<ItemData> keepable, ItemData heirloom)
+    {
+        foreach (var child in _heirloomButtons.GetChildren())
+        {
+            _heirloomButtons.RemoveChild(child);
+            child.QueueFree();
+        }
+        _heirloomChoices.Clear();
+
+        string current = heirloom != null ? $"Current heirloom: {heirloom.DisplayName}." : "No heirloom yet.";
+        if (keepable.Count == 0)
+        {
+            _heirloomLabel.Text = victory
+                ? $"{current} You wore no gear to keep beyond your starting weapon."
+                : $"{current} Win a run to keep one piece of gear for the next.";
+            return;
+        }
+
+        _heirloomLabel.Text = $"{current} Keep one piece of gear? It starts equipped in your next runs.";
+        foreach (var item in keepable)
+        {
+            var button = new Button
+            {
+                Text = $"Keep {item.DisplayName}",
+                TooltipText = item.Describe(),
+                CustomMinimumSize = new Vector2(0, 36),
+                Disabled = item == heirloom,
+            };
+            button.Pressed += () => Choose(item);
+            _heirloomButtons.AddChild(button);
+            _heirloomChoices.Add((item, button));
+        }
+    }
+
+    private void Choose(ItemData item)
+    {
+        foreach (var (_, button) in _heirloomChoices)
+            button.Disabled = true;
+        _heirloomLabel.Text = $"Heirloom: {item.DisplayName}. It starts equipped in your next runs.";
+        EmitSignal(SignalName.HeirloomChosen, item);
+        _continue.GrabFocus();
+    }
+
+    public override void _UnhandledInput(InputEvent @event)
+    {
+        if (Visible && @event.IsActionPressed("restart"))
+            EmitSignal(SignalName.ContinueRequested);
+    }
+}

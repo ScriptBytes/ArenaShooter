@@ -5,8 +5,9 @@ using Godot;
 namespace ArenaShooter;
 
 /// <summary>
-/// Run controller: wires the scene together and drives class select → spell select → wave → shop → wave loop.
-/// The tree is paused whenever a wave isn't running; the UI layers run while paused.
+/// Run controller: wires the scene together and drives mode select → class select → (career screen) →
+/// spell select → wave → shop → wave loop. The tree is paused whenever a wave isn't running; the UI
+/// layers run while paused. The mode and the career save live in the <see cref="Career"/> autoload.
 /// </summary>
 public partial class Main : Node2D
 {
@@ -29,6 +30,10 @@ public partial class Main : Node2D
     [Export] public Shop Shop { get; set; }
     [Export] public ClassSelect ClassSelect { get; set; }
     [Export] public SpellSelect SpellSelect { get; set; }
+    [Export] public ModeSelect ModeSelect { get; set; }
+    [Export] public CareerScreen CareerScreen { get; set; }
+    [Export] public CareerSummary CareerSummary { get; set; }
+    [Export] public CareerSettings CareerSettings { get; set; }
 
     private readonly RunState _run = new();
     private GameState _state;
@@ -37,6 +42,8 @@ public partial class Main : Node2D
     private AutoplayOptions _autoplay;
     private Autoplay _autoplayDriver;
     private ClassData _class;
+    private Career Career => Career.Instance;
+    private bool IsCareer => Career.Mode == GameMode.Career;
 
     /// <summary>What the shop can offer at random: the shared catalog plus the class's own weapons.</summary>
     private IEnumerable<ItemData> ShopPool => ItemCatalog.Items.Concat(_class.Weapons);
@@ -55,9 +62,25 @@ public partial class Main : Node2D
         Shop.Purchased += ApplyLoadout;
         Shop.ContinueRequested += () => StartWave(_run.Wave + 1);
         Hud.RestartRequested += Restart;
-        ClassSelect.ClassChosen += SpellSelect.Open;
-        SpellSelect.BackRequested += () => ClassSelect.Open(Classes);
+        ModeSelect.ModeChosen += mode =>
+        {
+            Career.Mode = (GameMode)mode;
+            OpenClassSelect();
+        };
+        ClassSelect.BackRequested += ModeSelect.Open;
+        ClassSelect.ClassChosen += OnClassChosen;
+        CareerScreen.BackRequested += OpenClassSelect;
+        CareerScreen.ContinueRequested += SpellSelect.Open;
+        SpellSelect.BackRequested += () =>
+        {
+            if (IsCareer)
+                OnClassChosen(_class);
+            else
+                OpenClassSelect();
+        };
         SpellSelect.SpellsChosen += StartRun;
+        CareerSummary.HeirloomChosen += OnHeirloomChosen;
+        CareerSummary.ContinueRequested += Restart;
 
         _autoplay = AutoplayOptions.FromCommandLine();
         if (_autoplay != null)
@@ -65,7 +88,45 @@ public partial class Main : Node2D
 
         _state = GameState.ClassSelect;
         GetTree().Paused = true;
-        ClassSelect.Open(Classes);
+        // After a restart the mode is already picked, so go straight to class select.
+        if (Career.Mode == GameMode.None)
+            ModeSelect.Open();
+        else
+            OpenClassSelect();
+    }
+
+    private void OpenClassSelect()
+    {
+        if (IsCareer)
+            ClassSelect.Open(Classes, c =>
+            {
+                var character = Career.Peek(c);
+                int free = CareerSettings.PointsFree(character);
+                return $"Level {CareerSettings.LevelFor(character.Xp)}" + (free > 0 ? $"  ·  {free} talent point{(free > 1 ? "s" : "")} to spend" : "");
+            });
+        else
+            ClassSelect.Open(Classes);
+    }
+
+    private void OnClassChosen(ClassData playerClass)
+    {
+        _class = playerClass;
+        if (IsCareer)
+            CareerScreen.Open(playerClass, CareerSettings, Career.For(playerClass), Heirloom(playerClass));
+        else
+            SpellSelect.Open(playerClass);
+    }
+
+    /// <summary>The class's saved heirloom, or null if none or its item no longer exists.</summary>
+    private ItemData Heirloom(ClassData playerClass)
+    {
+        string id = Career.Peek(playerClass).Heirloom;
+        if (id == null)
+            return null;
+        var item = ItemCatalog.Items.Concat(playerClass.Weapons).FirstOrDefault(i => Career.ItemId(i) == id);
+        if (item == null)
+            GD.PushWarning($"[career] heirloom '{id}' of {Career.ClassId(playerClass)} isn't a known item; ignored");
+        return item;
     }
 
     private void StartRun(ClassData playerClass, Godot.Collections.Array<AbilityData> spells)
@@ -74,6 +135,8 @@ public partial class Main : Node2D
         _run.Equipment.StartingWeapon = playerClass.StartingWeapon;
         _run.AddItem(playerClass.StartingWeapon);
         _run.Potions.SetCatalog(ItemCatalog.Consumables);
+        if (IsCareer)
+            ApplyCareer(playerClass);
         if (_autoplay != null)
             GrantAutoplayItems();
 
@@ -85,16 +148,31 @@ public partial class Main : Node2D
         StartWave(_autoplay?.StartWave ?? 1);
     }
 
+    /// <summary>Career bonuses for a run: talent stats as grants, the heirloom equipped from the start.</summary>
+    private void ApplyCareer(ClassData playerClass)
+    {
+        foreach (var (stat, value) in CareerSettings.Bonuses(Career.Peek(playerClass)))
+            _run.GrantStat(stat, value);
+        if (Heirloom(playerClass) is { } heirloom)
+            _run.AddItem(heirloom);
+    }
+
     /// <summary>Debug mode for unattended runs (headless/cloud testing). See AutoplayOptions.</summary>
     private void SetUpAutoplay()
     {
+        // A scratch save by default, so tests never touch the player's career. Only the first launch's call counts.
+        Career.Configure(_autoplay.SavePath, _autoplay.ResetCareer);
         if (_autoplay.Seed is { } seed)
-            GD.Seed(seed);
+            GD.Seed(seed + (ulong)Autoplay.RunsDone);
 
         var autoplay = _autoplayDriver = new Autoplay
         {
             Options = _autoplay,
+            ModeSelect = ModeSelect,
             ClassSelect = ClassSelect,
+            CareerScreen = CareerScreen,
+            CareerSummary = CareerSummary,
+            CareerSettings = CareerSettings,
             SpellSelect = SpellSelect,
             Shop = Shop,
             Player = Player,
@@ -193,12 +271,41 @@ public partial class Main : Node2D
         _state = result;
         Spawner.Active = false;
 
-        Hud.ShowMessage(result == GameState.Victory
-            ? $"Victory!\nSurvived all {TotalWaves} waves · {_run.Kills} kills\nPress R to play again"
-            : $"Defeated on wave {_run.Wave}\n{_run.Kills} kills\nPress R to try again");
-
         GetTree().Paused = true;
+        if (IsCareer)
+            EndCareerRun(result == GameState.Victory);
+        else
+            Hud.ShowMessage(result == GameState.Victory
+                ? $"Victory!\nSurvived all {TotalWaves} waves · {_run.Kills} kills\nPress R to play again"
+                : $"Defeated on wave {_run.Wave}\n{_run.Kills} kills\nPress R to try again");
+
         EmitSignal(SignalName.RunEnded, result == GameState.Victory);
+    }
+
+    /// <summary>Banks the run's XP and record into the career (saved now), then shows the summary.</summary>
+    private void EndCareerRun(bool victory)
+    {
+        var character = Career.For(_class);
+        int levelBefore = CareerSettings.LevelFor(character.Xp);
+        var reward = CareerSettings.RewardFor(_run.Kills, victory ? _run.Wave : _run.Wave - 1, victory);
+
+        character.Xp += reward.Total;
+        character.Runs++;
+        character.Kills += _run.Kills;
+        character.BestWave = Mathf.Max(character.BestWave, _run.Wave);
+        if (victory)
+            character.Victories++;
+        Career.Persist();
+
+        // Any worn gear except the class's starting weapon, which you always have anyway.
+        var keepable = _run.Equipment.Worn.Where(i => i != _class.StartingWeapon);
+        CareerSummary.Open(_class, CareerSettings, character, reward, levelBefore, _run.Wave, Heirloom(_class), keepable);
+    }
+
+    private void OnHeirloomChosen(ItemData item)
+    {
+        Career.For(_class).Heirloom = Career.ItemId(item);
+        Career.Persist();
     }
 
     private void OnGoldCollected(int amount)

@@ -53,3 +53,37 @@ Open questions, judgment calls and concerns from the unattended batch run (Warlo
 - Should a full reserve become a regular charge (freeing room for more hearts), or should excess hearts heal directly when the reserve is full?
 - Should consumables also drop during waves (rare potion drop), or stay shop-only?
 - Should Space drink the reserve first when it's full, to make room for more hearts before using the free charge?
+
+## 3. Career vs arcade
+
+**Questions (my recommendation in bold; answer "yes" to keep it)**
+1. Shape of progression: per-class characters with XP → levels → talent points spent on permanent stats, plus one heirloom gear piece. **Keep.** It's the Brotato/VS "meta upgrades" idea with an RPG face. Alternative: a shared account-wide currency (VS gold) spent in one shop for all classes.
+2. One character per class, one save file, no save slots or multiple characters per class. **Keep for now**; the save is a dictionary keyed by class id, so slots can be added later as a wrapper.
+3. XP: 1/kill, 20/wave cleared, +50 victory, earned on defeat too. **Keep**: a loss still feels like progress. Kill XP rewards classes that kill more (Necromancer > Fighter today), which may need per-wave XP instead.
+4. Level curve 60, +40 per level, cap 25 (24 points for 33 ranks). About 3–4 wins per level by level 10, ~30 wins to cap. **Probably too slow late**; playtest a few runs first.
+5. Talent reset is free and unlimited. **Keep** (talents are small, and experimenting is the fun part). A gold cost needs a persistent currency, which we don't have.
+6. Heirloom only on victory, one per character, any worn gear except the starting weapon, replaces the previous one. **Keep**. Open: should the heirloom be upgradable (+1 tier per victory it's carried, e.g. +25% to its modifiers)? This is the natural home for "incrementally upgrading gear" from the brief, but needs rarity tiers first.
+7. Gear "stash" (bank several items, pick a loadout) was **not built**: a full starting loadout at wave 1 breaks the shop economy faster than talents do. Recommend: no stash; grow the heirloom instead.
+8. Career runs use the same 5 waves and difficulty as arcade. **Change later**: add difficulty tiers ("Danger 1–5" in Brotato) unlocked per class by career victories, each +X% enemy health/damage and +XP. That's the main lever against the power creep below.
+9. Arcade characters get no career bonuses and nothing is recorded (no arcade high scores). **Keep**; an arcade best-wave/kills board could come later.
+10. Quitting mid-run banks nothing (no XP for a run in progress). **Keep**, matches Brotato. There's no in-game abandon button yet (no pause menu).
+11. Mode is remembered for the session, not saved: launching the game always starts on mode select. **Keep.**
+
+**Balance concerns**
+- Talents only add power. At the cap a character can have e.g. +10 Max HP (+62% for the Mage's 16), +15% Damage, +15% Attack Speed, +3 Armor. Armor is flat reduction, so +3 (on the Fighter's 1) turns a wave-1 Runner's 3-damage hit into 1 and a Grunt's 5 into 1. Iron Skin may need fewer ranks or a percent-based armor model.
+- Toughness is far stronger for low-HP classes (Mage, Necromancer) than the Fighter. Percent-of-base HP would even it out.
+- Magnetism and Fleet Foot are weak next to Might/Haste; expect everyone to buy Might/Haste first.
+- Heirloom: a wave-5 shop item at wave 1. With refunds, replacing the heirloom in the shop pays out half its price (free gold). Consider no refund for heirlooms.
+- Suggested wave scaling (not built): career difficulty tier `t` multiplies enemy health/damage by `1 + 0.15·t` in `WaveSettings.For`, with XP × `1 + 0.25·t`. Or scale by the character's level directly (`1 + 0.02·level`), which keeps runs tense but makes leveling feel pointless; tiers are the better-known pattern.
+- Autoplay check: Fighter `--god` seed 2 kills 184 → 215 with 3 talent ranks + Ring of Vigor heirloom (max HP 30 → 40). Mage without `--god`, 4 runs (seeds 1–4) spending each point: died wave 2, 3, 3, 3. Not a balance read, the bot doesn't dodge.
+
+**Save format (expensive to change, please review)**
+- `user://career.json`, JSON, `version: 1`. Stores facts only: total XP (not level), talent ranks by id, heirloom by item file name, runs/victories/bestWave/kills. Levels and points re-derive from `CareerSettings`, so retuning the curve or talents needs no migration; if a character ends up with more ranks than points, its talents reset (logged).
+- Unknown fields are preserved on write, so an older build doesn't erase newer data. A file from a newer version is moved aside (`.newer-<time>`) and a fresh career starts, rather than being overwritten. A corrupt file goes to `.corrupt-<time>`. Writes use a temp file and replace.
+- IDs are file names (`fighter`, `spear`) and talent `Id` strings, so renaming a class/item `.tres` orphans saved data (an unknown heirloom is ignored with a warning, not deleted). Consider explicit `Id` exports on `ClassData`/`ItemData` before renaming anything.
+- System.Text.Json uses reflection; fine for desktop. A trimmed/AOT export (iOS) would need a source-generated `JsonSerializerContext`.
+
+**Unverified**
+- New screens (mode select, talents, career summary, the class select Back button and level badges) checked in Movie Maker frames only, not with mouse/keyboard. Keyboard focus between the screens, and the R key on the career summary, untested by hand.
+- Restart (R) after an arcade run was tested through Autoplay's input action only.
+- The heirloom choice row could overflow the panel with 6 gear pieces (buttons are in one row).

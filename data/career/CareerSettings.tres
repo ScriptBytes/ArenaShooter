@@ -1,0 +1,64 @@
+[gd_resource type="Resource" script_class="CareerSettings" format=3]
+
+[ext_resource type="Script" path="res://scripts/career/CareerSettings.cs" id="1_settings"]
+[ext_resource type="Script" path="res://scripts/career/CareerTalent.cs" id="2_talent"]
+
+[sub_resource type="Resource" id="Talent_toughness"]
+script = ExtResource("2_talent")
+Id = "toughness"
+DisplayName = "Toughness"
+Stat = 0
+PerRank = 2.0
+MaxRank = 5
+
+[sub_resource type="Resource" id="Talent_might"]
+script = ExtResource("2_talent")
+Id = "might"
+DisplayName = "Might"
+Stat = 2
+PerRank = 3.0
+MaxRank = 5
+
+[sub_resource type="Resource" id="Talent_haste"]
+script = ExtResource("2_talent")
+Id = "haste"
+DisplayName = "Haste"
+Stat = 3
+PerRank = 3.0
+MaxRank = 5
+
+[sub_resource type="Resource" id="Talent_fleet"]
+script = ExtResource("2_talent")
+Id = "fleet_foot"
+DisplayName = "Fleet Foot"
+Stat = 4
+PerRank = 3.0
+MaxRank = 5
+
+[sub_resource type="Resource" id="Talent_iron_skin"]
+script = ExtResource("2_talent")
+Id = "iron_skin"
+DisplayName = "Iron Skin"
+Stat = 1
+PerRank = 1.0
+MaxRank = 3
+
+[sub_resource type="Resource" id="Talent_precision"]
+script = ExtResource("2_talent")
+Id = "precision"
+DisplayName = "Precision"
+Stat = 7
+PerRank = 2.0
+MaxRank = 5
+
+[sub_resource type="Resource" id="Talent_magnetism"]
+script = ExtResource("2_talent")
+Id = "magnetism"
+DisplayName = "Magnetism"
+Stat = 6
+PerRank = 12.0
+MaxRank = 5
+
+[resource]
+script = ExtResource("1_settings")
+Talents = Array[ExtResource("2_talent")]([SubResource("Talent_toughness"), SubResource("Talent_might"), SubResource("Talent_haste"), SubResource("Talent_fleet"), SubResource("Talent_iron_skin"), SubResource("Talent_precision"), SubResource("Talent_magnetism")])

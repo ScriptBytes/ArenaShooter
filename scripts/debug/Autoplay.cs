@@ -17,7 +17,11 @@ public partial class Autoplay : Node
     private const float CircleSpeed = 0.5f; // radians per second
 
     public AutoplayOptions Options { get; set; }
+    public ModeSelect ModeSelect { get; set; }
     public ClassSelect ClassSelect { get; set; }
+    public CareerScreen CareerScreen { get; set; }
+    public CareerSummary CareerSummary { get; set; }
+    public CareerSettings CareerSettings { get; set; }
     public SpellSelect SpellSelect { get; set; }
     public Shop Shop { get; set; }
     public Player Player { get; set; }
@@ -32,6 +36,13 @@ public partial class Autoplay : Node
     private readonly HashSet<ConsumableData> _boughtThisShop = new();
     private bool _failed;
     private float _menuWait;
+    private ClassData _class;
+    private bool _careerScreenLogged;
+    private bool _heirloomDone;
+    private bool _runEnded;
+
+    /// <summary>Runs finished in this app launch (static, so it survives the restart's scene reload).</summary>
+    public static int RunsDone { get; private set; }
 
     public static void Log(string message) => GD.Print($"[autoplay] {message}");
 
@@ -49,13 +60,20 @@ public partial class Autoplay : Node
         if (_failed)
             return;
 
-        bool inMenu = ClassSelect.Visible || SpellSelect.Visible || Shop.Visible;
+        bool inMenu = ModeSelect.Visible || ClassSelect.Visible || CareerScreen.Visible || SpellSelect.Visible
+                      || Shop.Visible || CareerSummary.Visible;
         if (inMenu && (_menuWait += (float)delta) < Options.MenuDelay)
             return;
         _menuWait = 0f;
 
-        if (ClassSelect.Visible)
+        if (ModeSelect.Visible)
+            PickMode();
+        else if (ClassSelect.Visible)
             PickClass();
+        else if (CareerScreen.Visible)
+            CareerStep();
+        else if (CareerSummary.Visible)
+            SummaryStep();
         else if (SpellSelect.Visible)
             SpellStep();
         else if (Shop.Visible)
@@ -69,9 +87,10 @@ public partial class Autoplay : Node
 
     public void OnRunStarted(ClassData playerClass)
     {
+        _class = playerClass;
         string spells = string.Join(",", Player.Abilities.Spells.Select(s => s.Ability.DisplayName));
         Log($"run_start class={playerClass.DisplayName} spells=\"{spells}\" gear=\"{Gear()}\" wave={Options.StartWave} " +
-            $"seed={Options.Seed?.ToString() ?? "random"} dotnet={System.Environment.Version}");
+            $"seed={(Options.Seed is { } seed ? (seed + (ulong)RunsDone).ToString() : "random")} dotnet={System.Environment.Version}");
         if (Options.AutoCastAll)
         {
             foreach (var slot in Player.Abilities.Spells)
@@ -106,7 +125,79 @@ public partial class Autoplay : Node
     {
         Log($"run_end result={(victory ? "victory" : "defeat")} wave={Run.Wave} kills={Run.Kills} " +
             $"gold={Run.Gold} gear=\"{Gear()}\" trinkets={Run.Trinkets.Count}");
-        GetTree().Quit();
+        _runEnded = true;
+        if (CareerSummary.Visible)
+            return; // SummaryStep banks the career, then quits or restarts.
+
+        if (++RunsDone >= Options.Runs)
+            GetTree().Quit();
+        else
+            Input.ParseInputEvent(new InputEventAction { Action = "restart", Pressed = true });
+    }
+
+    private void PickMode()
+    {
+        var choice = ModeSelect.Choices.FirstOrDefault(c => c.Mode == Options.Mode);
+        Press(choice.Button);
+    }
+
+    private string CareerState(CareerCharacter character)
+    {
+        string talents = string.Join(",", CareerSettings.Talents
+            .Where(t => character.Rank(t.Id) > 0).Select(t => $"{t.Id}:{character.Rank(t.Id)}"));
+        return $"level={CareerSettings.LevelFor(character.Xp)} xp={character.Xp} points={CareerSettings.PointsFree(character)} " +
+               $"talents=\"{talents}\" heirloom=\"{character.Heirloom}\" runs={character.Runs} victories={character.Victories}";
+    }
+
+    // Logs the character once, spends one point per frame (--talents=spread), then continues to spells.
+    private void CareerStep()
+    {
+        var character = CareerScreen.Character;
+        if (!_careerScreenLogged)
+        {
+            _careerScreenLogged = true;
+            Log($"career save=\"{Career.Instance.SavePath}\" load={Career.Instance.LoadStatus.ToString().ToLower()} {CareerState(character)}");
+        }
+
+        if (Options.Talents == TalentStrategy.Spread && CareerScreen.FreePoints > 0)
+        {
+            var pick = CareerScreen.TalentButtons.Where(t => !t.Button.Disabled)
+                .OrderBy(t => character.Rank(t.Talent.Id)).FirstOrDefault();
+            if (pick.Button != null)
+            {
+                Press(pick.Button);
+                Log($"talent id={pick.Talent.Id} rank={character.Rank(pick.Talent.Id)} points_left={CareerScreen.FreePoints}");
+                return;
+            }
+        }
+
+        Press(CareerScreen.ContinueButton);
+    }
+
+    // After a career run: keep an heirloom on victory (--heirloom), log the banked career, then quit or restart.
+    private void SummaryStep()
+    {
+        if (!_runEnded)
+            return;
+
+        var character = Career.Instance.For(_class);
+        if (!_heirloomDone)
+        {
+            _heirloomDone = true;
+            var choice = CareerSummary.HeirloomChoices.Where(c => !c.Button.Disabled).OrderByDescending(c => c.Item.Price).FirstOrDefault();
+            if (Options.Heirloom == HeirloomStrategy.Priciest && choice.Button != null)
+            {
+                Press(choice.Button);
+                Log($"heirloom item=\"{choice.Item.DisplayName}\"");
+                return;
+            }
+        }
+
+        Log($"career_end class={_class.DisplayName} {CareerState(character)}");
+        if (++RunsDone >= Options.Runs)
+            GetTree().Quit();
+        else
+            Press(CareerSummary.ContinueButton);
     }
 
     private string Gear() => string.Join(",", Run.Equipment.Worn.Select(i => i.DisplayName));
