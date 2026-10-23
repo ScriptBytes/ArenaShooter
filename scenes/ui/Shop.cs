@@ -6,7 +6,8 @@ namespace ArenaShooter;
 
 /// <summary>
 /// Between-wave shop. Static layout lives in Shop.tscn; item cards are built in code.
-/// Mutates the RunState directly (gold, items) and signals Main to re-apply stats.
+/// Mutates the RunState directly (gold, items) and signals Main to re-apply gear and stats.
+/// Gear that replaces something refunds half the old item's price.
 /// </summary>
 public partial class Shop : CanvasLayer
 {
@@ -22,8 +23,14 @@ public partial class Shop : CanvasLayer
     {
         public ItemData Item;
         public int Price;
-        public Button BuyButton;
         public bool Sold;
+
+        /// <summary>One per slot the item can go into: two when both ring slots are full. Rebuilt on refresh.</summary>
+        public List<Button> Buttons { get; } = new();
+        public Button BuyButton => Buttons[0];
+
+        public Label Replaces;
+        public VBoxContainer ButtonBox;
     }
 
     private readonly List<Offer> _offers = new();
@@ -39,6 +46,7 @@ public partial class Shop : CanvasLayer
     private Label _gold;
     private HBoxContainer _offerRow;
     private Label _stats;
+    private Label _equipment;
     private Button _reroll;
     private Button _continue;
 
@@ -48,9 +56,11 @@ public partial class Shop : CanvasLayer
         _gold = GetNode<Label>("%Gold");
         _offerRow = GetNode<HBoxContainer>("%Offers");
         _stats = GetNode<Label>("%Stats");
+        _equipment = GetNode<Label>("%Equipment");
         _reroll = GetNode<Button>("%RerollButton");
         _continue = GetNode<Button>("%ContinueButton");
         GetNode<PanelContainer>("%StatsPanel").AddThemeStyleboxOverride("panel", UiStyles.Panel());
+        GetNode<PanelContainer>("%EquipmentPanel").AddThemeStyleboxOverride("panel", UiStyles.Panel());
 
         _reroll.Pressed += Reroll;
         _continue.Pressed += () =>
@@ -84,8 +94,10 @@ public partial class Shop : CanvasLayer
         }
         _offers.Clear();
 
+        // Gear you're already wearing would only replace itself. Rings are the exception: you can wear two.
+        var pool = _pool.Where(i => i.Slot == EquipSlot.Ring || !_run.Equipment.IsWorn(i)).ToList();
         float priceScale = 1f + PriceIncreasePerWave * (_run.Wave - 1);
-        foreach (var item in PickRandom(_pool, OfferCount))
+        foreach (var item in PickRandom(pool, OfferCount))
         {
             var offer = new Offer { Item = item, Price = Mathf.RoundToInt(item.Price * priceScale) };
             _offers.Add(offer);
@@ -97,7 +109,7 @@ public partial class Shop : CanvasLayer
 
     private Control BuildCard(Offer offer)
     {
-        var card = new PanelContainer { CustomMinimumSize = new Vector2(190, 240) };
+        var card = new PanelContainer { CustomMinimumSize = new Vector2(170, 280) };
         card.AddThemeStyleboxOverride("panel", UiStyles.Panel());
         var content = new VBoxContainer();
         content.AddThemeConstantOverride("separation", 8);
@@ -107,24 +119,32 @@ public partial class Shop : CanvasLayer
 
         content.AddChild(UiStyles.WrappedLabel(offer.Item.DisplayName, 20));
 
+        var slot = UiStyles.WrappedLabel(offer.Item.SlotLabel, 14);
+        slot.AddThemeColorOverride("font_color", UiStyles.Dim);
+        content.AddChild(slot);
+
         var description = UiStyles.WrappedLabel(offer.Item.Describe());
         description.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
         content.AddChild(description);
 
-        offer.BuyButton = new Button { CustomMinimumSize = new Vector2(0, 40) };
-        offer.BuyButton.Pressed += () => Buy(offer);
-        content.AddChild(offer.BuyButton);
+        offer.Replaces = UiStyles.WrappedLabel("", 14);
+        offer.Replaces.AddThemeColorOverride("font_color", UiStyles.Dim);
+        content.AddChild(offer.Replaces);
+
+        offer.ButtonBox = new VBoxContainer();
+        content.AddChild(offer.ButtonBox);
 
         return card;
     }
 
-    private void Buy(Offer offer)
+    private void Buy(Offer offer, int position)
     {
         if (offer.Sold || !_run.TrySpend(offer.Price))
             return;
 
         offer.Sold = true;
-        _run.AddItem(offer.Item);
+        var replaced = _run.AddItem(offer.Item, position);
+        _run.Gold += replaced.Sum(i => i.SellValue);
         EmitSignal(SignalName.Purchased);
         Refresh();
     }
@@ -147,13 +167,82 @@ public partial class Shop : CanvasLayer
         _reroll.Disabled = _run.Gold < _rerollCost;
 
         foreach (var offer in _offers)
-        {
-            offer.BuyButton.Text = offer.Sold ? "Sold" : $"Buy ({offer.Price})";
-            offer.BuyButton.Disabled = offer.Sold || _run.Gold < offer.Price;
-        }
+            RefreshOffer(offer);
 
         _stats.Text = "Your stats\n\n" + string.Join("\n",
             System.Enum.GetValues<StatType>().Select(s => StatInfo.Format(s, _run.Stats.Get(s))));
+        _equipment.Text = DescribeEquipment();
+    }
+
+    // Buying one item can change what another replaces (e.g. the first ring fills the empty slot),
+    // so the buttons are rebuilt every refresh.
+    private void RefreshOffer(Offer offer)
+    {
+        foreach (var button in offer.Buttons)
+        {
+            offer.ButtonBox.RemoveChild(button);
+            button.QueueFree();
+        }
+        offer.Buttons.Clear();
+
+        var targets = offer.Item.IsGear && !offer.Sold ? _run.Equipment.TargetsFor(offer.Item) : new List<int> { -1 };
+        offer.Replaces.Text = "";
+        foreach (int position in targets)
+        {
+            var replaced = position >= 0 ? _run.Equipment.Displaced(offer.Item, position) : new List<ItemData>();
+            string text = offer.Sold ? "Sold" : $"Buy ({offer.Price})";
+            if (targets.Count > 1)
+                text += $"\nover {string.Join(", ", replaced.Select(i => i.DisplayName))}";
+            else if (replaced.Count > 0)
+                offer.Replaces.Text = DescribeReplacement(offer.Item, replaced);
+
+            var button = new Button
+            {
+                Text = text,
+                CustomMinimumSize = new Vector2(0, 40),
+                Disabled = offer.Sold || _run.Gold < offer.Price,
+            };
+            button.Pressed += () => Buy(offer, position);
+            offer.ButtonBox.AddChild(button);
+            offer.Buttons.Add(button);
+        }
+
+        if (targets.Count > 1)
+            offer.Replaces.Text = $"Both {EquipSlotInfo.Label(offer.Item.Slot).ToLower()} slots full: pick one to replace (half its price back)";
+    }
+
+    private string DescribeReplacement(ItemData item, List<ItemData> replaced)
+    {
+        int refund = replaced.Sum(i => i.SellValue);
+        string names = string.Join(" and ", replaced.Select(i => i.DisplayName));
+        string text = refund > 0 ? $"Replaces {names} (+{refund} gold back)" : $"Replaces {names}";
+
+        // An off-hand item pushing out a two-hander leaves the main hand to the starting weapon.
+        var equipment = _run.Equipment;
+        if (item.Slot != EquipSlot.MainHand && replaced.Contains(equipment.MainHand))
+            text += $". {equipment.StartingWeapon.DisplayName} goes back in your main hand";
+        return text;
+    }
+
+    private string DescribeEquipment()
+    {
+        var equipment = _run.Equipment;
+        var lines = new List<string> { "Equipment", "" };
+        for (int i = 0; i < Equipment.Layout.Length; i++)
+        {
+            var slot = Equipment.Layout[i];
+            string name = equipment[i]?.DisplayName
+                ?? (slot == EquipSlot.OffHand && equipment.IsTwoHanding ? "(two-handed)" : "-");
+            lines.Add($"{EquipSlotInfo.Label(slot)}: {name}");
+        }
+
+        lines.Add("");
+        lines.Add("Trinkets");
+        if (_run.Trinkets.Count == 0)
+            lines.Add("-");
+        foreach (var group in _run.Trinkets.GroupBy(t => t))
+            lines.Add(group.Count() > 1 ? $"{group.Key.DisplayName} x{group.Count()}" : group.Key.DisplayName);
+        return string.Join("\n", lines);
     }
 
     private static IEnumerable<ItemData> PickRandom(IReadOnlyList<ItemData> pool, int count)

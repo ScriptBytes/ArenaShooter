@@ -6,11 +6,12 @@
 [sub_resource type="Resource" id="StatModifier_0"]
 script = ExtResource("2_mod")
 Stat = 0
-Value = 5.0
+Value = 8.0
 
 [resource]
 script = ExtResource("1_item")
 DisplayName = "Heart Amulet"
-Price = 15
+Price = 20
 IconColor = Color(0.35, 0.55, 0.95, 1)
+Slot = 5
 Modifiers = Array[ExtResource("2_mod")]([SubResource("StatModifier_0")])

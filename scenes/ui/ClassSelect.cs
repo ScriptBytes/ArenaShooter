@@ -56,8 +56,8 @@ public partial class ClassSelect : CanvasLayer
             $"HP {playerClass.MaxHealth:0}  ·  Armor {playerClass.Armor:0}  ·  Speed {playerClass.MoveSpeed:0}", 14));
         content.AddChild(new HSeparator());
 
-        content.AddChild(UiStyles.WrappedLabel($"Weapon: {playerClass.Weapon.DisplayName}", 18));
-        content.AddChild(UiStyles.WrappedLabel(playerClass.Weapon.Description, 14));
+        content.AddChild(UiStyles.WrappedLabel($"Weapon: {playerClass.StartingWeapon.DisplayName}", 18));
+        content.AddChild(UiStyles.WrappedLabel(playerClass.StartingWeapon.Weapon.Description, 14));
         content.AddChild(new HSeparator());
 
         content.AddChild(UiStyles.WrappedLabel($"Spells: pick {playerClass.SpellPicks} of {playerClass.Spells.Count}", 18));

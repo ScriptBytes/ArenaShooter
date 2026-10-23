@@ -16,15 +16,15 @@ public partial class AbilityCaster : Node2D
 
     private readonly List<AbilitySlot> _spells = new();
     private AbilityContext _context;
+    private float _weaponCooldownMultiplier = 1f;
 
     public override void _Ready()
     {
         _context = new AbilityContext(this);
     }
 
-    public void Setup(AbilityData weapon, IEnumerable<AbilityData> spells)
+    public void Setup(IEnumerable<AbilityData> spells)
     {
-        Weapon = new AbilitySlot(weapon, autoCast: true);
         _spells.Clear();
         foreach (var spell in spells)
         {
@@ -34,13 +34,22 @@ public partial class AbilityCaster : Node2D
         }
     }
 
+    /// <summary>Swaps the basic attack (the main-hand weapon). Keeps the slot if it's unchanged.</summary>
+    public void SetWeapon(AbilityData weapon)
+    {
+        if (Weapon?.Ability == weapon)
+            return;
+        Weapon = new AbilitySlot(weapon, autoCast: true) { CooldownMultiplier = _weaponCooldownMultiplier };
+    }
+
     public void ApplyStats(PlayerStats stats)
     {
         _context.DamageMultiplier = stats.Multiplier(StatType.Damage);
         _context.RangeBonus = stats.Get(StatType.Range);
         _context.CritChanceBonus = stats.Get(StatType.CritChance);
+        _weaponCooldownMultiplier = 1f / stats.Multiplier(StatType.AttackSpeed);
         if (Weapon != null)
-            Weapon.CooldownMultiplier = 1f / stats.Multiplier(StatType.AttackSpeed);
+            Weapon.CooldownMultiplier = _weaponCooldownMultiplier;
     }
 
     public void ResetCooldowns()

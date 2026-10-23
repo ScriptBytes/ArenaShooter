@@ -13,4 +13,5 @@ script = ExtResource("1_item")
 DisplayName = "Magnet Ring"
 Price = 10
 IconColor = Color(0.4, 0.8, 0.45, 1)
+Slot = 4
 Modifiers = Array[ExtResource("2_mod")]([SubResource("StatModifier_0")])

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="ProjectileAbility" format=3]
+
+[ext_resource type="Script" path="res://scripts/abilities/ProjectileAbility.cs" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/weapons/Projectile.tscn" id="2_projectile"]
+
+[resource]
+script = ExtResource("1_script")
+DisplayName = "Frost Scepter"
+Description = "Icy bolts that slow what they hit."
+IconColor = Color(0.55, 0.85, 1, 1)
+Cooldown = 0.45
+Damage = 5.0
+Range = 420.0
+SlowMultiplier = 0.6
+SlowDuration = 1.0
+Knockback = 20.0
+ProjectileSpeed = 650.0
+ProjectileRadius = 5.0
+ProjectileScene = ExtResource("2_projectile")

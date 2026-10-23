@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/items/ItemData.cs" id="1_item"]
+[ext_resource type="Resource" path="res://data/weapons/spear.tres" id="3_weapon"]
+
+[resource]
+script = ExtResource("1_item")
+DisplayName = "Spear"
+Price = 35
+IconColor = Color(0.78, 0.66, 0.48, 1)
+Slot = 1
+Weapon = ExtResource("3_weapon")

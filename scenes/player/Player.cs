@@ -66,8 +66,11 @@ public partial class Player : CharacterBody2D, IDamageable
     public void Setup(ClassData playerClass, IEnumerable<AbilityData> spells)
     {
         _class = playerClass;
-        Abilities.Setup(playerClass.Weapon, spells);
+        Abilities.Setup(spells);
     }
+
+    /// <summary>Sets the basic attack from the main-hand weapon. Call before ApplyStats.</summary>
+    public void SetWeapon(AbilityData weapon) => Abilities.SetWeapon(weapon);
 
     /// <summary>Sets the run's stat bonuses and applies them, plus any active buffs.</summary>
     public void ApplyStats(PlayerStats runStats)

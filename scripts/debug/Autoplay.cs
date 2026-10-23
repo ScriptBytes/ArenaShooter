@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Godot;
 
@@ -26,6 +27,7 @@ public partial class Autoplay : Node
     private float _moveAngle;
     private int _potionWave;
     private bool _failed;
+    private float _menuWait;
 
     public static void Log(string message) => GD.Print($"[autoplay] {message}");
 
@@ -43,6 +45,11 @@ public partial class Autoplay : Node
         if (_failed)
             return;
 
+        bool inMenu = ClassSelect.Visible || SpellSelect.Visible || Shop.Visible;
+        if (inMenu && (_menuWait += (float)delta) < Options.MenuDelay)
+            return;
+        _menuWait = 0f;
+
         if (ClassSelect.Visible)
             PickClass();
         else if (SpellSelect.Visible)
@@ -59,7 +66,7 @@ public partial class Autoplay : Node
     public void OnRunStarted(ClassData playerClass)
     {
         string spells = string.Join(",", Player.Abilities.Spells.Select(s => s.Ability.DisplayName));
-        Log($"run_start class={playerClass.DisplayName} spells=\"{spells}\" wave={Options.StartWave} " +
+        Log($"run_start class={playerClass.DisplayName} spells=\"{spells}\" gear=\"{Gear()}\" wave={Options.StartWave} " +
             $"seed={Options.Seed?.ToString() ?? "random"} dotnet={System.Environment.Version}");
         if (Options.AutoCastAll)
         {
@@ -78,14 +85,16 @@ public partial class Autoplay : Node
     public void OnRunEnded(bool victory)
     {
         Log($"run_end result={(victory ? "victory" : "defeat")} wave={Run.Wave} kills={Run.Kills} " +
-            $"gold={Run.Gold} items={Run.Items.Count}");
+            $"gold={Run.Gold} gear=\"{Gear()}\" trinkets={Run.Trinkets.Count}");
         GetTree().Quit();
     }
 
-    /// <summary>Resolves --item names against the catalog (display name or .tres file name).</summary>
-    public ItemData FindItem(ItemCatalog catalog, string name)
+    private string Gear() => string.Join(",", Run.Equipment.Worn.Select(i => i.DisplayName));
+
+    /// <summary>Resolves --item names against the shop's pool (display name or .tres file name).</summary>
+    public ItemData FindItem(IEnumerable<ItemData> pool, string name)
     {
-        var item = catalog.Items.FirstOrDefault(i =>
+        var item = pool.FirstOrDefault(i =>
             Same(i.DisplayName, name) || Same(i.ResourcePath.GetFile().GetBaseName(), name));
         if (item == null)
             Fail($"unknown item '{name}'");
@@ -158,7 +167,12 @@ public partial class Autoplay : Node
 
         if (offer != null)
         {
-            Log($"buy item=\"{offer.Item.DisplayName}\" price={offer.Price} gold_left={Run.Gold - offer.Price}");
+            // The first button is the first target slot (Shop builds them in TargetsFor order).
+            var replaces = offer.Item.IsGear
+                ? Run.Equipment.Displaced(offer.Item, Run.Equipment.TargetsFor(offer.Item)[0]).Select(i => i.DisplayName)
+                : Enumerable.Empty<string>();
+            Log($"buy item=\"{offer.Item.DisplayName}\" price={offer.Price} gold_left={Run.Gold - offer.Price} " +
+                $"replaces=\"{string.Join(",", replaces)}\"");
             Press(offer.BuyButton);
             return;
         }

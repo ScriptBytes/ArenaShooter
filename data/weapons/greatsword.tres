@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="MeleeArcAbility" format=3]
+
+[ext_resource type="Script" path="res://scripts/abilities/MeleeArcAbility.cs" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+DisplayName = "Greatsword"
+Description = "Slow, crushing sweeps all around you."
+IconColor = Color(0.75, 0.78, 0.85, 1)
+Cooldown = 1.15
+Damage = 20.0
+Range = 105.0
+CritMultiplier = 2.0
+Knockback = 220.0
+ScreenShake = 0.12
+ArcDegrees = 200.0

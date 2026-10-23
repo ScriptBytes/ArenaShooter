@@ -25,6 +25,7 @@ public enum MoveMode { Circle, Still }
 /// <item><c>--move=circle|still</c> circle the arena (collects coins) or stand in the middle (default circle).</item>
 /// <item><c>--autocast</c> turns auto-cast on for every spell, including manual-by-default ones.</item>
 /// <item><c>--item=NAME</c> grants an item at run start (display name or .tres file name). Repeatable.</item>
+/// <item><c>--menu-delay=SECONDS</c> waits before each menu action, so Movie Maker can record the menus (default 0).</item>
 /// <item><c>--stat=STAT:VALUE</c> adds a stat bonus at run start, e.g. <c>--stat=CritChance:20</c>. Repeatable.</item>
 /// </list>
 /// </summary>
@@ -38,6 +39,7 @@ public sealed class AutoplayOptions
     public ShopStrategy Shop { get; private set; } = ShopStrategy.Cheapest;
     public MoveMode Move { get; private set; } = MoveMode.Circle;
     public bool AutoCastAll { get; private set; }
+    public float MenuDelay { get; private set; }
     public List<string> Items { get; } = new();
     public List<(StatType Stat, float Value)> Stats { get; } = new();
 
@@ -86,6 +88,9 @@ public sealed class AutoplayOptions
                     break;
                 case "--autocast":
                     options.AutoCastAll = true;
+                    break;
+                case "--menu-delay" when float.TryParse(value, System.Globalization.CultureInfo.InvariantCulture, out float delay) && delay >= 0f:
+                    options.MenuDelay = delay;
                     break;
                 case "--item" when value != "":
                     options.Items.Add(value);

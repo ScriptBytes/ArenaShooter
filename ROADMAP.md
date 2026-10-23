@@ -19,17 +19,17 @@ Where the project stands and what's next. `Goals.md` holds the vision and the de
 | Testing infrastructure: `--autoplay` debug mode (plays full runs through the real UI, seeded, logs events), cloud setup script `tools/cloud-setup.sh` (tested in Docker, x86_64 + arm64), local vs cloud testing notes in CLAUDE.md | `1473151` |
 | Moved to .NET 10 (LTS): editor and `dotnet build` clean, 12/12 seeded Autoplay runs identical to .NET 8, cloud script verified with it | `1473151` |
 | Spell selection: each class has 5 spells and picks 3 on a new screen after class select (pick order = hotkeys). New spells: Ice Bolt, Chain Lightning, Meteor (Mage); Charge, Shield Wall, War Cry (Fighter). Timed stat buffs (`ActiveBuffs`), delayed telegraphed blasts, area spells aim at the densest crowd, Autoplay `--spells` | `f29e9a8` |
-| Healing: enemies sometimes drop a heart (+2 HP, 3% chance, Brutes 15%) that waits on the floor until you're hurt; a health potion on Space (+10 HP, once per wave) with a hotbar slot. Coins and hearts share a `Pickup` base. Autoplay drinks the potion when it would heal fully or HP is under 35% | _this commit_ |
+| Healing: enemies sometimes drop a heart (+2 HP, 3% chance, Brutes 15%) that waits on the floor until you're hurt; a health potion on Space (+10 HP, once per wave) with a hotbar slot. Coins and hearts share a `Pickup` base. Autoplay drinks the potion when it would heal fully or HP is under 35% | `f9fac1c` |
+| Equipment slots: Main Hand, Off Hand, Armor, Ring ×2, Amulet, next to stackable trinkets. Weapons are main-hand items, so the basic attack changes with what you buy. New weapons Spear, Greatsword (2H) for the Fighter and Frost Scepter, Staff (2H) for the Mage. 13 new gear items, 5 existing items moved into slots. Replaced gear refunds half its price. The shop shows your equipment, what a purchase replaces, and a choice when both rings are full. Autoplay `--menu-delay` for recording menus | _this commit_ |
 
 **Playtest status:** the user has beaten wave 5 with both classes and finds it fun so far. Balance hasn't been tuned on purpose yet.
 
 ## Next up (suggested order)
 
-1. **Equipment slots:** main hand (weapon = basic attack), off hand (shield, tome, orb), armor, rings, trinkets. Weapons become items you can buy or swap. Two-handed weapons take both hand slots and are stronger.
-2. **Warlock and Necromancer:** Warlock needs life steal / drain (heal-on-damage hook, a LifeSteal stat). Necromancer needs a minion system (allied units with their own AI that target enemies).
-3. **More consumables:** the health potion (Space, once per wave) is in. Next: other potions bought in the shop (e.g. a damage potion reusing `ActiveBuffs`), and buying extra potion charges or a bigger heal.
-4. **Placeholder sprites:** replace the `_Draw()` shapes with simple SVG sprites Claude authors (Mage, Fighter, the 4 enemies), starting with a Mage + Grunt sample to judge the look. Code side: an optional `Texture2D` on `ClassData`/`EnemyData`, drawn via `Sprite2D`, falling back to `_Draw()` when unset. Decide the art style (pixel vs vector, sprite size, view angle) first, since changing it later means redoing every asset. Kenney CC0 packs or commissioned art can swap in later through the same fields.
-5. **Progression modes:** "career" (persistent character growth between runs) vs "arcade" (fresh each run). Needs save data in an autoload or file, since `RunState` is thrown away on restart.
+1. **Warlock and Necromancer:** Warlock needs life steal / drain (heal-on-damage hook, a LifeSteal stat). Necromancer needs a minion system (allied units with their own AI that target enemies).
+2. **More consumables:** the health potion (Space, once per wave) is in. Next: other potions bought in the shop (e.g. a damage potion reusing `ActiveBuffs`), and buying extra potion charges or a bigger heal.
+3. **Placeholder sprites:** replace the `_Draw()` shapes with simple SVG sprites Claude authors (Mage, Fighter, the 4 enemies), starting with a Mage + Grunt sample to judge the look. Code side: an optional `Texture2D` on `ClassData`/`EnemyData`, drawn via `Sprite2D`, falling back to `_Draw()` when unset. Decide the art style (pixel vs vector, sprite size, view angle) first, since changing it later means redoing every asset. Kenney CC0 packs or commissioned art can swap in later through the same fields.
+4. **Progression modes:** "career" (persistent character growth between runs) vs "arcade" (fresh each run). Needs save data in an autoload or file, since `RunState` is thrown away on restart.
 
 ## Backlog (ideas, not yet scheduled)
 
@@ -37,7 +37,9 @@ Where the project stands and what's next. `Goals.md` holds the vision and the de
 - Item rarity tiers and class-specific shop items.
 - Fill spell slot 4 during the run: e.g. a spell offer in the shop after wave 2 or 3 (the "mix" answer to when spells get chosen). Also grow each class list toward 6–8 spells.
 - Spell upgrades in the shop (Fireball +radius, Chain Lightning +1 jump), tying spells into the item economy.
-- Selling items; item drops during waves.
+- Selling items outright (replacing gear already refunds half); item drops during waves.
+- Show the equipped weapon on the HUD; a gear screen reachable mid-run (Tab) rather than only in the shop.
+- Shared (classless) weapons in the catalog; weapon-specific bonuses per class (Brotato style).
 - Vacuum pickup (Vampire Survivors): a rare drop that pulls all gold on screen to the player.
 - Hand-authored waves (`WaveData` Resources) replacing the `WaveSettings` formula; an elite or boss on the final wave.
 - More stats: cooldown reduction, life steal, crit, HP regen, dodge.
@@ -47,7 +49,7 @@ Where the project stands and what's next. `Goals.md` holds the vision and the de
 ## Open design questions
 
 - Career vs arcade progression: one, the other, or both? What carries over between runs?
-- Shop only, or shop plus drops? Can items be sold?
+- Shop only, or shop plus drops? Can items be sold outright (beyond the half refund when gear is replaced)?
 
 ## Known issues and tuning notes
 
@@ -61,4 +63,6 @@ Where the project stands and what's next. `Goals.md` holds the vision and the de
 - Auto-cast Charge picks a direction toward the nearest enemy and dashes the full range, which can carry you into a crowd. It's manual by default for that reason.
 - Crit item values are first guesses: crit chance is worth less per point than Damage% (+10% crit at ×1.5 ≈ +5% damage), so the items give bigger numbers.
 - Feel knobs not tuned by playtest yet: `ScreenShake` per ability (Feel group), `Player.HurtShake`, `ShakeCamera.MaxOffset`, Wand knockback 40. Damage numbers stay frozen on screen behind the defeat message.
+- Gear and new weapon numbers are first guesses. With seed 2, no shop and `--god`, kills over a full run were: Sword 182, Spear 229, Greatsword 223, Wand 235, Frost Scepter 241, Staff 253. The upgrades beat the starters, but Spear and Greatsword are close, though the Greatsword also costs the off hand.
+- Autoplay's `cheapest` shop strategy happily buys a weapon or armor that's worse than what it wears. That's fine for a test bot, but don't read balance into which gear it ends up with.
 - Enemies can pile up on top of each other. Fine for now; a separation behavior would help once there's art.

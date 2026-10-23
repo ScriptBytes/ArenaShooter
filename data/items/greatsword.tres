@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/items/ItemData.cs" id="1_item"]
+[ext_resource type="Script" path="res://scripts/items/StatModifier.cs" id="2_mod"]
+[ext_resource type="Resource" path="res://data/weapons/greatsword.tres" id="3_weapon"]
+
+[sub_resource type="Resource" id="StatModifier_0"]
+script = ExtResource("2_mod")
+Stat = 4
+Value = -5.0
+
+[resource]
+script = ExtResource("1_item")
+DisplayName = "Greatsword"
+Price = 50
+IconColor = Color(0.75, 0.78, 0.85, 1)
+Slot = 1
+Modifiers = Array[ExtResource("2_mod")]([SubResource("StatModifier_0")])
+Weapon = ExtResource("3_weapon")
+TwoHanded = true

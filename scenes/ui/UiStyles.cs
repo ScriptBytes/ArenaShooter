@@ -6,6 +6,7 @@ namespace ArenaShooter;
 public static class UiStyles
 {
     public static readonly Color Gold = new(0.96f, 0.77f, 0.26f);
+    public static readonly Color Dim = new(0.65f, 0.67f, 0.72f);
 
     public static StyleBoxFlat Panel()
     {

@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ProjectileAbility" format=3]
+
+[ext_resource type="Script" path="res://scripts/abilities/ProjectileAbility.cs" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/weapons/Projectile.tscn" id="2_projectile"]
+
+[resource]
+script = ExtResource("1_script")
+DisplayName = "Staff"
+Description = "Heavy orbs that burst on impact."
+IconColor = Color(0.95, 0.6, 0.3, 1)
+Cooldown = 0.65
+Damage = 7.0
+Range = 460.0
+Knockback = 60.0
+ProjectileSpeed = 520.0
+ProjectileRadius = 7.0
+ExplosionRadius = 50.0
+ProjectileScene = ExtResource("2_projectile")

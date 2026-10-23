@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="MeleeArcAbility" format=3]
+
+[ext_resource type="Script" path="res://scripts/abilities/MeleeArcAbility.cs" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+DisplayName = "Spear"
+Description = "Thrusts far ahead in a narrow line."
+IconColor = Color(0.78, 0.66, 0.48, 1)
+Cooldown = 0.7
+Damage = 10.0
+Range = 135.0
+CritChance = 10.0
+CritMultiplier = 2.0
+Knockback = 90.0
+ArcDegrees = 45.0

@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using Godot;
 
 namespace ArenaShooter;
@@ -33,6 +35,11 @@ public partial class Main : Node2D
     private WaveSettings _wave;
     private float _timeLeft;
     private AutoplayOptions _autoplay;
+    private Autoplay _autoplayDriver;
+    private ClassData _class;
+
+    /// <summary>What the shop can offer: the shared catalog plus the class's own weapons.</summary>
+    private IEnumerable<ItemData> ShopPool => ItemCatalog.Items.Concat(_class.Weapons);
 
     public override void _Ready()
     {
@@ -45,7 +52,7 @@ public partial class Main : Node2D
         Player.Health.Died += () => EndRun(GameState.Defeat);
         Player.GoldCollected += OnGoldCollected;
         Spawner.EnemyKilled += () => _run.Kills++;
-        Shop.Purchased += () => Player.ApplyStats(_run.Stats);
+        Shop.Purchased += ApplyLoadout;
         Shop.ContinueRequested += () => StartWave(_run.Wave + 1);
         Hud.RestartRequested += Restart;
         ClassSelect.ClassChosen += SpellSelect.Open;
@@ -63,8 +70,14 @@ public partial class Main : Node2D
 
     private void StartRun(ClassData playerClass, Godot.Collections.Array<AbilityData> spells)
     {
+        _class = playerClass;
+        _run.Equipment.StartingWeapon = playerClass.StartingWeapon;
+        _run.AddItem(playerClass.StartingWeapon);
+        if (_autoplay != null)
+            GrantAutoplayItems();
+
         Player.Setup(playerClass, spells);
-        Player.ApplyStats(_run.Stats);
+        ApplyLoadout();
         Hud.BindAbilities(Player.Abilities);
         Hud.BindPotion(Player);
         EmitSignal(SignalName.RunStarted, playerClass);
@@ -77,7 +90,7 @@ public partial class Main : Node2D
         if (_autoplay.Seed is { } seed)
             GD.Seed(seed);
 
-        var autoplay = new Autoplay
+        var autoplay = _autoplayDriver = new Autoplay
         {
             Options = _autoplay,
             ClassSelect = ClassSelect,
@@ -97,12 +110,24 @@ public partial class Main : Node2D
         // Run-start grants, applied before the class's first ApplyStats in StartRun.
         Player.Invulnerable = _autoplay.God;
         foreach (var (stat, value) in _autoplay.Stats)
-            _run.Stats.Add(stat, value);
+            _run.GrantStat(stat, value);
+    }
+
+    // --item grants. They wait for the class, since its weapons are part of the pool.
+    private void GrantAutoplayItems()
+    {
         foreach (var name in _autoplay.Items)
         {
-            if (autoplay.FindItem(ItemCatalog, name) is { } item)
+            if (_autoplayDriver.FindItem(ShopPool, name) is { } item)
                 _run.AddItem(item);
         }
+    }
+
+    /// <summary>Pushes the run's gear and stats to the player. Call whenever either changes.</summary>
+    private void ApplyLoadout()
+    {
+        Player.SetWeapon(_run.Equipment.Weapon);
+        Player.ApplyStats(_run.Stats);
     }
 
     public override void _Process(double delta)
@@ -156,7 +181,7 @@ public partial class Main : Node2D
 
         _state = GameState.Shop;
         GetTree().Paused = true;
-        Shop.Open(_run, ItemCatalog.Items);
+        Shop.Open(_run, ShopPool);
     }
 
     private void EndRun(GameState result)
