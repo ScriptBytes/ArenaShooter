@@ -5,6 +5,7 @@
 
 [resource]
 script = ExtResource("1_item")
+Id = "hex_rod"
 DisplayName = "Hex Rod"
 Price = 0
 IconColor = Color(1, 0.42, 0.62, 1)

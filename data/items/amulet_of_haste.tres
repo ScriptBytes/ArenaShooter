@@ -15,6 +15,7 @@ Value = 10.0
 
 [resource]
 script = ExtResource("1_item")
+Id = "amulet_of_haste"
 DisplayName = "Amulet of Haste"
 Price = 30
 IconColor = Color(0.95, 0.85, 0.3, 1)

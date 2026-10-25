@@ -10,6 +10,7 @@ Value = 10.0
 
 [resource]
 script = ExtResource("1_item")
+Id = "troll_heart"
 DisplayName = "Troll Heart"
 Price = 35
 IconColor = Color(0.35, 0.55, 0.95, 1)

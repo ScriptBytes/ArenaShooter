@@ -22,7 +22,7 @@ public class CareerSave
     /// <summary>Last write, ISO 8601 UTC. Informational only.</summary>
     public string Updated { get; set; } = "";
 
-    /// <summary>One career character per class, keyed by the class's .tres file name ("fighter").</summary>
+    /// <summary>One career character per class, keyed by <see cref="ClassData.Id"/> ("fighter").</summary>
     public Dictionary<string, CareerCharacter> Characters { get; set; } = new();
 
     [JsonExtensionData] public Dictionary<string, JsonElement> Extra { get; set; }
@@ -46,7 +46,7 @@ public class CareerCharacter
     /// <summary>Ranks bought per talent id (CareerTalent.Id). Unknown ids are ignored, so a removed talent refunds itself.</summary>
     public Dictionary<string, int> Talents { get; set; } = new();
 
-    /// <summary>Item id (.tres file name) of the gear kept from a victory; starts equipped. Null for none.</summary>
+    /// <summary><see cref="ItemData.Id"/> of the gear kept from a victory; starts equipped. Null for none.</summary>
     public string Heirloom { get; set; }
 
     public int Runs { get; set; }

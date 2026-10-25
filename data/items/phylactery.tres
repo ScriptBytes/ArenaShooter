@@ -15,6 +15,7 @@ Value = 20.0
 
 [resource]
 script = ExtResource("1_item")
+Id = "phylactery"
 DisplayName = "Phylactery"
 Price = 30
 IconColor = Color(0.3, 0.75, 0.6, 1)

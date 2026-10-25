@@ -15,6 +15,7 @@ Value = 60.0
 
 [resource]
 script = ExtResource("1_consumable")
+Id = "potion_of_swiftness"
 Duration = 10.0
 DisplayName = "Potion of Swiftness"
 Price = 6

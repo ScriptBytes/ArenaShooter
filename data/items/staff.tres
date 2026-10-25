@@ -5,6 +5,7 @@
 
 [resource]
 script = ExtResource("1_item")
+Id = "staff"
 DisplayName = "Staff"
 Price = 50
 IconColor = Color(0.95, 0.6, 0.3, 1)

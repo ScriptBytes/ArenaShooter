@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Godot;
 
 namespace ArenaShooter;
@@ -71,7 +72,46 @@ public partial class Career : Node
 
     public void Persist() => CareerStore.Write(SavePath, Save);
 
-    public static string ClassId(ClassData playerClass) => playerClass.ResourcePath.GetFile().GetBaseName();
+    /// <summary>The class's save key (<see cref="ClassData.Id"/>; the file name if it's missing, which <see cref="ValidateIds"/> reports).</summary>
+    public static string ClassId(ClassData playerClass) => IdOrFileName(playerClass.Id, playerClass);
 
-    public static string ItemId(ItemData item) => item.ResourcePath.GetFile().GetBaseName();
+    /// <summary>The item's save key (<see cref="ItemData.Id"/>; the file name if it's missing).</summary>
+    public static string ItemId(ItemData item) => IdOrFileName(item.Id, item);
+
+    private static string IdOrFileName(string id, Resource resource) =>
+        string.IsNullOrWhiteSpace(id) ? resource.ResourcePath.GetFile().GetBaseName() : id;
+
+    /// <summary>
+    /// Logs an error for every empty or duplicate save id, so new content can't silently collide
+    /// with (or orphan) saved data. Called once at startup with everything a save can reference.
+    /// Returns the number of problems found.
+    /// </summary>
+    public static int ValidateIds(IEnumerable<ClassData> classes, IEnumerable<ItemData> items, IEnumerable<CareerTalent> talents)
+    {
+        int problems = 0;
+        void Check<T>(string kind, IEnumerable<T> things, System.Func<T, string> id, System.Func<T, string> path) where T : Resource
+        {
+            var seen = new Dictionary<string, string>();
+            foreach (var thing in things.Where(t => t != null).Distinct())
+            {
+                string key = id(thing);
+                if (string.IsNullOrWhiteSpace(key))
+                {
+                    GD.PushError($"[career] {kind} {path(thing)} has no Id");
+                    problems++;
+                }
+                else if (seen.TryGetValue(key, out string other))
+                {
+                    GD.PushError($"[career] {kind} Id '{key}' is used by both {other} and {path(thing)}");
+                    problems++;
+                }
+                else
+                    seen[key] = path(thing);
+            }
+        }
+        Check("class", classes, c => c.Id, c => c.ResourcePath);
+        Check("item", items, i => i.Id, i => i.ResourcePath);
+        Check("talent", talents, t => t.Id, t => $"'{t.DisplayName}'");
+        return problems;
+    }
 }

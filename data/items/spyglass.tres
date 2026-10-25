@@ -10,6 +10,7 @@ Value = 60.0
 
 [resource]
 script = ExtResource("1_item")
+Id = "spyglass"
 DisplayName = "Spyglass"
 Price = 15
 IconColor = Color(0.4, 0.8, 0.45, 1)

@@ -10,6 +10,7 @@ Value = 2.0
 
 [resource]
 script = ExtResource("1_item")
+Id = "iron_buckler"
 DisplayName = "Iron Buckler"
 Price = 25
 IconColor = Color(0.35, 0.55, 0.95, 1)

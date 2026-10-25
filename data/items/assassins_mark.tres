@@ -15,6 +15,7 @@ Value = -3.0
 
 [resource]
 script = ExtResource("1_item")
+Id = "assassins_mark"
 DisplayName = "Assassin's Mark"
 Price = 25
 IconColor = Color(1, 0.847, 0.29, 1)

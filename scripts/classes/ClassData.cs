@@ -6,6 +6,12 @@ namespace ArenaShooter;
 [GlobalClass]
 public partial class ClassData : Resource
 {
+    /// <summary>
+    /// Stable key for the career save. Unique among classes; never change it once shipped
+    /// (saves reference it). The .tres file name is free to change.
+    /// </summary>
+    [Export] public string Id { get; set; } = "";
+
     [Export] public string DisplayName { get; set; } = "";
     [Export(PropertyHint.MultilineText)] public string Description { get; set; } = "";
     [Export] public Color Color { get; set; } = Colors.White;

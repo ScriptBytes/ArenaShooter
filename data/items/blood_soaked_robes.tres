@@ -15,6 +15,7 @@ Value = 4.0
 
 [resource]
 script = ExtResource("1_item")
+Id = "blood_soaked_robes"
 DisplayName = "Blood-Soaked Robes"
 Price = 30
 IconColor = Color(0.6, 0.1, 0.2, 1)

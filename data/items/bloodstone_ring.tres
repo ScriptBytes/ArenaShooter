@@ -15,6 +15,7 @@ Value = 5.0
 
 [resource]
 script = ExtResource("1_item")
+Id = "bloodstone_ring"
 DisplayName = "Bloodstone Ring"
 Price = 30
 IconColor = Color(0.7, 0.1, 0.2, 1)

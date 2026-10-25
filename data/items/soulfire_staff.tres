@@ -5,6 +5,7 @@
 
 [resource]
 script = ExtResource("1_item")
+Id = "soulfire_staff"
 DisplayName = "Soulfire Staff"
 Price = 50
 IconColor = Color(0.5, 0.95, 0.4, 1)

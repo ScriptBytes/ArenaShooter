@@ -5,6 +5,7 @@
 
 [resource]
 script = ExtResource("1_item")
+Id = "wand"
 DisplayName = "Wand"
 Price = 0
 IconColor = Color(0.902, 0.945, 1, 1)

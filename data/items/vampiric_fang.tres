@@ -10,6 +10,7 @@ Value = 3.0
 
 [resource]
 script = ExtResource("1_item")
+Id = "vampiric_fang"
 DisplayName = "Vampiric Fang"
 Price = 25
 IconColor = Color(0.9, 0.2, 0.35, 1)

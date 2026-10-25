@@ -13,6 +13,12 @@ namespace ArenaShooter;
 [GlobalClass]
 public partial class ItemData : Resource
 {
+    /// <summary>
+    /// Stable key for saves (career heirloom). Unique among all items, consumables and class
+    /// weapons; never change it once shipped. The .tres file name is free to change.
+    /// </summary>
+    [Export] public string Id { get; set; } = "";
+
     [Export] public string DisplayName { get; set; } = "";
     [Export] public int Price { get; set; } = 10;
     [Export] public Color IconColor { get; set; } = Colors.White;

@@ -10,6 +10,7 @@ Value = 15.0
 
 [resource]
 script = ExtResource("1_item")
+Id = "whetstone"
 DisplayName = "Whetstone"
 Price = 20
 IconColor = Color(0.9, 0.35, 0.3, 1)

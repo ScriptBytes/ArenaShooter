@@ -14,6 +14,7 @@
 
 [resource]
 script = ExtResource("1_class")
+Id = "warlock"
 DisplayName = "Warlock"
 Description = "Trades blood for power: drains, curses and steals life to stay standing."
 Color = Color(1, 0.42, 0.62, 1)

@@ -82,6 +82,11 @@ public partial class Main : Node2D
         CareerSummary.HeirloomChosen += OnHeirloomChosen;
         CareerSummary.ContinueRequested += Restart;
 
+        Career.ValidateIds(Classes,
+            ItemCatalog.Items.Concat(ItemCatalog.Consumables)
+                .Concat(Classes.SelectMany(c => c.Weapons.Append(c.StartingWeapon))),
+            CareerSettings.Talents);
+
         _autoplay = AutoplayOptions.FromCommandLine();
         if (_autoplay != null)
             SetUpAutoplay();

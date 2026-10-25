@@ -15,6 +15,7 @@ Value = -10.0
 
 [resource]
 script = ExtResource("1_item")
+Id = "swift_quiver"
 DisplayName = "Swift Quiver"
 Price = 25
 IconColor = Color(0.9, 0.35, 0.3, 1)

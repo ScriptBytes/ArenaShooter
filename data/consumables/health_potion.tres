@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1_consumable")
+Id = "health_potion"
 HealthPotion = true
 MaxCarry = 2
 DisplayName = "Health Potion"

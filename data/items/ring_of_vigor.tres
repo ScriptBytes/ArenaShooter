@@ -10,6 +10,7 @@ Value = 8.0
 
 [resource]
 script = ExtResource("1_item")
+Id = "ring_of_vigor"
 DisplayName = "Ring of Vigor"
 Price = 25
 IconColor = Color(0.4, 0.85, 0.45, 1)

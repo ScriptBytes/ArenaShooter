@@ -15,6 +15,7 @@ Value = -10.0
 
 [resource]
 script = ExtResource("1_item")
+Id = "tower_shield"
 DisplayName = "Tower Shield"
 Price = 40
 IconColor = Color(0.35, 0.55, 0.95, 1)

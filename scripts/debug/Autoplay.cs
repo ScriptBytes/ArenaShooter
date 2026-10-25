@@ -202,11 +202,11 @@ public partial class Autoplay : Node
 
     private string Gear() => string.Join(",", Run.Equipment.Worn.Select(i => i.DisplayName));
 
-    /// <summary>Resolves --item names against the shop's pool (display name or .tres file name).</summary>
+    /// <summary>Resolves --item names against the shop's pool (display name, Id or .tres file name).</summary>
     public ItemData FindItem(IEnumerable<ItemData> pool, string name)
     {
         var item = pool.FirstOrDefault(i =>
-            Same(i.DisplayName, name) || Same(i.ResourcePath.GetFile().GetBaseName(), name));
+            Same(i.DisplayName, name) || Same(i.Id, name) || Same(i.ResourcePath.GetFile().GetBaseName(), name));
         if (item == null)
             Fail($"unknown item '{name}'");
         return item;
@@ -217,7 +217,7 @@ public partial class Autoplay : Node
         var choices = ClassSelect.Choices;
         var choice = Options.ClassName == null ? choices.FirstOrDefault()
             : int.TryParse(Options.ClassName, out int index) ? choices.ElementAtOrDefault(index)
-            : choices.FirstOrDefault(c => Same(c.Class.DisplayName, Options.ClassName));
+            : choices.FirstOrDefault(c => Same(c.Class.DisplayName, Options.ClassName) || Same(c.Class.Id, Options.ClassName));
 
         if (choice.Button == null)
         {
@@ -272,7 +272,7 @@ public partial class Autoplay : Node
         foreach (var name in Options.BuyPotions)
         {
             var potion = Shop.PotionOffers.FirstOrDefault(o =>
-                Same(o.Item.DisplayName, name) || Same(o.Item.ResourcePath.GetFile().GetBaseName(), name));
+                Same(o.Item.DisplayName, name) || Same(o.Item.Id, name) || Same(o.Item.ResourcePath.GetFile().GetBaseName(), name));
             if (potion == null)
             {
                 Fail($"unknown potion '{name}' (shop has: {string.Join(", ", Shop.PotionOffers.Select(o => o.Item.DisplayName))})");

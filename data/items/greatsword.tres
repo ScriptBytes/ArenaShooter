@@ -11,6 +11,7 @@ Value = -5.0
 
 [resource]
 script = ExtResource("1_item")
+Id = "greatsword"
 DisplayName = "Greatsword"
 Price = 50
 IconColor = Color(0.75, 0.78, 0.85, 1)

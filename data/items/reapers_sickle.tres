@@ -5,6 +5,7 @@
 
 [resource]
 script = ExtResource("1_item")
+Id = "reapers_sickle"
 DisplayName = "Reaper's Sickle"
 Price = 35
 IconColor = Color(0.6, 0.95, 0.8, 1)
