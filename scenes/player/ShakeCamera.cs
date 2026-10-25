@@ -4,7 +4,8 @@ namespace ArenaShooter;
 
 /// <summary>
 /// Player camera with trauma-based screen shake: hits add trauma (0–1), which decays over
-/// time, and the shake offset scales with trauma squared so small bumps stay subtle.
+/// time, and the shake offset scales with trauma squared so small bumps stay subtle. The player's
+/// Screen shake setting (<see cref="GameSettings"/>) scales it.
 /// </summary>
 public partial class ShakeCamera : Camera2D
 {
@@ -40,7 +41,8 @@ public partial class ShakeCamera : Camera2D
         }
 
         _trauma = Mathf.Max(_trauma - TraumaDecay * (float)delta, 0f);
-        float strength = _trauma * _trauma * MaxOffset;
+        // The Screen shake setting (0–1) scales the offset only, so the random draws stay the same.
+        float strength = _trauma * _trauma * MaxOffset * (GameSettings.Instance?.ScreenShake ?? 1f);
         Offset = new Vector2((float)GD.RandRange(-1.0, 1.0), (float)GD.RandRange(-1.0, 1.0)) * strength;
     }
 }

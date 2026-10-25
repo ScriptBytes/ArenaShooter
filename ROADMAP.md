@@ -29,7 +29,8 @@ Where the project stands and what's next. `Goals.md` holds the vision and the de
 | Follow-up answers: targetable minions (`MinionData.Targetable`, on for all; enemies chase the nearest of player/minion, contact and shots hurt minions), life steal is Warlock-only (Vampiric Fang out of the catalog; Bloodstone Ring and Blood-Soaked Robes repurposed, same Ids), hearts heal directly when hurt and only fill the reserve at full HP, Space drinks a full reserve first. Autoplay `heart` event logs healed/added | `2d78d12` |
 | Item rarity: Common/Uncommon/Rare/Epic rolled per shop offer with wave-dependent odds (`data/RaritySettings.tres`), scaling positive stats, price, refund and weapon damage. Owned items are `ItemInstance`s (item + rarity). Colored card borders, names, tooltips, equipment panel and an odds line in the shop. Career heirloom saves its rarity (old saves load as Common). Autoplay `--rarity`, `offers` event, rarity in `buy`/`run_end`/`heirloom` | `a6f72d0` |
 | New stats: Cooldown Reduction (spells only, cap 50%), HP Regen (HP per 10s, batched "+N"), Dodge (cap 60%, "Dodge" text, uses i-frames). 6 shop items (Hourglass, Sage's Amulet, Mending Herb, Ring of Regeneration, Feather Charm, Shadow Cloak), 3 career talents (Focus, Evasion, Recovery). Cap notes on cards/tooltips; the shop stats panel lists only non-zero stats. Autoplay `hits`/`dodged`/`regen` in `wave_end`/`run_end` | `51fa056` |
-| 8 spells per class (12 new): Fighter Throwing Axe, Shockwave, Second Wind; Mage Arcane Missiles, Blizzard, Blink; Warlock Siphoning Aura, Corruption, Vampire Bats; Necromancer Skeletal Mage, Bone Armor, Corpse Explosion. New behaviors: `LineAbility`, `AuraAbility` (+`AuraField`), `BlinkAbility`, `DetonateAbility`; projectile volleys/pierce/return/homing/shapes; stun and spreading DoTs on hit; barrier shields; ranged minions. Spells get an `Id`. Spell select is a 4×2 grid. Autoplay `damage` event (damage per source) and `shielded` | _this commit_ |
+| 8 spells per class (12 new): Fighter Throwing Axe, Shockwave, Second Wind; Mage Arcane Missiles, Blizzard, Blink; Warlock Siphoning Aura, Corruption, Vampire Bats; Necromancer Skeletal Mage, Bone Armor, Corpse Explosion. New behaviors: `LineAbility`, `AuraAbility` (+`AuraField`), `BlinkAbility`, `DetonateAbility`; projectile volleys/pierce/return/homing/shapes; stun and spreading DoTs on hit; barrier shields; ranged minions. Spells get an `Id`. Spell select is a 4×2 grid. Autoplay `damage` event (damage per source) and `shielded` | `24bb9f3` |
+| UI and QoL: equipped weapon on the HUD (rarity-colored name, refill bar, tooltip); Tab gear screen mid-wave (equipment/trinkets with tooltips, potions, buffs, full stat sheet with caps; shares `GearViews` with the shop); Esc pause menu (Resume, Settings, Retry, Abandon run, Quit; confirm prompts, career "banks nothing" note); Settings screen + `GameSettings` autoload (`user://settings.cfg`: fullscreen + F11/Alt+Enter, screen shake %, enemy damage numbers, master volume); "Retry same class" on the arcade and career end screens; HUD gold now follows shop purchases. Autoplay `--tour`, `--retry`, `--settings` | _this commit_ |
 
 **Playtest status:** the user has beaten wave 5 with both classes and finds it fun so far. Balance hasn't been tuned on purpose yet.
 
@@ -37,6 +38,8 @@ Where the project stands and what's next. `Goals.md` holds the vision and the de
 
 1. **Placeholder sprites:** replace the `_Draw()` shapes with simple SVG sprites Claude authors (Mage, Fighter, the 4 enemies), starting with a Mage + Grunt sample to judge the look. Code side: an optional `Texture2D` on `ClassData`/`EnemyData`/`MinionData`, drawn via `Sprite2D`, falling back to `_Draw()` when unset. Decide the art style (pixel vs vector, sprite size, view angle) first, since changing it later means redoing every asset. Kenney CC0 packs or commissioned art can swap in later through the same fields.
 2. **Career follow-ups** (see `FOLLOWUPS.md` §3): difficulty tiers unlocked by career victories to offset talent power, heirloom upgrades, an "unlocks" layer (spells/items gated by level).
+3. **Balance pass** now that a run can be retried in one click: playtest the 8-spell lists and the new stats (`FOLLOWUPS.md` §7–8), starting with Throwing Axe, Shockwave, Meteor and War Cry.
+4. **Sound:** a few placeholder effects (hit, pickup, level-up) through the Master bus the volume setting already controls.
 
 ## Backlog (ideas, not yet scheduled)
 
@@ -46,14 +49,13 @@ Where the project stands and what's next. `Goals.md` holds the vision and the de
 - Fill spell slot 4 during the run: e.g. a spell offer in the shop after wave 2 or 3 (the "mix" answer to when spells get chosen). Each class now has 8 spells; more would need the spell select grid rethought (scrolling or a 5th column).
 - Spell upgrades in the shop (Fireball +radius, Chain Lightning +1 jump), tying spells into the item economy.
 - Selling items outright (replacing gear already refunds half); item drops during waves.
-- Show the equipped weapon on the HUD; a gear screen reachable mid-run (Tab) rather than only in the shop.
 - Shared (classless) weapons in the catalog; weapon-specific bonuses per class (Brotato style).
 - Vacuum pickup (Vampire Survivors): a rare drop that pulls all gold on screen to the player.
 - Hand-authored waves (`WaveData` Resources) replacing the `WaveSettings` formula; an elite or boss on the final wave.
 - More stats: minion count/HP/duration (cooldown reduction, HP regen and dodge are done). Maybe a Luck or Harvesting-style economy stat.
 - Minion upgrades (more skeletons, longer lifetime); a Necromancer item that raises from every kill. A taunt (minion that pulls aggro from further away).
-- Pause menu (Esc), settings, fullscreen toggle, "retry same class" on the end screen.
-- Sound, music, an art pass (replace the `_Draw()` placeholder shapes).
+- Settings follow-ups: key rebinding, a colorblind-friendly rarity palette, UI scale.
+- Sound and music (the Master volume setting already drives the audio bus), an art pass (replace the `_Draw()` placeholder shapes).
 
 ## Open design questions
 
@@ -63,8 +65,7 @@ Where the project stands and what's next. `Goals.md` holds the vision and the de
 
 - Autoplay without `--god` dies by wave 2 with either class (it circles and doesn't dodge). It's a bot, but it may also hint that the early waves are tough for new players.
 
-- The HUD gold count behind the shop doesn't update on purchase. It's hidden by the shop and refreshed when the next wave starts.
-- Restart (R) goes back to class select in the same mode; the Back button there returns to mode select. There's no way to abandon a run mid-wave (no pause menu yet).
+- Restart (R, Choose class, Abandon run) goes back to class select in the same mode; the Back button there returns to mode select. Retry same class in career skips the talents screen, so points earned by the last run wait until the player goes through Choose class.
 - Career balance is unplayed: talents only add power and waves don't scale with career level (see `FOLLOWUPS.md` §3). Autoplay Fighter, `--god`, seed 2, same seed each run: 184 → 215 kills once talents and an heirloom kicked in.
 - Difficulty in waves 4–5 hasn't been tuned since the new enemy types were added.
 - Healing numbers are first guesses: heart +2 (heals when hurt, else into the reserve) at 3% (Brutes 15%), potion +10 once per wave. A full run drops roughly 5–8 hearts, about one full reserve. +10 is most of the Mage's 16 HP, so the potion may be strong for the Mage and weak for the Fighter (30 HP); a percent-of-max heal is an option.

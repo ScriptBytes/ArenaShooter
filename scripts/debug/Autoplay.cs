@@ -24,6 +24,13 @@ public partial class Autoplay : Node
     public CareerSettings CareerSettings { get; set; }
     public SpellSelect SpellSelect { get; set; }
     public Shop Shop { get; set; }
+    public Hud Hud { get; set; }
+    public PauseMenu PauseMenu { get; set; }
+    public GearScreen GearScreen { get; set; }
+    public SettingsScreen SettingsScreen { get; set; }
+
+    /// <summary>Set by Main when this run started from "Retry same class" (logged in run_start).</summary>
+    public bool FromRetry { get; set; }
     public Player Player { get; set; }
     public RunState Run { get; set; }
     public Vector2 ArenaCenter { get; set; }
@@ -40,6 +47,10 @@ public partial class Autoplay : Node
     private bool _careerScreenLogged;
     private bool _heirloomDone;
     private bool _runEnded;
+
+    // --tour: which step is next, and wave time to wait before starting.
+    private int _tourStep;
+    private float _tourWait = 1f;
 
     /// <summary>Runs finished in this app launch (static, so it survives the restart's scene reload).</summary>
     public static int RunsDone { get; private set; }
@@ -60,13 +71,18 @@ public partial class Autoplay : Node
         if (_failed)
             return;
 
+        bool overlay = PauseMenu.Visible || GearScreen.Visible || SettingsScreen.Visible;
         bool inMenu = ModeSelect.Visible || ClassSelect.Visible || CareerScreen.Visible || SpellSelect.Visible
-                      || Shop.Visible || CareerSummary.Visible;
+                      || Shop.Visible || CareerSummary.Visible || overlay || (_runEnded && Hud.EndScreenVisible);
         if (inMenu && (_menuWait += (float)delta) < Options.MenuDelay)
             return;
         _menuWait = 0f;
 
-        if (ModeSelect.Visible)
+        if (Options.Tour && (overlay || TourDue((float)delta)))
+            TourStep();
+        else if (_runEnded && Hud.EndScreenVisible)
+            EndStep();
+        else if (ModeSelect.Visible)
             PickMode();
         else if (ClassSelect.Visible)
             PickClass();
@@ -91,7 +107,7 @@ public partial class Autoplay : Node
         Combat.ResetDamageLog();
         string spells = string.Join(",", Player.Abilities.Spells.Select(s => s.Ability.DisplayName));
         Log($"run_start class={playerClass.DisplayName} spells=\"{spells}\" gear=\"{Gear()}\" wave={Options.StartWave} " +
-            $"seed={(Options.Seed is { } seed ? (seed + (ulong)RunsDone).ToString() : "random")} dotnet={System.Environment.Version}");
+            $"seed={(Options.Seed is { } seed ? (seed + (ulong)RunsDone).ToString() : "random")} retry={FromRetry.ToString().ToLower()} dotnet={System.Environment.Version}");
         if (Options.AutoCastAll)
         {
             foreach (var slot in Player.Abilities.Spells)
@@ -132,14 +148,84 @@ public partial class Autoplay : Node
         // Damage that landed per source (weapon, spell, minion type), biggest first.
         var damage = Combat.DamageBySource.OrderByDescending(p => p.Value).ToList();
         Log($"damage total={damage.Sum(p => p.Value):0} by=\"{string.Join(",", damage.Select(p => $"{p.Key}:{p.Value:0}"))}\"");
+        // SummaryStep (career) or EndStep (arcade) then quits or restarts, after --menu-delay.
         _runEnded = true;
-        if (CareerSummary.Visible)
-            return; // SummaryStep banks the career, then quits or restarts.
+    }
 
+    // Arcade end screen: quit, or start the next run with R (or Retry with --retry).
+    private void EndStep()
+    {
         if (++RunsDone >= Options.Runs)
             GetTree().Quit();
+        else if (Options.Retry)
+            Press(Hud.RetryButton);
         else
             Input.ParseInputEvent(new InputEventAction { Action = "restart", Pressed = true });
+    }
+
+    private const int TourSteps = 8;
+
+    // --tour starts once the first wave has run a second, then runs until its last step.
+    private bool TourDue(float delta)
+    {
+        if (!Options.Tour || RunsDone > 0 || _tourStep >= TourSteps)
+            return false;
+        if (_tourStep > 0)
+            return true;
+        return !GetTree().Paused && Player.Abilities.Weapon != null && (_tourWait -= delta) <= 0f;
+    }
+
+    // One step per call, each checking that the previous one worked. Uses the real input actions
+    // for Tab and Esc, and presses buttons for the rest.
+    private void TourStep()
+    {
+        void Expect(bool ok, string what)
+        {
+            if (!ok)
+                Fail($"tour: {what}");
+        }
+
+        switch (_tourStep++)
+        {
+            case 0:
+                Log("tour step=open_gear");
+                Input.ParseInputEvent(new InputEventAction { Action = "gear_screen", Pressed = true });
+                break;
+            case 1:
+                Expect(GearScreen.Visible && GetTree().Paused, "gear screen didn't open or pause");
+                Log("tour step=close_gear");
+                Input.ParseInputEvent(new InputEventAction { Action = "gear_screen", Pressed = true });
+                break;
+            case 2:
+                Expect(!GearScreen.Visible && !GetTree().Paused, "gear screen didn't close or unpause");
+                Log("tour step=open_pause");
+                Input.ParseInputEvent(new InputEventAction { Action = "pause", Pressed = true });
+                break;
+            case 3:
+                Expect(PauseMenu.Visible && GetTree().Paused, "pause menu didn't open or pause");
+                Log("tour step=open_settings");
+                Press(PauseMenu.SettingsButton);
+                break;
+            case 4:
+                Expect(SettingsScreen.Visible, "settings didn't open");
+                bool numbers = !GameSettings.Instance.DamageNumbers;
+                Log($"tour step=toggle_damage_numbers to={numbers.ToString().ToLower()}");
+                SettingsScreen.DamageNumbersToggle.ButtonPressed = numbers;
+                break;
+            case 5:
+                Log($"tour step=close_settings settings=\"{GameSettings.Instance.Summary()}\"");
+                Press(SettingsScreen.BackButton);
+                break;
+            case 6:
+                Expect(!SettingsScreen.Visible && PauseMenu.Visible, "settings didn't return to the pause menu");
+                Log("tour step=resume");
+                Press(PauseMenu.ResumeButton);
+                break;
+            case 7:
+                Expect(!PauseMenu.Visible && !GetTree().Paused, "resume didn't close the menu or unpause");
+                Log("tour step=done");
+                break;
+        }
     }
 
     private void PickMode()
@@ -204,7 +290,7 @@ public partial class Autoplay : Node
         if (++RunsDone >= Options.Runs)
             GetTree().Quit();
         else
-            Press(CareerSummary.ContinueButton);
+            Press(Options.Retry ? CareerSummary.RetryButton : CareerSummary.ContinueButton);
     }
 
     private string Gear() => string.Join(",", Run.Equipment.Worn.Select(i => i.LogName));

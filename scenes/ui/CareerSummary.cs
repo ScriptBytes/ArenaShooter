@@ -6,8 +6,8 @@ namespace ArenaShooter;
 
 /// <summary>
 /// End of a career run (instead of the HUD's end message): XP earned and its breakdown, level-ups,
-/// and after a victory a choice of one worn piece of gear to keep as the heirloom. Continue (or R)
-/// restarts into class select. The XP is already saved when this opens. Built in code.
+/// and after a victory a choice of one worn piece of gear to keep as the heirloom. Choose class (or R)
+/// restarts into class select; Retry starts the same class and spells again. The XP is already saved when this opens. Built in code.
 /// </summary>
 public partial class CareerSummary : CanvasLayer
 {
@@ -17,6 +17,7 @@ public partial class CareerSummary : CanvasLayer
     /// </summary>
     public event System.Action<ItemInstance> HeirloomChosen;
     [Signal] public delegate void ContinueRequestedEventHandler();
+    [Signal] public delegate void RetryRequestedEventHandler();
 
     private Label _title;
     private Label _breakdown;
@@ -26,12 +27,14 @@ public partial class CareerSummary : CanvasLayer
     private Label _heirloomLabel;
     private HBoxContainer _heirloomButtons;
     private Button _continue;
+    private Button _retry;
 
     private readonly List<(ItemInstance Item, Button Button)> _heirloomChoices = new();
 
     /// <summary>"Keep" buttons for the worn gear after a victory (empty otherwise); Autoplay presses one (--heirloom).</summary>
     public IReadOnlyList<(ItemInstance Item, Button Button)> HeirloomChoices => _heirloomChoices;
     public Button ContinueButton => _continue;
+    public Button RetryButton => _retry;
 
     public override void _Ready()
     {
@@ -61,14 +64,16 @@ public partial class CareerSummary : CanvasLayer
         _heirloomButtons.AddThemeConstantOverride("separation", 8);
         _heirloomBox.AddChild(_heirloomButtons);
 
-        _continue = new Button
-        {
-            Text = "Continue (R)",
-            CustomMinimumSize = new Vector2(240, 44),
-            SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter,
-        };
+        var buttons = new HBoxContainer { Alignment = BoxContainer.AlignmentMode.Center };
+        buttons.AddThemeConstantOverride("separation", 16);
+        layout.AddChild(buttons);
+        // Retry skips class, talents and spell select; Continue goes back to class select.
+        _retry = new Button { CustomMinimumSize = new Vector2(260, 44) };
+        _retry.Pressed += () => EmitSignal(SignalName.RetryRequested);
+        buttons.AddChild(_retry);
+        _continue = new Button { Text = "Choose class (R)", CustomMinimumSize = new Vector2(220, 44) };
         _continue.Pressed += () => EmitSignal(SignalName.ContinueRequested);
-        layout.AddChild(_continue);
+        buttons.AddChild(_continue);
         Hide();
     }
 
@@ -76,6 +81,7 @@ public partial class CareerSummary : CanvasLayer
         CareerSettings.Reward reward, int levelBefore, int wave, ItemInstance heirloom, IEnumerable<ItemInstance> keepable)
     {
         _title.Text = reward.Victory ? "Victory!" : $"Defeated on wave {wave}";
+        _retry.Text = $"Retry {playerClass.DisplayName} (same spells)";
 
         var parts = new List<string> { $"{reward.Kills} kills +{reward.KillXp}", $"{reward.WavesCleared} waves cleared +{reward.WaveXp}" };
         if (reward.Victory)

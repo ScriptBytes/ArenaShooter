@@ -7,8 +7,8 @@ namespace ArenaShooter;
 public enum GameMode { None, Arcade, Career }
 
 /// <summary>
-/// Autoload (project.godot) holding what outlives a scene reload: the mode picked this session
-/// and the career save. Like a singleton service: Main and the career screens reach it through
+/// Autoload (project.godot) holding what outlives a scene reload: the mode picked this session,
+/// a pending "retry same class" request, and the career save. Like a singleton service: Main and the career screens reach it through
 /// <see cref="Instance"/>. The save loads lazily on first use, so arcade play never reads or
 /// writes it, and every change is written straight away (<see cref="Persist"/>).
 /// </summary>
@@ -20,6 +20,15 @@ public partial class Career : Node
 
     /// <summary>The mode picked on the mode select screen. Survives restarts; None until picked.</summary>
     public GameMode Mode { get; set; } = GameMode.None;
+
+    /// <summary>"Retry same class": the class and spell picks (by save Id) to start again with.</summary>
+    public sealed record RetryRequest(string ClassId, IReadOnlyList<string> SpellIds);
+
+    /// <summary>
+    /// Set just before a restart's scene reload; Main takes it on the next load and starts that run
+    /// straight away, skipping the select screens. Null otherwise.
+    /// </summary>
+    public RetryRequest PendingRetry { get; set; }
 
     public string SavePath { get; private set; } = DefaultSavePath;
     public CareerStore.LoadStatus LoadStatus { get; private set; }
@@ -77,6 +86,9 @@ public partial class Career : Node
 
     /// <summary>The item's save key (<see cref="ItemData.Id"/>; the file name if it's missing).</summary>
     public static string ItemId(ItemData item) => IdOrFileName(item.Id, item);
+
+    /// <summary>The spell's Id (the file name if it's missing).</summary>
+    public static string SpellId(AbilityData spell) => IdOrFileName(spell.Id, spell);
 
     private static string IdOrFileName(string id, Resource resource) =>
         string.IsNullOrWhiteSpace(id) ? resource.ResourcePath.GetFile().GetBaseName() : id;

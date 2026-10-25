@@ -39,6 +39,10 @@ public enum HeirloomStrategy { Priciest, Keep }
 /// <item><c>--heirloom=priciest|keep</c> career victory: keep the priciest worn gear (default) or the current heirloom.</item>
 /// <item><c>--rarity=common|uncommon|rare|epic</c> every shop offer and every --item grant gets this rarity instead of a roll.</item>
 /// <item><c>--stat=STAT:VALUE</c> adds a stat bonus at run start, e.g. <c>--stat=CritChance:20</c>. Repeatable.</item>
+/// <item><c>--retry</c> with <c>--runs=N</c>: later runs start through the end screen's "Retry same class" button instead of R.</item>
+/// <item><c>--tour</c> early in the first wave, opens and closes the gear screen (Tab), then the pause menu (Esc) and its
+/// Settings, flips Damage numbers there, and resumes. Logs a <c>tour</c> event per step. Combine with --menu-delay to record it.</item>
+/// <item><c>--settings=PATH</c> settings file to load and save (default: none, so Autoplay uses default settings in memory and never writes user://settings.cfg).</item>
 /// </list>
 /// </summary>
 public sealed class AutoplayOptions
@@ -62,6 +66,9 @@ public sealed class AutoplayOptions
     public TalentStrategy Talents { get; private set; } = TalentStrategy.Spread;
     public HeirloomStrategy Heirloom { get; private set; } = HeirloomStrategy.Priciest;
     public Rarity? Rarity { get; private set; }
+    public bool Retry { get; private set; }
+    public bool Tour { get; private set; }
+    public string SettingsPath { get; private set; }
 
     /// <summary>Problems with the flags. Autoplay logs them and quits with exit code 1.</summary>
     public List<string> Errors { get; } = new();
@@ -138,6 +145,15 @@ public sealed class AutoplayOptions
                     break;
                 case "--rarity" when Enum.TryParse(value, ignoreCase: true, out Rarity rarity) && Enum.IsDefined(rarity):
                     options.Rarity = rarity;
+                    break;
+                case "--retry":
+                    options.Retry = true;
+                    break;
+                case "--tour":
+                    options.Tour = true;
+                    break;
+                case "--settings" when value != "":
+                    options.SettingsPath = value;
                     break;
                 case "--stat" when TryParseStat(value, out var stat):
                     options.Stats.Add(stat);

@@ -3,10 +3,11 @@ using Godot;
 
 namespace ArenaShooter;
 
-/// <summary>First screen: Arcade (one fresh run) or Career (characters that grow between runs). Built in code.</summary>
+/// <summary>First screen: Arcade (one fresh run) or Career (characters that grow between runs), plus Settings. Built in code.</summary>
 public partial class ModeSelect : CanvasLayer
 {
     [Signal] public delegate void ModeChosenEventHandler(int mode);
+    [Signal] public delegate void SettingsRequestedEventHandler();
 
     private readonly List<(GameMode Mode, Button Button)> _choices = new();
 
@@ -29,6 +30,15 @@ public partial class ModeSelect : CanvasLayer
             "Each class is a character that levels up from every run, win or lose. Spend talent points on " +
             "permanent bonuses, and after a victory keep one piece of gear as an heirloom for the next run.",
             "Progress saves automatically.");
+
+        var settings = new Button
+        {
+            Text = "Settings",
+            CustomMinimumSize = new Vector2(200, 40),
+            SizeFlagsHorizontal = Control.SizeFlags.ShrinkCenter,
+        };
+        settings.Pressed += () => EmitSignal(SignalName.SettingsRequested);
+        layout.AddChild(settings);
         Hide();
     }
 

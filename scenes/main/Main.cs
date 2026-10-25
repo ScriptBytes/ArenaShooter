@@ -6,8 +6,9 @@ namespace ArenaShooter;
 
 /// <summary>
 /// Run controller: wires the scene together and drives mode select → class select → (career screen) →
-/// spell select → wave → shop → wave loop. The tree is paused whenever a wave isn't running; the UI
-/// layers run while paused. The mode and the career save live in the <see cref="Career"/> autoload.
+/// spell select → wave → shop → wave loop. The tree is paused whenever a wave isn't running (and while
+/// the pause menu or gear screen is open); the UI layers run while paused. The mode, the career save
+/// and a pending "retry same class" live in the <see cref="Career"/> autoload, which survives restarts.
 /// </summary>
 public partial class Main : Node2D
 {
@@ -35,6 +36,9 @@ public partial class Main : Node2D
     [Export] public CareerScreen CareerScreen { get; set; }
     [Export] public CareerSummary CareerSummary { get; set; }
     [Export] public CareerSettings CareerSettings { get; set; }
+    [Export] public PauseMenu PauseMenu { get; set; }
+    [Export] public GearScreen GearScreen { get; set; }
+    [Export] public SettingsScreen SettingsScreen { get; set; }
 
     private readonly RunState _run = new();
     private GameState _state;
@@ -43,6 +47,7 @@ public partial class Main : Node2D
     private AutoplayOptions _autoplay;
     private Autoplay _autoplayDriver;
     private ClassData _class;
+    private Godot.Collections.Array<AbilityData> _spells;
     private Career Career => Career.Instance;
     private bool IsCareer => Career.Mode == GameMode.Career;
 
@@ -62,8 +67,10 @@ public partial class Main : Node2D
         Spawner.EnemyKilled += () => _run.Kills++;
         Shop.Rarities = Rarities;
         Shop.Purchased += ApplyLoadout;
+        Shop.GoldChanged += Hud.SetGold;
         Shop.ContinueRequested += () => StartWave(_run.Wave + 1);
         Hud.RestartRequested += Restart;
+        Hud.RetryRequested += Retry;
         ModeSelect.ModeChosen += mode =>
         {
             Career.Mode = (GameMode)mode;
@@ -83,6 +90,16 @@ public partial class Main : Node2D
         SpellSelect.SpellsChosen += StartRun;
         CareerSummary.HeirloomChosen += OnHeirloomChosen;
         CareerSummary.ContinueRequested += Restart;
+        CareerSummary.RetryRequested += Retry;
+        ModeSelect.SettingsRequested += SettingsScreen.Open;
+
+        // Esc: a wave or the shop. Tab: a wave only (the shop shows your gear already). Never both at once.
+        PauseMenu.Settings = SettingsScreen;
+        PauseMenu.IsCareer = () => IsCareer;
+        PauseMenu.CanOpen = () => _state is GameState.Wave or GameState.Shop && !GearScreen.Visible;
+        PauseMenu.RetryRequested += Retry;
+        PauseMenu.AbandonRequested += Restart;
+        GearScreen.CanOpen = () => _state == GameState.Wave && !PauseMenu.Visible && !SettingsScreen.Visible;
 
         Career.ValidateIds(Classes,
             ItemCatalog.Items.Concat(ItemCatalog.Consumables)
@@ -96,8 +113,15 @@ public partial class Main : Node2D
 
         _state = GameState.ClassSelect;
         GetTree().Paused = true;
-        // After a restart the mode is already picked, so go straight to class select.
-        if (Career.Mode == GameMode.None)
+        // "Retry same class" skips every select screen. After a plain restart the mode is already
+        // picked, so go straight to class select.
+        if (TakeRetry() is var (retryClass, retrySpells))
+        {
+            if (_autoplayDriver != null)
+                _autoplayDriver.FromRetry = true;
+            StartRun(retryClass, retrySpells);
+        }
+        else if (Career.Mode == GameMode.None)
             ModeSelect.Open();
         else
             OpenClassSelect();
@@ -152,6 +176,7 @@ public partial class Main : Node2D
     private void StartRun(ClassData playerClass, Godot.Collections.Array<AbilityData> spells)
     {
         _class = playerClass;
+        _spells = spells;
         // Starting weapons are always Common.
         _run.Equipment.StartingWeapon = new ItemInstance(playerClass.StartingWeapon, Rarities.Common);
         _run.AddItem(_run.Equipment.StartingWeapon);
@@ -165,6 +190,8 @@ public partial class Main : Node2D
         ApplyLoadout();
         Hud.BindAbilities(Player.Abilities);
         Hud.BindPotions(Player);
+        PauseMenu.SetClass(playerClass);
+        GearScreen.Bind(_run, Player);
         EmitSignal(SignalName.RunStarted, playerClass);
         StartWave(_autoplay?.StartWave ?? 1);
     }
@@ -196,6 +223,10 @@ public partial class Main : Node2D
             CareerSettings = CareerSettings,
             SpellSelect = SpellSelect,
             Shop = Shop,
+            Hud = Hud,
+            PauseMenu = PauseMenu,
+            GearScreen = GearScreen,
+            SettingsScreen = SettingsScreen,
             Player = Player,
             Run = _run,
             ArenaCenter = Arena.Size / 2f,
@@ -234,6 +265,7 @@ public partial class Main : Node2D
     {
         Player.SetWeapon(_run.Equipment.Weapon, _run.Equipment.WeaponDamageMultiplier);
         Player.ApplyStats(_run.Stats);
+        Hud.SetWeapon(_run.Equipment.MainHand ?? _run.Equipment.StartingWeapon);
     }
 
     public override void _Process(double delta)
@@ -301,9 +333,10 @@ public partial class Main : Node2D
         if (IsCareer)
             EndCareerRun(result == GameState.Victory);
         else
-            Hud.ShowMessage(result == GameState.Victory
-                ? $"Victory!\nSurvived all {TotalWaves} waves · {_run.Kills} kills\nPress R to play again"
-                : $"Defeated on wave {_run.Wave}\n{_run.Kills} kills\nPress R to try again");
+            Hud.ShowEndScreen(result == GameState.Victory
+                    ? $"Victory!\nSurvived all {TotalWaves} waves · {_run.Kills} kills"
+                    : $"Defeated on wave {_run.Wave}\n{_run.Kills} kills",
+                $"Retry {_class.DisplayName} (same spells)");
 
         EmitSignal(SignalName.RunEnded, result == GameState.Victory);
     }
@@ -360,6 +393,32 @@ public partial class Main : Node2D
         }
     }
 
+    /// <summary>Restarts with the same class and spell picks, skipping the select screens (and, in career, the talents screen).</summary>
+    private void Retry()
+    {
+        Career.PendingRetry = new Career.RetryRequest(Career.ClassId(_class), _spells.Select(Career.SpellId).ToList());
+        Restart();
+    }
+
+    /// <summary>Takes the pending retry, resolved against this scene's classes; null if none or it no longer resolves.</summary>
+    private (ClassData Class, Godot.Collections.Array<AbilityData> Spells)? TakeRetry()
+    {
+        var retry = Career.PendingRetry;
+        Career.PendingRetry = null;
+        if (retry == null)
+            return null;
+
+        var playerClass = Classes.FirstOrDefault(c => Career.ClassId(c) == retry.ClassId);
+        var spells = retry.SpellIds.Select(id => playerClass?.Spells.FirstOrDefault(s => Career.SpellId(s) == id)).ToList();
+        if (playerClass == null || spells.Any(s => s == null))
+        {
+            GD.PushWarning($"[retry] class '{retry.ClassId}' or one of its spells no longer exists; back to class select");
+            return null;
+        }
+        return (playerClass, new Godot.Collections.Array<AbilityData>(spells));
+    }
+
+    /// <summary>Reloads the scene: class select in the same mode (also how a run is abandoned, which banks nothing).</summary>
     private void Restart()
     {
         GetTree().Paused = false;

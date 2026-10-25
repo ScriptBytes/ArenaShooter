@@ -25,8 +25,11 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/CareerSummary.tscn" id="23_career_summary"]
 [ext_resource type="Resource" path="res://data/career/CareerSettings.tres" id="24_career_settings"]
 [ext_resource type="Resource" path="res://data/RaritySettings.tres" id="25_rarities"]
+[ext_resource type="PackedScene" path="res://scenes/ui/PauseMenu.tscn" id="26_pause_menu"]
+[ext_resource type="PackedScene" path="res://scenes/ui/GearScreen.tscn" id="27_gear_screen"]
+[ext_resource type="PackedScene" path="res://scenes/ui/SettingsScreen.tscn" id="28_settings_screen"]
 
-[node name="Main" type="Node2D" node_paths=PackedStringArray("Arena", "Player", "Spawner", "Hud", "Shop", "ClassSelect", "SpellSelect", "ModeSelect", "CareerScreen", "CareerSummary")]
+[node name="Main" type="Node2D" node_paths=PackedStringArray("Arena", "Player", "Spawner", "Hud", "Shop", "ClassSelect", "SpellSelect", "ModeSelect", "CareerScreen", "CareerSummary", "PauseMenu", "GearScreen", "SettingsScreen")]
 script = ExtResource("1_main")
 Classes = Array[ExtResource("10_class_data")]([ExtResource("11_fighter"), ExtResource("12_mage"), ExtResource("19_warlock"), ExtResource("20_necromancer")])
 ItemCatalog = ExtResource("8_catalog")
@@ -41,6 +44,9 @@ SpellSelect = NodePath("SpellSelect")
 ModeSelect = NodePath("ModeSelect")
 CareerScreen = NodePath("CareerScreen")
 CareerSummary = NodePath("CareerSummary")
+PauseMenu = NodePath("PauseMenu")
+GearScreen = NodePath("GearScreen")
+SettingsScreen = NodePath("SettingsScreen")
 CareerSettings = ExtResource("24_career_settings")
 
 [node name="Arena" type="Node2D" parent="."]
@@ -67,3 +73,9 @@ Arena = NodePath("../Arena")
 [node name="CareerScreen" parent="." instance=ExtResource("22_career_screen")]
 
 [node name="CareerSummary" parent="." instance=ExtResource("23_career_summary")]
+
+[node name="PauseMenu" parent="." instance=ExtResource("26_pause_menu")]
+
+[node name="GearScreen" parent="." instance=ExtResource("27_gear_screen")]
+
+[node name="SettingsScreen" parent="." instance=ExtResource("28_settings_screen")]

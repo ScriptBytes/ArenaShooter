@@ -250,3 +250,47 @@ Each class went from 5 to 8 spells (pick 3 stays). Numbers and per-spell damage 
 - Should stun have diminishing returns or an immunity window, to stop Shockwave + CDR chain-stunning?
 - Is Second Wind the Fighter sustain you want, or would you rather keep healing to potions/hearts (and give the Fighter a taunt or a third attack instead)?
 
+
+## 9. UI and QoL
+
+**What was added**
+
+- HUD weapon slot left of the spell bar (name in rarity color, bar that refills between shots, item tooltip). Hotbar tooltips now use the shop's tooltip style.
+- Tab gear screen (waves only), Esc pause menu (waves and the shop), Settings (pause menu and mode select), Retry same class on both end screens and in the pause menu, HUD gold following shop purchases and rerolls.
+
+**Judgment calls**
+
+- **Pause menu works in the shop too**, not only mid-wave, so you can abandon or retry from there. It remembers the pause state it found, so Resume over the shop leaves the game paused. The gear screen is waves-only (the shop already shows your gear and stats).
+- **Pause menu: Retry and Abandon are both there.** "Restart run" and "Retry" are the same action (same class and spells), so there's one button. Abandon = the existing restart (class select, same mode). All three run-ending buttons (Retry, Abandon, Quit) ask first; in career the prompt says the run banks nothing, keeping the existing decision. In arcade it says gold and items are lost.
+- **Retry in career skips the talents screen** as well as class and spell select (it's a one-click retry). Points from a level-up wait until you go through Choose class. Alternative: route Retry through the talents screen only when there are free points.
+- **Retry survives the scene reload** through `Career.PendingRetry` (class and spell `Id`s, resolved against the reloaded scene), rather than a new autoload. If an Id no longer resolves it falls back to class select with a warning.
+- **The end screen's buttons**: "Retry Mage (same spells)" (focused, so Enter/Space retries) and "Choose class (R)". The career summary's "Continue (R)" became "Choose class (R)" for the same reason. R works as before. A dim backdrop now sits behind the arcade end message.
+- **Damage numbers off hides enemy damage numbers only.** Your own red numbers, heals, "Dodge", "Blocked", "x2" and spell names stay, since they're feedback about you. Say if you want everything gone.
+- **Screen shake scales the offset**, not the trauma, so the random draws stay the same; 0% means no movement at all.
+- **Master volume** sets the Master bus (dB from a linear 0–100%, muted at 0). No audio yet, so it's untested by ear.
+- **Settings and Autoplay:** Autoplay ignores `user://settings.cfg` and uses defaults in memory (seeded runs mustn't depend on your settings, e.g. damage numbers off changes random draws). `--settings=PATH` points it at a scratch file. Your real settings file is never written by tests.
+- Fullscreen uses `WindowMode.Fullscreen` (borderless on macOS, its own Space). Not exclusive fullscreen.
+- Gear screen shows bonuses from gear, trinkets and talents (not timed buffs, which are listed separately with their time left), plus derived character numbers (HP, armor, move speed, pickup range, dodge chance, weapon rate). The full stat list shows all 14 stats including zeros, with "(cap 60%)" / "(cap 50%)" next to Dodge and CDR.
+- `GearViews` (static) replaced the shop's private equipment-list code; the shop now uses it too.
+
+**Verified**
+
+- `dotnet build` clean, smoke test clean.
+- Seeded arcade Autoplay runs (4 classes × seeds 1–2, with and without `--god`) identical before and after for Fighter, Mage, Warlock. Necromancer differs, but it also differs between two runs of the same build (the known minion non-determinism: seed 2 `--god` gave 252, 279, 287, 286 kills).
+- `--tour` passes (gear screen opens/pauses/closes, pause menu → Settings → toggle → Back → Resume, unpaused after).
+- Settings persistence: launch 1 with `--settings=<scratch>.cfg --tour` wrote `damage_numbers=false`; launch 2 logged `loaded ... damage_numbers=false`.
+- Retry: arcade `--runs=2 --retry` and career `--runs=2 --retry` kept class and the non-default spell picks (`retry=true` in run 2's `run_start`; career skipped the talents screen).
+- HUD gold: a temporary print showed the HUD gold following every shop purchase (removed).
+- Movie Maker frames: HUD weapon slot, gear screen, pause menu, settings, arcade end screen and career summary with Retry, mode select with Settings.
+
+**Unverified**
+
+- Anything done with a real keyboard and mouse: Esc/Tab/F11/Alt+Enter on the Mac, hover tooltips on the gear screen and the weapon slot, dragging the sliders, keyboard focus moving back to the shop's button after closing the pause menu.
+- Fullscreen toggling on macOS (headless and Movie Maker runs don't touch the window), and going back to the 2560×1440 window size afterwards.
+- Pausing over the shop (logic only; Autoplay's tour pauses mid-wave).
+
+**Questions**
+
+- Should Retry in career go through the talents screen when you have free points?
+- Damage numbers toggle: enemies only (now), or every floating number?
+- Do you want Esc to also work as "Back" on the select screens?

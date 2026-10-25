@@ -17,6 +17,9 @@ public partial class Shop : CanvasLayer
     [Signal] public delegate void PurchasedEventHandler();
     [Signal] public delegate void ContinueRequestedEventHandler();
 
+    /// <summary>Gold went up or down (purchase, refund, reroll), so the HUD behind the shop can follow.</summary>
+    [Signal] public delegate void GoldChangedEventHandler(int gold);
+
     /// <summary>New offers are on display (shop opened or rerolled).</summary>
     [Signal] public delegate void OffersRolledEventHandler();
 
@@ -326,10 +329,10 @@ public partial class Shop : CanvasLayer
             RefreshPotionOffer(offer);
 
         // Only stats you have: listing every stat at +0 no longer fits the screen (14 stats).
-        var owned = System.Enum.GetValues<StatType>().Where(s => _run.Stats.Get(s) != 0f)
-            .Select(s => StatInfo.FormatTotal(s, _run.Stats.Get(s))).ToList();
+        var owned = GearViews.StatLines(_run.Stats, all: false);
         _stats.Text = "Your stats\n\n" + (owned.Count > 0 ? string.Join("\n", owned) : "No bonuses yet");
-        BuildEquipment();
+        GearViews.FillEquipment(_equipment, _run);
+        EmitSignal(SignalName.GoldChanged, _run.Gold);
     }
 
     // Buying one item can change what another replaces (e.g. the first ring fills the empty slot),
@@ -380,50 +383,6 @@ public partial class Shop : CanvasLayer
         if (item.Slot != EquipSlot.MainHand && replaced.Contains(equipment.MainHand))
             text += $". {equipment.StartingWeapon.DisplayName} goes back in your main hand";
         return text;
-    }
-
-    // One row per slot and per trinket, so each can show the item's stats on hover.
-    private void BuildEquipment()
-    {
-        foreach (var child in _equipment.GetChildren())
-        {
-            _equipment.RemoveChild(child);
-            child.QueueFree();
-        }
-
-        var equipment = _run.Equipment;
-        AddEquipmentRow("Equipment\n", null);
-        for (int i = 0; i < Equipment.Layout.Length; i++)
-        {
-            var slot = Equipment.Layout[i];
-            string name = equipment[i]?.DisplayName
-                ?? (slot == EquipSlot.OffHand && equipment.IsTwoHanding ? "(two-handed)" : "-");
-            AddEquipmentRow($"{EquipSlotInfo.Label(slot)}: {name}", equipment[i]);
-        }
-
-        AddEquipmentRow("\nTrinkets", null);
-        if (_run.Trinkets.Count == 0)
-            AddEquipmentRow("-", null);
-        // One row per item and rarity: a Common and a Rare Whetstone are listed apart (their stats just add up).
-        foreach (var group in _run.Trinkets.GroupBy(t => (t.Item, t.Rarity)))
-        {
-            var first = group.First();
-            AddEquipmentRow(group.Count() > 1 ? $"{first.DisplayName} x{group.Count()}" : first.DisplayName, first);
-        }
-    }
-
-    private void AddEquipmentRow(string text, ItemInstance item)
-    {
-        var row = new Label { Text = text };
-        row.AddThemeFontSizeOverride("font_size", 15);
-        if (item != null)
-        {
-            row.AddThemeColorOverride("font_color", item.Color);
-            row.TooltipText = item.Tooltip();
-            // Labels ignore the mouse by default, which would also stop the tooltip.
-            row.MouseFilter = Control.MouseFilterEnum.Pass;
-        }
-        _equipment.AddChild(row);
     }
 
     private static IEnumerable<ItemData> PickRandom(IReadOnlyList<ItemData> pool, int count)
