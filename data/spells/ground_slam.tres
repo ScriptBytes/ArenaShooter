@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1_script")
+Id = "ground_slam"
 DisplayName = "Ground Slam"
 Description = "Leap to the target spot and slam down, knocking enemies away. Untouchable mid-air."
 IconColor = Color(0.788, 0.635, 0.153, 1)

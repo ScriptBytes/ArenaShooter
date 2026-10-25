@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="ProjectileAbility" format=3]
+
+[ext_resource type="Script" path="res://scripts/abilities/ProjectileAbility.cs" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/weapons/Projectile.tscn" id="2_projectile"]
+
+[resource]
+script = ExtResource("1_script")
+Id = "corruption"
+DisplayName = "Corruption"
+Description = "Corrupts an enemy: 3 damage per second for 5 seconds. When a corrupted enemy dies, the corruption spreads to 2 enemies nearby. 10% of it heals you."
+IconColor = Color(0.8, 0.95, 0.3, 1)
+Cooldown = 5.0
+Damage = 3.0
+Range = 450.0
+LifeSteal = 10.0
+DotDamage = 3.0
+DotDuration = 5.0
+DotSpreads = 2
+ProjectileScene = ExtResource("2_projectile")
+ProjectileSpeed = 520.0
+ProjectileRadius = 6.0

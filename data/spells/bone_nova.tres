@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1_script")
+Id = "bone_nova"
 DisplayName = "Bone Nova"
 Description = "Shards of bone burst out around you, shoving enemies away and slowing them."
 IconColor = Color(0.75, 0.9, 0.85, 1)

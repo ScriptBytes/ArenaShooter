@@ -13,6 +13,7 @@ Armor = 2.0
 Speed = 130.0
 Lifetime = 25.0
 MaxAlive = 1
+Detonatable = false
 Damage = 10.0
 AttackCooldown = 1.2
 AttackReach = 8.0

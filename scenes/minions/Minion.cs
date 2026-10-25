@@ -164,9 +164,14 @@ public partial class Minion : CharacterBody2D, IDamageable
         float damage = Data.Damage * ctx.MinionDamageMultiplier;
         // Minions crit like a default ability (5% + Crit Chance), and don't life steal.
         var effects = new HitEffects(Knockback: Data.Knockback,
-            CritChance: Mathf.Clamp((5f + ctx.CritChanceBonus) / 100f, 0f, 1f), CritMultiplier: 1.5f);
+            CritChance: Mathf.Clamp((5f + ctx.CritChanceBonus) / 100f, 0f, 1f), CritMultiplier: 1.5f,
+            Source: Data.DisplayName);
 
-        if (Data.SplashRadius > 0f)
+        if (Data.IsRanged)
+        {
+            Shoot(enemy, damage, effects);
+        }
+        else if (Data.SplashRadius > 0f)
         {
             var center = enemy.GlobalPosition;
             Combat.DamageArea(GetTree(), center, Data.SplashRadius, damage, effects);
@@ -176,6 +181,33 @@ public partial class Minion : CharacterBody2D, IDamageable
         {
             Combat.Hit(enemy, damage, effects, GlobalPosition);
         }
+    }
+
+    private void Shoot(Enemy enemy, float damage, HitEffects effects)
+    {
+        var shot = Data.ProjectileScene.Instantiate<Projectile>();
+        shot.Direction = _facing;
+        shot.Rotation = _facing.Angle();
+        shot.Speed = Data.ShotSpeed;
+        shot.Damage = damage;
+        shot.Radius = 5f;
+        shot.Color = Data.GlowColor;
+        shot.Shape = ProjectileShape.Dart;
+        shot.Effects = effects;
+        shot.MaxDistance = (Data.AttackReach + Data.Size + enemy.Data.Size) * 1.4f;
+        GetParent().AddChild(shot);
+        shot.GlobalPosition = GlobalPosition + _facing * Data.Size / 2f;
+        shot.ReserveOn(enemy);
+    }
+
+    /// <summary>Corpse Explosion: bursts for <paramref name="damage"/> around itself and is gone.</summary>
+    public void Detonate(float damage, float radius, HitEffects effects)
+    {
+        if (IsQueuedForDeletion())
+            return;
+        Combat.DamageArea(GetTree(), GlobalPosition, radius, damage, effects);
+        AreaFlash.Spawn(GetParent(), GlobalPosition, radius, Data.GlowColor);
+        Crumble();
     }
 
     private void Follow()
@@ -246,6 +278,10 @@ public partial class Minion : CharacterBody2D, IDamageable
         var socket = new Color(0.1f, 0.1f, 0.12f, alpha);
         DrawCircle(eyes + side, r * 0.18f, socket);
         DrawCircle(eyes - side, r * 0.18f, socket);
+
+        // Ranged types hold a glowing orb out in front: the staff they shoot from.
+        if (Data.IsRanged)
+            DrawCircle(offset + _facing * (r + 4f) + side * 1.4f, 3.5f + 1.5f * _lunge, new Color(Data.GlowColor.Lightened(0.3f), alpha));
 
         if (_health < Data.MaxHealth)
         {

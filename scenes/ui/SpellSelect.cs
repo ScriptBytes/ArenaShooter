@@ -6,7 +6,8 @@ namespace ArenaShooter;
 
 /// <summary>
 /// Second start-of-run screen: pick <see cref="ClassData.SpellPicks"/> spells from the class's
-/// list. Pick order is slot order (first pick goes on key 1). Cards are built in code.
+/// list. Pick order is slot order (first pick goes on key 1). Cards are built in code, in a
+/// 4-column grid (8 spells = 2 rows, which fits the 1280×720 viewport).
 /// </summary>
 public partial class SpellSelect : CanvasLayer
 {
@@ -22,7 +23,7 @@ public partial class SpellSelect : CanvasLayer
 
     private Label _title;
     private Label _hint;
-    private HBoxContainer _cards;
+    private GridContainer _cards;
     private Button _back;
     private Button _start;
 
@@ -39,7 +40,7 @@ public partial class SpellSelect : CanvasLayer
     {
         _title = GetNode<Label>("%Title");
         _hint = GetNode<Label>("%Hint");
-        _cards = GetNode<HBoxContainer>("%Cards");
+        _cards = GetNode<GridContainer>("%Cards");
         _back = GetNode<Button>("%BackButton");
         _start = GetNode<Button>("%StartButton");
 
@@ -80,18 +81,24 @@ public partial class SpellSelect : CanvasLayer
         var card = new Card { Spell = spell, Style = UiStyles.Panel() };
         card.Style.BorderColor = UiStyles.Gold;
 
-        var panel = new PanelContainer { CustomMinimumSize = new Vector2(220, 300) };
+        var panel = new PanelContainer { CustomMinimumSize = new Vector2(285, 262) };
         panel.AddThemeStyleboxOverride("panel", card.Style);
         _cards.AddChild(panel);
 
         var content = new VBoxContainer();
-        content.AddThemeConstantOverride("separation", 8);
+        content.AddThemeConstantOverride("separation", 6);
         panel.AddChild(content);
 
-        content.AddChild(new ColorRect { Color = spell.IconColor, CustomMinimumSize = new Vector2(0, 40) });
-        content.AddChild(UiStyles.WrappedLabel(spell.DisplayName, 20));
+        // Name next to a color swatch, so two rows of cards stay compact.
+        var header = new HBoxContainer();
+        header.AddThemeConstantOverride("separation", 10);
+        header.AddChild(new ColorRect { Color = spell.IconColor, CustomMinimumSize = new Vector2(26, 26) });
+        var name = UiStyles.WrappedLabel(spell.DisplayName, 19);
+        name.SizeFlagsHorizontal = Control.SizeFlags.ExpandFill;
+        header.AddChild(name);
+        content.AddChild(header);
 
-        var description = UiStyles.WrappedLabel(spell.Description, 14);
+        var description = UiStyles.WrappedLabel(spell.Description, 13);
         description.SizeFlagsVertical = Control.SizeFlags.ExpandFill;
         content.AddChild(description);
 
@@ -100,9 +107,9 @@ public partial class SpellSelect : CanvasLayer
             : $"Cooldown {spell.Cooldown:0.#}s";
         if (!spell.AutoCastByDefault)
             stats += "\nManual cast (moves you)";
-        content.AddChild(UiStyles.WrappedLabel(stats, 13));
+        content.AddChild(UiStyles.WrappedLabel(stats, 12));
 
-        card.Button = new Button { CustomMinimumSize = new Vector2(0, 40) };
+        card.Button = new Button { CustomMinimumSize = new Vector2(0, 34) };
         card.Button.Pressed += () => Toggle(spell);
         content.AddChild(card.Button);
 

@@ -86,7 +86,8 @@ public partial class Career : Node
     /// with (or orphan) saved data. Called once at startup with everything a save can reference.
     /// Returns the number of problems found.
     /// </summary>
-    public static int ValidateIds(IEnumerable<ClassData> classes, IEnumerable<ItemData> items, IEnumerable<CareerTalent> talents)
+    public static int ValidateIds(IEnumerable<ClassData> classes, IEnumerable<ItemData> items, IEnumerable<CareerTalent> talents,
+        IEnumerable<AbilityData> spells)
     {
         int problems = 0;
         void Check<T>(string kind, IEnumerable<T> things, System.Func<T, string> id, System.Func<T, string> path) where T : Resource
@@ -112,6 +113,7 @@ public partial class Career : Node
         Check("class", classes, c => c.Id, c => c.ResourcePath);
         Check("item", items, i => i.Id, i => i.ResourcePath);
         Check("talent", talents, t => t.Id, t => $"'{t.DisplayName}'");
+        Check("spell", spells, s => s.Id, s => s.ResourcePath);
         return problems;
     }
 }

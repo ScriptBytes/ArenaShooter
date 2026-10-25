@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="ProjectileAbility" format=3]
+
+[ext_resource type="Script" path="res://scripts/abilities/ProjectileAbility.cs" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/weapons/Projectile.tscn" id="2_projectile"]
+
+[resource]
+script = ExtResource("1_script")
+Id = "arcane_missiles"
+DisplayName = "Arcane Missiles"
+Description = "Five arcane darts that seek out enemies on their own, each picking a different target."
+IconColor = Color(0.85, 0.5, 1, 1)
+Cooldown = 4.0
+Damage = 5.0
+Range = 420.0
+ProjectileScene = ExtResource("2_projectile")
+ProjectileSpeed = 480.0
+ProjectileRadius = 4.0
+Shape = 2
+Count = 5
+SpreadDegrees = 80.0
+Homing = 360.0

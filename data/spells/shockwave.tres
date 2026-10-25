@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="LineAbility" format=3]
+
+[ext_resource type="Script" path="res://scripts/abilities/LineAbility.cs" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+Id = "shockwave"
+DisplayName = "Shockwave"
+Description = "Strike the ground and send a crack racing forward, stunning every enemy on the line for 1.5 seconds."
+IconColor = Color(0.95, 0.82, 0.5, 1)
+Cooldown = 7.0
+Damage = 10.0
+Range = 320.0
+StunDuration = 1.5
+CritMultiplier = 2.0
+ScreenShake = 0.35
+HalfWidth = 35.0
+MinTargets = 3

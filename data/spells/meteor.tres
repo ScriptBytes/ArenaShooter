@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1_script")
+Id = "meteor"
 DisplayName = "Meteor"
 Description = "Calls down a meteor on the thickest crowd. Lands after a second, for huge damage."
 IconColor = Color(0.91, 0.333, 0.2, 1)

@@ -88,6 +88,7 @@ public partial class Autoplay : Node
     public void OnRunStarted(ClassData playerClass)
     {
         _class = playerClass;
+        Combat.ResetDamageLog();
         string spells = string.Join(",", Player.Abilities.Spells.Select(s => s.Ability.DisplayName));
         Log($"run_start class={playerClass.DisplayName} spells=\"{spells}\" gear=\"{Gear()}\" wave={Options.StartWave} " +
             $"seed={(Options.Seed is { } seed ? (seed + (ulong)RunsDone).ToString() : "random")} dotnet={System.Environment.Version}");
@@ -108,8 +109,8 @@ public partial class Autoplay : Node
         Log($"wave_end wave={wave} kills={Run.Kills} gold={Run.Gold} bag={Run.Bag} " +
             $"hp={Player.Health.Current:0}/{Player.Health.Max:0} {PotionSummary()} {Defense()}");
 
-    // Run totals so far: hits that landed, hits dodged, HP healed by regen.
-    private string Defense() => $"hits={Player.HitsTaken} dodged={Player.HitsDodged} regen={Player.RegenHealed:0.#}";
+    // Run totals so far: hits that landed, hits dodged, HP healed by regen, damage absorbed by barriers.
+    private string Defense() => $"hits={Player.HitsTaken} dodged={Player.HitsDodged} regen={Player.RegenHealed:0.#} shielded={Player.ShieldAbsorbed:0.#}";
 
     public void OnHeartCollected(float healed, float stored) =>
         Log($"heart healed={healed:0.#} added={stored:0.#} hp={Player.Health.Current:0}/{Player.Health.Max:0} reserve={Reserve()}");
@@ -128,6 +129,9 @@ public partial class Autoplay : Node
     {
         Log($"run_end result={(victory ? "victory" : "defeat")} wave={Run.Wave} kills={Run.Kills} " +
             $"gold={Run.Gold} gear=\"{Gear()}\" trinkets={Run.Trinkets.Count} trinket_list=\"{string.Join(",", Run.Trinkets.Select(t => t.LogName))}\" {Defense()}");
+        // Damage that landed per source (weapon, spell, minion type), biggest first.
+        var damage = Combat.DamageBySource.OrderByDescending(p => p.Value).ToList();
+        Log($"damage total={damage.Sum(p => p.Value):0} by=\"{string.Join(",", damage.Select(p => $"{p.Key}:{p.Value:0}"))}\"");
         _runEnded = true;
         if (CareerSummary.Visible)
             return; // SummaryStep banks the career, then quits or restarts.

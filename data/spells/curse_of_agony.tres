@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1_script")
+Id = "curse_of_agony"
 DisplayName = "Curse of Agony"
 Description = "Curses the thickest crowd: 5 damage per second for 6 seconds. 10% of it heals you."
 IconColor = Color(0.55, 0.85, 0.2, 1)

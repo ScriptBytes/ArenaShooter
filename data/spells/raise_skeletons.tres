@@ -5,6 +5,7 @@
 
 [resource]
 script = ExtResource("1_script")
+Id = "raise_skeletons"
 DisplayName = "Raise Skeletons"
 Description = "Raises 2 skeletons that fight for you for 18 seconds. Up to 6 at once."
 IconColor = Color(0.922, 0.898, 0.812, 1)

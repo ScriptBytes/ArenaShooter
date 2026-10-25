@@ -5,6 +5,7 @@
 
 [resource]
 script = ExtResource("1_script")
+Id = "fireball"
 DisplayName = "Fireball"
 Description = "Hurls a fireball that explodes on impact."
 IconColor = Color(1, 0.541, 0.239, 1)

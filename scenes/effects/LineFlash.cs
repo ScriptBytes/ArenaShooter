@@ -13,12 +13,20 @@ public partial class LineFlash : Node2D
     public float Width { get; set; } = 3f;
     public float Duration { get; set; } = 0.25f;
 
+    /// <summary>Scales the whole line's alpha, e.g. for a faint wide band under a crack.</summary>
+    public float Opacity { get; set; } = 1f;
+
     private float _time;
 
     /// <summary>Adds a line to the world. Points are global; deferred so it's safe from physics callbacks.</summary>
-    public static void Spawn(Node world, Vector2[] points, Color color, float width, float jitter = 0f)
+    public static void Spawn(Node world, Vector2[] points, Color color, float width, float jitter = 0f,
+        float opacity = 1f, float duration = 0.25f)
     {
-        var flash = new LineFlash { Points = jitter > 0f ? Jag(points, jitter) : points, Color = color, Width = width };
+        var flash = new LineFlash
+        {
+            Points = jitter > 0f ? Jag(points, jitter) : points, Color = color, Width = width,
+            Opacity = opacity, Duration = duration,
+        };
         world.CallDeferred(Node.MethodName.AddChild, flash);
     }
 
@@ -59,7 +67,7 @@ public partial class LineFlash : Node2D
         if (Points.Length < 2)
             return;
 
-        float fade = 1f - Mathf.Clamp(_time / Duration, 0f, 1f);
+        float fade = (1f - Mathf.Clamp(_time / Duration, 0f, 1f)) * Opacity;
         // A soft wide glow under a bright core.
         DrawPolyline(Points, new Color(Color, 0.35f * fade), Width + 6f);
         DrawPolyline(Points, new Color(Color, 0.9f * fade), Width);

@@ -87,7 +87,8 @@ public partial class Main : Node2D
         Career.ValidateIds(Classes,
             ItemCatalog.Items.Concat(ItemCatalog.Consumables)
                 .Concat(Classes.SelectMany(c => c.Weapons.Append(c.StartingWeapon))),
-            CareerSettings.Talents);
+            CareerSettings.Talents,
+            Classes.SelectMany(c => c.Spells));
 
         _autoplay = AutoplayOptions.FromCommandLine();
         if (_autoplay != null)

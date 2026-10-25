@@ -17,6 +17,8 @@ public partial class Enemy : CharacterBody2D, IDamageable
     private const float DotTickInterval = 0.5f;
     private const uint ShotCollisionMask = 1 | 2 | 16; // world + player + minions
     private const float RetargetInterval = 0.25f;
+    private const float SpreadRadius = 150f;
+    private static readonly Color StunColor = new("ffe066");
     private static readonly Color ShotColor = new("ff6b6b");
 
     /// <summary>Set before the enemy enters the tree (Enemy.tscn defaults to the grunt).</summary>
@@ -49,6 +51,11 @@ public partial class Enemy : CharacterBody2D, IDamageable
     private float _dotTick;
     private float _dotLifeSteal;
     private Color _dotColor;
+    private float _dotDuration;
+    private int _dotSpreads;
+    private string _dotSource;
+
+    private float _stunLeft;
 
     private MinionData _raiseMinion;
     private float _raiseChance;
@@ -92,19 +99,37 @@ public partial class Enemy : CharacterBody2D, IDamageable
     /// <summary>
     /// Damage over time, ticking every half second. The strongest DoT wins; a weaker one
     /// doesn't replace or extend it. Ticks heal the player for <paramref name="lifeSteal"/> (0–1).
+    /// <paramref name="spreads"/> &gt; 0 makes it jump to that many neighbors when this enemy dies with
+    /// it on. The spread survives a stronger DoT replacing it (the stronger one then spreads),
+    /// but not the DoT running out.
     /// </summary>
-    public void ApplyDot(float dps, float duration, float lifeSteal, Color color)
+    public void ApplyDot(float dps, float duration, float lifeSteal, Color color, int spreads = 0, string source = null)
     {
+        int keptSpreads = _dotLeft > 0f ? _dotSpreads : 0;
         if (_dotLeft > 0f && dps < _dotDps)
+        {
+            _dotSpreads = Mathf.Max(keptSpreads, spreads);
             return;
+        }
         if (_dotLeft <= 0f)
             _dotTick = DotTickInterval;
 
         _dotDps = dps;
         _dotLifeSteal = lifeSteal;
         _dotColor = color;
+        _dotSource = source;
+        _dotDuration = duration;
+        _dotSpreads = Mathf.Max(keptSpreads, spreads);
         _dotLeft = Mathf.Max(_dotLeft, duration);
     }
+
+    /// <summary>Can't move or shoot for a while. Knockback resistance shortens it (a Brute, 0.7, keeps 65%).</summary>
+    public void ApplyStun(float duration)
+    {
+        _stunLeft = Mathf.Max(_stunLeft, duration * (1f - 0.5f * Data.KnockbackResistance));
+    }
+
+    public bool IsStunned => _stunLeft > 0f;
 
     /// <summary>If this enemy dies within <paramref name="window"/> seconds, it may rise as a minion.</summary>
     public void MarkForRaising(MinionData minion, float chance, float window)
@@ -137,7 +162,14 @@ public partial class Enemy : CharacterBody2D, IDamageable
             _target = FindTarget();
         }
 
-        if (IsInstanceValid(_target))
+        _stunLeft = Mathf.Max(_stunLeft - dt, 0f);
+        if (IsStunned)
+        {
+            // Stunned: only knockback moves it, and it doesn't shoot.
+            Velocity = _knockback;
+            MoveAndSlide();
+        }
+        else if (IsInstanceValid(_target))
         {
             var toTarget = _target.GlobalPosition - GlobalPosition;
             Move(toTarget);
@@ -183,7 +215,7 @@ public partial class Enemy : CharacterBody2D, IDamageable
         if (_dotTick <= 0f)
         {
             _dotTick += DotTickInterval;
-            Combat.Deal(this, _dotDps * DotTickInterval, _dotLifeSteal, color: _dotColor.Lightened(0.35f));
+            Combat.Deal(this, _dotDps * DotTickInterval, _dotLifeSteal, color: _dotColor.Lightened(0.35f), source: _dotSource);
         }
         _dotLeft -= dt;
     }
@@ -256,9 +288,31 @@ public partial class Enemy : CharacterBody2D, IDamageable
         DeathPop.Spawn(GetTree().CurrentScene, GlobalPosition, Data.Color, Data.Size);
         if (_raiseLeft > 0f && GD.Randf() < _raiseChance)
             Minion.Spawn(GetTree().CurrentScene, _raiseMinion, GlobalPosition);
+        if (_dotLeft > 0f && _dotSpreads > 0)
+            SpreadDot();
 
         EmitSignal(SignalName.Died, this);
         QueueFree();
+    }
+
+    // Corruption: the DoT jumps to the nearest enemies that don't already carry a spreading one,
+    // at full duration, so it can run through a crowd of enemies that die to it.
+    private void SpreadDot()
+    {
+        var targets = new System.Collections.Generic.List<Enemy>();
+        foreach (var enemy in Combat.EnemiesInRadius(GetTree(), GlobalPosition, SpreadRadius))
+        {
+            if (enemy != this && !(enemy._dotLeft > 0f && enemy._dotSpreads > 0))
+                targets.Add(enemy);
+        }
+        targets.Sort((a, b) => GlobalPosition.DistanceSquaredTo(a.GlobalPosition)
+            .CompareTo(GlobalPosition.DistanceSquaredTo(b.GlobalPosition)));
+
+        for (int i = 0; i < Mathf.Min(_dotSpreads, targets.Count); i++)
+        {
+            targets[i].ApplyDot(_dotDps, _dotDuration, _dotLifeSteal, _dotColor, _dotSpreads, _dotSource);
+            LineFlash.Spawn(GetTree().CurrentScene, [GlobalPosition, targets[i].GlobalPosition], _dotColor, 2f, jitter: 6f);
+        }
     }
 
     public override void _Draw()
@@ -268,6 +322,8 @@ public partial class Enemy : CharacterBody2D, IDamageable
             color = color.Lerp(new Color("7fc8ff"), 0.6f);
         if (_dotLeft > 0f)
             color = color.Lerp(_dotColor, 0.5f);
+        if (IsStunned)
+            color = color.Lerp(StunColor, 0.45f);
         if (_hitFlashLeft > 0f)
             color = Colors.White;
 
@@ -297,6 +353,16 @@ public partial class Enemy : CharacterBody2D, IDamageable
         }
 
         DrawSetTransform(Vector2.Zero);
+        // Stunned: three little stars circling above its head.
+        if (IsStunned)
+        {
+            float spin = (float)Time.GetTicksMsec() / 1000f * 6f;
+            for (int i = 0; i < 3; i++)
+            {
+                var at = new Vector2(0, -r - 8f) + Vector2.FromAngle(spin + Mathf.Tau * i / 3f) * new Vector2(r * 0.8f, 3f);
+                DrawCircle(at, 2.5f, StunColor);
+            }
+        }
         // Marked for raising: a ring in the minion's glow color.
         if (_raiseLeft > 0f && _raiseMinion != null)
             DrawArc(Vector2.Zero, r + 5f, 0f, Mathf.Tau, 24, new Color(_raiseMinion.GlowColor, 0.8f), 2f);

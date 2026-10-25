@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1_script")
+Id = "whirlwind"
 DisplayName = "Whirlwind"
 Description = "Spin, striking and shoving back everything around you."
 IconColor = Color(0.722, 0.769, 0.839, 1)

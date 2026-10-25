@@ -11,6 +11,11 @@ namespace ArenaShooter;
 [GlobalClass]
 public partial class AbilityData : Resource
 {
+    /// <summary>
+    /// Stable key for saves (future spell unlocks, loadouts), like <see cref="ItemData.Id"/>.
+    /// Never change it once shipped; the file can be renamed freely.
+    /// </summary>
+    [Export] public string Id { get; set; } = "";
     [Export] public string DisplayName { get; set; } = "";
     [Export(PropertyHint.MultilineText)] public string Description { get; set; } = "";
     [Export] public Color IconColor { get; set; } = Colors.White;
@@ -32,6 +37,12 @@ public partial class AbilityData : Resource
     /// <summary>Damage over time (per second, scaled by Damage%) for <see cref="DotDuration"/> seconds.</summary>
     [Export] public float DotDamage { get; set; }
     [Export] public float DotDuration { get; set; }
+
+    /// <summary>When an enemy dies with this DoT on it, the DoT jumps to this many enemies nearby (Corruption).</summary>
+    [Export] public int DotSpreads { get; set; }
+
+    /// <summary>Seconds the enemy can't move or shoot. Heavy enemies (knockback resistance) shake it off faster.</summary>
+    [Export] public float StunDuration { get; set; }
 
     /// <summary>
     /// Necromancy: enemies hit become marked for <see cref="RaiseWindow"/> seconds; one that dies
@@ -62,7 +73,8 @@ public partial class AbilityData : Resource
     protected HitEffects Effects(AbilityContext ctx) =>
         new(SlowMultiplier, SlowDuration, Knockback, EffectiveCritChance(ctx), CritMultiplier,
             EffectiveLifeSteal(ctx), DotDamage * ctx.DamageMultiplier, DotDuration, IconColor,
-            RaiseMinion, RaiseMinion == null ? 0f : RaiseChance / 100f, RaiseWindow);
+            RaiseMinion, RaiseMinion == null ? 0f : RaiseChance / 100f, RaiseWindow,
+            StunDuration, DotSpreads, DisplayName);
 
     /// <summary>Manual casts aim at the mouse when true; otherwise they fire from the caster.</summary>
     public virtual bool NeedsAim => true;

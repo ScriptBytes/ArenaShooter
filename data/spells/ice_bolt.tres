@@ -5,6 +5,7 @@
 
 [resource]
 script = ExtResource("1_script")
+Id = "ice_bolt"
 DisplayName = "Ice Bolt"
 Description = "A shard of ice that hits hard and leaves its target crawling."
 IconColor = Color(0.627, 0.894, 1, 1)

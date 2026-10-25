@@ -5,6 +5,7 @@
 
 [resource]
 script = ExtResource("1_script")
+Id = "bone_spear"
 DisplayName = "Bone Spear"
 Description = "A fast, heavy spear of bone."
 IconColor = Color(0.95, 0.93, 0.85, 1)

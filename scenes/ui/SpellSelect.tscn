@@ -24,12 +24,12 @@ grow_vertical = 2
 
 [node name="Layout" type="VBoxContainer" parent="Center"]
 layout_mode = 2
-theme_override_constants/separation = 20
+theme_override_constants/separation = 12
 
 [node name="Title" type="Label" parent="Center/Layout"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 36
+theme_override_font_sizes/font_size = 30
 text = "Choose your spells"
 horizontal_alignment = 1
 
@@ -39,11 +39,13 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 16
 horizontal_alignment = 1
 
-[node name="Cards" type="HBoxContainer" parent="Center/Layout"]
+[node name="Cards" type="GridContainer" parent="Center/Layout"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_constants/separation = 16
-alignment = 1
+size_flags_horizontal = 4
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 12
+columns = 4
 
 [node name="Buttons" type="HBoxContainer" parent="Center/Layout"]
 layout_mode = 2

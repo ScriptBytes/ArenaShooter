@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="ProjectileAbility" format=3]
+
+[ext_resource type="Script" path="res://scripts/abilities/ProjectileAbility.cs" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/weapons/Projectile.tscn" id="2_projectile"]
+
+[resource]
+script = ExtResource("1_script")
+Id = "throwing_axe"
+DisplayName = "Throwing Axe"
+Description = "Hurl an axe that cuts through every enemy in its path, then spins back to you and hits them again."
+IconColor = Color(0.86, 0.55, 0.32, 1)
+Cooldown = 3.5
+Damage = 8.0
+Range = 340.0
+Knockback = 60.0
+CritMultiplier = 2.0
+ProjectileScene = ExtResource("2_projectile")
+ProjectileSpeed = 520.0
+ProjectileRadius = 7.0
+Shape = 1
+Returns = true

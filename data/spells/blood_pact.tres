@@ -15,6 +15,7 @@ Value = 15.0
 
 [resource]
 script = ExtResource("1_script")
+Id = "blood_pact"
 DisplayName = "Blood Pact"
 Description = "Pay 4 HP: +50% Damage and +15% Life Steal for 8 seconds. Auto-cast waits until you're above half health."
 IconColor = Color(1, 0.35, 0.25, 1)

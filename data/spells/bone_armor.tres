@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="BuffAbility" format=3]
+
+[ext_resource type="Script" path="res://scripts/abilities/BuffAbility.cs" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+Id = "bone_armor"
+DisplayName = "Bone Armor"
+Description = "Bone plates wrap around you, absorbing the next 10 damage within 8 seconds, and shove nearby enemies back."
+IconColor = Color(0.9, 0.87, 0.75, 1)
+Cooldown = 12.0
+Damage = 0.0
+Range = 0.0
+Knockback = 220.0
+ScreenShake = 0.2
+Radius = 120.0
+CenteredOnCaster = true
+MinTargets = 2
+Duration = 8.0
+Shield = 10.0

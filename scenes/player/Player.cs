@@ -65,6 +65,18 @@ public partial class Player : CharacterBody2D, IDamageable
     private float _invulnerableLeft;
     private float _basePickupRange;
 
+    // Barrier (Bone Armor): absorbs damage after armor until it's used up or runs out.
+    private float _shield;
+    private float _shieldMax;
+    private float _shieldLeft;
+    private Color _shieldColor;
+
+    /// <summary>HP of damage the current barrier still absorbs.</summary>
+    public float Shield => _shieldLeft > 0f ? _shield : 0f;
+
+    /// <summary>This run's total damage absorbed by barriers, for Autoplay's logs.</summary>
+    public float ShieldAbsorbed { get; private set; }
+
     private Vector2 _leapVelocity;
     private float _leapLeft;
     private float _leapDuration;
@@ -123,8 +135,17 @@ public partial class Player : CharacterBody2D, IDamageable
         RefreshStats();
     }
 
+    /// <summary>Gives a barrier of <paramref name="amount"/> HP for <paramref name="duration"/> seconds. Recasting refreshes it (no stacking).</summary>
+    public void AddShield(float amount, float duration, Color color)
+    {
+        _shield = _shieldMax = Mathf.Max(Shield, amount);
+        _shieldLeft = duration;
+        _shieldColor = color;
+    }
+
     public void ClearBuffs()
     {
+        _shieldLeft = 0f;
         Buffs.Clear();
         RefreshStats();
     }
@@ -312,6 +333,7 @@ public partial class Player : CharacterBody2D, IDamageable
     {
         float dt = (float)delta;
         _invulnerableLeft -= dt;
+        _shieldLeft = Mathf.Max(_shieldLeft - dt, 0f);
         if (Buffs.Tick(dt))
             RefreshStats();
         UpdateLifeSteal(dt);
@@ -359,6 +381,18 @@ public partial class Player : CharacterBody2D, IDamageable
 
         HitsTaken++;
         float taken = Mathf.Max(amount - Armor, 1f);
+        if (Shield > 0f)
+        {
+            float absorbed = Mathf.Min(_shield, taken);
+            _shield -= absorbed;
+            ShieldAbsorbed += absorbed;
+            taken -= absorbed;
+            if (taken <= 0f)
+            {
+                FloatingText.Spawn(GetTree().CurrentScene, GlobalPosition + new Vector2(0, -Radius), "Blocked", _shieldColor, 15);
+                return;
+            }
+        }
         Health.TakeDamage(taken);
         Camera.AddTrauma(HurtShake);
         FloatingText.SpawnDamage(GetTree().CurrentScene, GlobalPosition + new Vector2(0, -Radius), taken, new Color("ff5a5a"));
@@ -383,6 +417,7 @@ public partial class Player : CharacterBody2D, IDamageable
     {
         var color = _class?.Color ?? new Color("4aa3ff");
         DrawBuffRings();
+        DrawShield();
 
         if (IsLeaping && !_leapAirborne)
         {
@@ -406,6 +441,20 @@ public partial class Player : CharacterBody2D, IDamageable
 
         bool blink = _invulnerableLeft > 0f && (int)(_invulnerableLeft * 20f) % 2 == 0;
         DrawCircle(Vector2.Zero, Radius, blink ? Colors.White : color);
+    }
+
+    // Barrier: six bone plates around the body, fading as it's used up.
+    private void DrawShield()
+    {
+        if (Shield <= 0f)
+            return;
+        float strength = 0.35f + 0.65f * _shield / _shieldMax;
+        float r = Radius + 2.5f; // inside the buff rings
+        for (int i = 0; i < 6; i++)
+        {
+            float a = Mathf.Tau * i / 6f;
+            DrawArc(Vector2.Zero, r, a + 0.12f, a + Mathf.Tau / 6f - 0.12f, 6, new Color(_shieldColor, strength), 4f);
+        }
     }
 
     // One ring per active buff; the arc shrinks as the buff runs out.

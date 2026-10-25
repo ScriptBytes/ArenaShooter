@@ -15,6 +15,7 @@ Value = 40.0
 
 [resource]
 script = ExtResource("1_script")
+Id = "war_cry"
 DisplayName = "War Cry"
 Description = "A roar that staggers nearby enemies. +40% Damage and +40% Attack Speed for 6 seconds."
 IconColor = Color(0.93, 0.27, 0.27, 1)

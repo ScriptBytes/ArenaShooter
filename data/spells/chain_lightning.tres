@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1_script")
+Id = "chain_lightning"
 DisplayName = "Chain Lightning"
 Description = "Lightning strikes an enemy, then arcs to up to 4 more, weakening with each jump."
 IconColor = Color(0.98, 0.96, 0.45, 1)

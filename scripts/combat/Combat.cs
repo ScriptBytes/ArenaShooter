@@ -9,12 +9,16 @@ namespace ArenaShooter;
 /// <see cref="LifeSteal"/> (0–1) heals the player for that share of the damage that landed.
 /// <see cref="DotDamage"/> is per second. <see cref="RaiseChance"/> (0–1) is the odds a marked
 /// enemy rises as <see cref="RaiseMinion"/> if it dies within <see cref="RaiseWindow"/> seconds.
+/// <see cref="StunDuration"/> stops the enemy moving and shooting. <see cref="DotSpreads"/> makes the
+/// DoT jump to that many nearby enemies when its host dies. <see cref="Source"/> names what dealt the
+/// hit (an ability or minion), for <see cref="Combat.DamageBySource"/>.
 /// </summary>
 public readonly record struct HitEffects(
     float SlowMultiplier = 1f, float SlowDuration = 0f, float Knockback = 0f,
     float CritChance = 0f, float CritMultiplier = 1f, float LifeSteal = 0f,
     float DotDamage = 0f, float DotDuration = 0f, Color DotColor = default,
-    MinionData RaiseMinion = null, float RaiseChance = 0f, float RaiseWindow = 0f);
+    MinionData RaiseMinion = null, float RaiseChance = 0f, float RaiseWindow = 0f,
+    float StunDuration = 0f, int DotSpreads = 0, string Source = null);
 
 /// <summary>
 /// Shared targeting and damage helpers. Uses simple distance checks against the enemies
@@ -22,6 +26,13 @@ public readonly record struct HitEffects(
 /// </summary>
 public static class Combat
 {
+    /// <summary>
+    /// Damage that landed (no overkill) per source name since the last <see cref="ResetDamageLog"/>.
+    /// Autoplay logs it at run end; it's how spells are compared when tuning.
+    /// </summary>
+    public static Dictionary<string, float> DamageBySource { get; } = new();
+
+    public static void ResetDamageLog() => DamageBySource.Clear();
     /// <summary>Nearest enemy worth targeting: skips ones that damage already in flight will kill.</summary>
     public static Enemy NearestEnemy(SceneTree tree, Vector2 from, float range)
     {
@@ -126,14 +137,17 @@ public static class Combat
             enemy.ApplyKnockback(source.DirectionTo(enemy.GlobalPosition) * effects.Knockback);
         if (effects.SlowDuration > 0f)
             enemy.ApplySlow(effects.SlowMultiplier, effects.SlowDuration);
+        if (effects.StunDuration > 0f)
+            enemy.ApplyStun(effects.StunDuration);
         if (effects.DotDamage > 0f && effects.DotDuration > 0f)
-            enemy.ApplyDot(effects.DotDamage, effects.DotDuration, effects.LifeSteal, effects.DotColor);
+            enemy.ApplyDot(effects.DotDamage, effects.DotDuration, effects.LifeSteal, effects.DotColor,
+                effects.DotSpreads, effects.Source);
         // Marked before the damage lands, so the killing blow itself can raise the enemy.
         if (effects.RaiseMinion != null && effects.RaiseChance > 0f)
             enemy.MarkForRaising(effects.RaiseMinion, effects.RaiseChance, effects.RaiseWindow);
 
         bool crit = GD.Randf() < effects.CritChance;
-        Deal(enemy, crit ? damage * effects.CritMultiplier : damage, effects.LifeSteal, crit);
+        Deal(enemy, crit ? damage * effects.CritMultiplier : damage, effects.LifeSteal, crit, source: effects.Source);
     }
 
     /// <summary>
@@ -141,9 +155,15 @@ public static class Combat
     /// (0–1) of the damage that landed (overkill doesn't count). The life steal hook: every
     /// player hit, DoT tick included, ends up here.
     /// </summary>
-    public static void Deal(Enemy enemy, float damage, float lifeSteal, bool crit = false, Color? color = null)
+    public static void Deal(Enemy enemy, float damage, float lifeSteal, bool crit = false, Color? color = null,
+        string source = null)
     {
         float landed = Mathf.Min(damage, enemy.Health.Current);
+        if (landed > 0f && !enemy.Health.IsDead)
+        {
+            string key = source ?? "other";
+            DamageBySource[key] = DamageBySource.GetValueOrDefault(key) + landed;
+        }
         var player = lifeSteal > 0f ? enemy.GetTree().GetFirstNodeInGroup(Groups.Player) as Player : null;
 
         enemy.TakeDamage(damage, crit, color);

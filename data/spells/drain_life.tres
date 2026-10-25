@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1_script")
+Id = "drain_life"
 DisplayName = "Drain Life"
 Description = "A beam that drains an enemy for 8 damage per second over 3 seconds, healing you for 40% of it. Jumps to the next enemy if the target dies."
 IconColor = Color(0.9, 0.2, 0.35, 1)

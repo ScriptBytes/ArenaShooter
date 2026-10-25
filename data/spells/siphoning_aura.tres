@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="AuraAbility" format=3]
+
+[ext_resource type="Script" path="res://scripts/abilities/AuraAbility.cs" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+Id = "siphoning_aura"
+DisplayName = "Siphoning Aura"
+Description = "For 5 seconds, drain everything near you for 5 damage per second, healing you for 25% of it."
+IconColor = Color(0.95, 0.3, 0.55, 1)
+Cooldown = 12.0
+Damage = 5.0
+Range = 0.0
+LifeSteal = 25.0
+Radius = 130.0
+CenteredOnCaster = true
+MinTargets = 3
+Duration = 5.0
+TickInterval = 0.5

@@ -202,3 +202,51 @@ Implemented the answered questions from §1 and §2; decisions are in `Goals.md`
 - Should Cooldown Reduction also shorten the weapon (and Attack Speed become weapon-only damage tempo)? I chose spells only.
 - Regen per 10s OK, or would you prefer Brotato's abstract "HP Regeneration" points?
 - Should a dodge give the full 0.5s i-frames (current) or a shorter window?
+
+## 8. New spells
+
+Each class went from 5 to 8 spells (pick 3 stays). Numbers and per-spell damage are in `ROADMAP.md` tuning notes.
+
+**What was added**
+
+- Fighter: **Throwing Axe** (returning, piercing blade), **Shockwave** (line crack that stuns 1.5s), **Second Wind** (heal 12 HP over 5s via +HP Regen, shove; auto-cast below half HP).
+- Mage: **Arcane Missiles** (5 homing darts, each its own target), **Blizzard** (4s ice zone on the densest crowd, damage + slow), **Blink** (short teleport, frost burst where you left; manual).
+- Warlock: **Siphoning Aura** (5s aura around you, 25% life steal), **Corruption** (DoT that spreads to 2 neighbors when its host dies, 10% life steal), **Vampire Bats** (4 homing bats, 30% life steal).
+- Necromancer: **Skeletal Mage** (ranged, non-targetable minion, up to 2), **Bone Armor** (10-HP barrier for 8s + shove), **Corpse Explosion** (up to 3 skeletons burst for 14 each).
+
+**Judgment calls**
+
+- Whirlwind and Frost Nova already existed, so the suggested "whirlwind" and "frost nova" became Second Wind (the Fighter had no sustain at all) and Blizzard (a lasting zone rather than a burst).
+- New reusable behaviors, kept small: `LineAbility`, `AuraAbility`/`AuraField`, `BlinkAbility`, `DetonateAbility`, plus options on existing ones (projectile `Count`/`Pierce`/`Returns`/`Homing`/`Shape`, `BuffAbility.Shield`/`CastBelowHealth`, `MinionData.ShotSpeed`/`Detonatable`) and two hit effects (`StunDuration`, `DotSpreads`).
+- **Stun** is a new effect, not a 0% slow, so stunned archers also stop shooting. Knockback resistance shortens it (Brute 1.5s → ~1s). No diminishing returns: two Shockwaves could chain-stun. Contact damage still applies while stunned.
+- **Barrier** absorbs after armor, so armor and a barrier stack. A hit fully absorbed shows "Blocked" and still starts i-frames. It's not shown on the HUD, only as bone plates around the player. Recasting refreshes to max(current, new); no stacking.
+- **Corruption** spreads at full duration to the 2 nearest enemies that don't already carry a spreading DoT, and keeps spreading as long as it kills. It ran ~120 spreads in a seed-2 run, not a runaway: by wave 3–4 enemies outlive 15 damage. If a stronger DoT (Curse of Agony) replaces it, the spread flag sticks and the *stronger* DoT spreads. That's a deliberate synergy; say if you'd rather it be lost.
+- **Skeletal Mage is non-targetable** (enemies ignore it, it can't be hurt) as a first use of the Targetable toggle. It deals more than skeletons but tanks nothing, which shows in survival (see concerns).
+- **Corpse Explosion only blows up skeletons** (`Detonatable` off for the golem and skeletal mages): blowing up a 25s tank or your turret felt like a trap. Damage scales with Damage% + Minion Damage%, like minions, not like other spells. With no skeletons it just puffs (the cooldown is still spent on a manual cast; auto-cast waits for a skeleton with 3 enemies around it).
+- **Second Wind** reuses the HP Regen stat as a timed buff (+24 per 10s for 5s = 12 HP), so it also shows the regen "+N" text, and Life-steal-cap rules don't apply.
+- **Blink**'s auto-cast (only with auto-cast switched on) jumps away from the crowd's center and can run into a wall (walls cut it short). It deals 5 damage at the spot you left.
+- **Spell `Id`s:** every spell has one (its file name) and startup validation checks them with the other save Ids. Weapons (`data/weapons/`) didn't get one; their items already have Ids.
+- **Autoplay `damage` event:** damage landed per source at run end (`Combat.DamageBySource`, filled through `Combat.Deal`; DoT ticks keep their source, minions use their type name). Kept as a permanent tool rather than a temporary print, since it's what spell tuning needs. `run_end`/`wave_end` also log `shielded`.
+- Spell select: 4×2 grid of 285×262 cards with the color swatch next to the name; fits 1280×720 with ~20px to spare.
+
+**Balance concerns**
+
+- Throwing Axe (~1600) and Shockwave (~1500) are near the top of the Fighter list; the Fighter's new-spell pick survived better than its default (3.0 vs 2.6). Fine while the Fighter is the weakest class, but watch them.
+- Necromancer picks without targetable minions die sooner in Autoplay (2.0–2.4 vs 3.0). Skeletal Mage being non-targetable and Corpse Explosion consuming skeletons both trade away the tanking that keeps the Necromancer alive.
+- Mage's new pick survived worse in Autoplay (2.2 vs 2.6), partly because the bot doesn't use Blink well; Arcane Missiles + Blizzard + Frost Nova did 3.0.
+- Siphoning Aura heals up to 25% of 5 dps per enemy around you, capped by the 5 HP/s life steal cap; with a crowd it reaches the cap easily. Vampire Bats + Blood Pact may be strong sustain.
+- Cooldown Reduction at 50% makes Second Wind a 10s heal and Bone Armor a 6s barrier (10 HP per 6s is more than Ring of Regeneration ×3).
+
+**Unverified**
+
+- Feel and readability seen only in Movie Maker frames: Shockwave band and stun stars, the axe's spin and return, missile darts, Blizzard and aura fields, bats (small; radius raised to 6), skeletal mage orbs, corruption lines, the bone-plate barrier and "Blocked". Not played by hand.
+- Manual aiming of Shockwave, Blink, Corpse Explosion (picks skeletons nearest the cursor) and manual-cast homing (missiles seek around the cursor) wasn't tested with a mouse; Autoplay only auto-casts.
+- Blink into walls and the arena edge.
+
+**Questions**
+
+- Should Skeletal Mage be targetable (a fragile ranged tank) or stay untouchable as now?
+- Corpse Explosion: skeletons only (now), or every minion including the golem?
+- Should stun have diminishing returns or an immunity window, to stop Shockwave + CDR chain-stunning?
+- Is Second Wind the Fighter sustain you want, or would you rather keep healing to potions/hearts (and give the Fighter a taunt or a third attack instead)?
+

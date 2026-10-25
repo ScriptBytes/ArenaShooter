@@ -30,15 +30,25 @@ public partial class MinionData : Resource
     /// <summary>Most of this type alive at once. Summoning past it crumbles the oldest.</summary>
     [Export] public int MaxAlive { get; set; } = 6;
 
+    /// <summary>Corpse Explosion may blow it up. Off for the golem, so a combo spell doesn't eat the tank.</summary>
+    [Export] public bool Detonatable { get; set; } = true;
+
     [ExportGroup("Attack")]
     /// <summary>Base damage per attack; scaled by the player's Damage% + Minion Damage%.</summary>
     [Export] public float Damage { get; set; } = 4f;
     [Export] public float AttackCooldown { get; set; } = 0.7f;
 
-    /// <summary>Gap between the two bodies' edges at which it can strike.</summary>
+    /// <summary>Gap between the two bodies' edges at which it can strike (or shoot, when ranged).</summary>
     [Export] public float AttackReach { get; set; } = 6f;
 
     /// <summary>0 = hits one enemy; otherwise every enemy this close to the target.</summary>
     [Export] public float SplashRadius { get; set; }
     [Export] public float Knockback { get; set; } = 30f;
+
+    /// <summary>Above 0, it shoots a projectile at this speed instead of hitting in melee (Skeletal Mage).</summary>
+    [ExportGroup("Ranged")]
+    [Export] public float ShotSpeed { get; set; }
+    [Export] public PackedScene ProjectileScene { get; set; }
+
+    public bool IsRanged => ShotSpeed > 0f && ProjectileScene != null;
 }

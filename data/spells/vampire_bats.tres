@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="ProjectileAbility" format=3]
+
+[ext_resource type="Script" path="res://scripts/abilities/ProjectileAbility.cs" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/weapons/Projectile.tscn" id="2_projectile"]
+
+[resource]
+script = ExtResource("1_script")
+Id = "vampire_bats"
+DisplayName = "Vampire Bats"
+Description = "Releases 4 bats that hunt down enemies on their own. Each bite heals you for 30% of its damage."
+IconColor = Color(0.75, 0.2, 0.35, 1)
+Cooldown = 4.5
+Damage = 6.0
+Range = 380.0
+LifeSteal = 30.0
+ProjectileScene = ExtResource("2_projectile")
+ProjectileSpeed = 380.0
+ProjectileRadius = 6.0
+Shape = 3
+Count = 4
+SpreadDegrees = 120.0
+Homing = 300.0

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="SummonAbility" format=3]
+
+[ext_resource type="Script" path="res://scripts/abilities/SummonAbility.cs" id="1_script"]
+[ext_resource type="Resource" path="res://data/minions/skeletal_mage.tres" id="3_minion"]
+
+[resource]
+script = ExtResource("1_script")
+Id = "skeletal_mage"
+DisplayName = "Skeletal Mage"
+Description = "Raises a skeletal mage that hangs back and shoots bolts of bone. Enemies ignore it. Lasts 20 seconds; up to 2."
+IconColor = Color(0.6, 0.78, 1, 1)
+Cooldown = 10.0
+Damage = 0.0
+Range = 450.0
+Count = 1
+Minion = ExtResource("3_minion")

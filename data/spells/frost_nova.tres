@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1_script")
+Id = "frost_nova"
 DisplayName = "Frost Nova"
 Description = "Blast of cold around you that slows enemies."
 IconColor = Color(0.498, 0.784, 1, 1)
