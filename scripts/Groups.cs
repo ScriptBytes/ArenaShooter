@@ -12,6 +12,9 @@ public static class Groups
     /// <summary>The player's allied units (Necromancer). Also Transient, so they're cleared at wave end.</summary>
     public const string Minions = "minions";
 
+    /// <summary>What enemies may chase and shoot: the player, plus minions whose type is Targetable.</summary>
+    public const string EnemyTargets = "enemy_targets";
+
     /// <summary>Short-lived world objects (projectiles, coins) cleared when a wave ends.</summary>
     public const string Transient = "transient";
 }

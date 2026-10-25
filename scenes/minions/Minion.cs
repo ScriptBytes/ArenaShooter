@@ -4,12 +4,13 @@ namespace ArenaShooter;
 
 /// <summary>
 /// An allied unit (skeletons, golems). Chases the nearest enemy close to the player and attacks
-/// it, or follows the player when there's nothing to fight. Enemies don't target minions (they
-/// keep chasing the player), but touching one hurts it, so minions trade hits and crumble.
-/// They also expire after <see cref="MinionData.Lifetime"/>. Physics layer 5 (minions): they
-/// bump into walls and each other, not into enemies or the player. Built in code, like pickups.
+/// it, or follows the player when there's nothing to fight. A <see cref="MinionData.Targetable"/>
+/// type joins <see cref="Groups.EnemyTargets"/>: enemies may chase it instead of the player, their
+/// contact hurts it and enemy shots hit it, so it tanks. Otherwise enemies ignore it and it can't be
+/// hurt. Either way it expires after <see cref="MinionData.Lifetime"/>. Physics layer 5 (minions):
+/// it bumps into walls and each other, not into enemies or the player. Built in code, like pickups.
 /// </summary>
-public partial class Minion : CharacterBody2D
+public partial class Minion : CharacterBody2D, IDamageable
 {
     private const uint MinionLayer = 16;
     private const uint WorldLayer = 1;
@@ -25,6 +26,9 @@ public partial class Minion : CharacterBody2D
 
     /// <summary>Spawn order, so the oldest one crumbles first when over the cap.</summary>
     public ulong SpawnOrder { get; private set; }
+
+    /// <summary>Enemies may chase, touch and shoot it (see <see cref="MinionData.Targetable"/>).</summary>
+    public bool Targetable => Data.Targetable;
 
     private Player _player;
     private Enemy _target;
@@ -49,6 +53,8 @@ public partial class Minion : CharacterBody2D
     {
         AddToGroup(Groups.Transient);
         AddToGroup(Groups.Minions);
+        if (Targetable)
+            AddToGroup(Groups.EnemyTargets);
         SpawnOrder = ++_spawnCounter;
         _player = GetTree().GetFirstNodeInGroup(Groups.Player) as Player;
 
@@ -190,7 +196,7 @@ public partial class Minion : CharacterBody2D
     // Like the player's hurtbox, but by distance: one hit from the strongest enemy touching it.
     private void TakeContactDamage()
     {
-        if (_hurtLeft > 0f)
+        if (!Targetable || _hurtLeft > 0f)
             return;
 
         float strongest = 0f;
@@ -199,8 +205,17 @@ public partial class Minion : CharacterBody2D
         if (strongest <= 0f)
             return;
 
-        _health -= Mathf.Max(strongest - Data.Armor, 1f);
+        TakeDamage(strongest);
         _hurtLeft = InvulnerabilityTime;
+    }
+
+    /// <summary>A hit from an enemy (contact or shot). Armor reduces it, minimum 1.</summary>
+    public void TakeDamage(float amount)
+    {
+        if (!Targetable || IsQueuedForDeletion())
+            return;
+
+        _health -= Mathf.Max(amount - Data.Armor, 1f);
         _hitFlashLeft = 0.08f;
         if (_health <= 0f)
             Crumble();

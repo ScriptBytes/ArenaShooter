@@ -28,8 +28,8 @@ Open questions, judgment calls and concerns from the unattended batch run (Warlo
 
 **Questions**
 
-- Should enemies attack minions (taunt/tank gameplay), or keep minions as pure damage? Ans: Le't make minons have an "targetable" toggle or something like that, so we can test out different minions being targetted or not. Turn it on for now.
-- Should life steal stay available to every class, or be Warlock-flavored (class-specific items)? Ans: Life steal itself should be a warlock spell.
+- ~~Should enemies attack minions?~~ **Resolved (§5):** Ans: Le't make minons have an "targetable" toggle or something like that, so we can test out different minions being targetted or not. Turn it on for now.
+- ~~Should life steal stay available to every class?~~ **Resolved (§5):** Ans: Life steal itself should be a warlock spell.
 - Necromancer pet count: is 6 skeletons + 1 golem the right amount of screen clutter once real sprites arrive? Ans: Not sure, TBD
 
 ## 2. Consumables and buffer potion
@@ -58,9 +58,9 @@ Open questions, judgment calls and concerns from the unattended batch run (Warlo
 
 **Questions**
 
-- Should a full reserve become a regular charge (freeing room for more hearts), or should excess hearts heal directly when the reserve is full? Ans: if the player is <100% health, hearts should always heal the player. Hearts only go into the buffer if the player is full health
-- Should consumables also drop during waves (rare potion drop), or stay shop-only? Ans: I think for now, shop only.
-- Should Space drink the reserve first when it's full, to make room for more hearts before using the free charge? Ans: yes, if it's full, use the reserve
+- ~~Full reserve / excess hearts?~~ **Resolved (§5):** Ans: if the player is <100% health, hearts should always heal the player. Hearts only go into the buffer if the player is full health
+- ~~Consumable drops?~~ **Resolved (Goals.md):** Ans: I think for now, shop only.
+- ~~Space reserve-first when full?~~ **Resolved (§5):** Ans: yes, if it's full, use the reserve
 
 ## 3. Career vs arcade
 
@@ -107,3 +107,34 @@ Open questions, judgment calls and concerns from the unattended batch run (Warlo
 - No save version bump: every `Id` equals the old file name, so a v1 save loads as-is (verified: a save made by the previous build reloads with the same character, talents and heirloom, and the same-seed run matches exactly).
 - A class or item with an empty `Id` still works, falling back to its file name, but logs an error at startup. Duplicates log an error too; the game still starts.
 - IDs are snake_case, the same style as the file names. Spells (`AbilityData`) got no `Id`, since nothing saves them yet; add one when something does (e.g. per-class spell unlocks).
+
+## 5. Follow-up answers
+
+Implemented the answered questions from §1 and §2; decisions are in `Goals.md`. Pet count (§1) is still TBD.
+
+**Judgment calls**
+
+- **Targetable minions:** `MinionData.Targetable` (default on; skeleton and golem use the default). On: the minion joins `Groups.EnemyTargets` with the player; each enemy re-picks the *nearest* member every 0.25s (staggered by instance id, not RNG, so seeded runs stay repeatable). Melee enemies chase it and their contact hurts it (the existing distance check), ranged enemies keep their distance from it and shoot it, and enemy shots hit it. Off: the minion is fully ignored and **can't be hurt at all** (before this, minions lost HP on contact even though enemies ignored them). I picked the clean "targetable = can be hurt" meaning so the toggle tests two clear designs; say if you want the old middle ground back as a third option.
+- Pure nearest-target means a skeleton next to an enemy always pulls it off you. No aggro range, threat or stickiness yet; enemies can flip between you and a minion as distances change.
+- **Life steal is Warlock-only.** Read "life steal itself should be a Warlock spell" as: the shared shop sells no life steal; it comes from Warlock spells and weapons. Vampiric Fang (trinket) left the catalog (`.tres` kept; trinkets can't be heirlooms, so no save references it). Bloodstone Ring (now +4 Max HP, +8% Damage) and Blood-Soaked Robes (now +6 Max HP, +6% Attack Speed) stay in the catalog with their `Id`s, so a saved heirloom of either still loads, just with the new stats.
+- I didn't add a new life steal spell: Blood Pact already is the timed life steal buff (+15% Life Steal, +50% Damage), and Drain Life / Crimson Nova / Curse of Agony steal on their own. A 6th Warlock spell would also need the spell select screen checked for 6 cards. If you want a purer one, a "Vampiric Embrace" (+30% Life Steal for 8s, no HP cost) could replace or join Blood Pact.
+- **Hearts:** when hurt, a heart heals you; only the part past full HP goes into the reserve (a +2 heart at 1 HP missing heals 1 and stores 1). At full HP it all goes into the reserve. A heart waits on the floor only while HP *and* reserve are both full. Heal text is green, reserve text pink.
+- **Space:** a full reserve is drunk first; otherwise free charge → bought potion → partial reserve, as before.
+- Consumable drops: shop only (recorded in Goals.md, no change).
+
+**Balance concerns**
+
+- Autoplay average death wave (seeds 1–5, default spells): Necromancer 2.4 → 2.8, Warlock 2.6 → 3.0. Minions soaking hits helps the Necromancer most; both gain from hearts healing directly.
+- Skeletons (14 HP, no wave scaling) now die much faster: about 100 hits on minions in a 3-wave seed-1 run. Their 18s lifetime rarely matters any more. Bone Golem as a tank is likely strong (it pulls a crowd off you).
+- Without shop life steal the Life Steal stat only exists inside Blood Pact. Warlock sustain is now fixed by spell picks, not by build.
+
+**Unverified**
+
+- Feel of enemies switching between you and minions: seen in a few Movie Maker frames (enemies on the golem, damaged skeleton health bars), not played. Minions show no damage numbers, just a hit flash and health bar.
+- Space reserve-first and heart-overflow checked through Autoplay `potion`/`heart` events (with a temporarily raised heart drop rate), not by keyboard.
+
+**Questions**
+
+- Should some minion types be non-targetable (e.g. skeletons as tanks, golem untouchable, or the reverse)? Today both are targetable.
+- Should non-targetable minions still lose HP on contact (the old behavior), or stay untouchable?
+- Should enemies prefer the player (e.g. only switch to a minion that's much closer), so minions don't trivialize melee waves?

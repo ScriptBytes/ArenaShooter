@@ -108,8 +108,8 @@ public partial class Autoplay : Node
         Log($"wave_end wave={wave} kills={Run.Kills} gold={Run.Gold} bag={Run.Bag} " +
             $"hp={Player.Health.Current:0}/{Player.Health.Max:0} {PotionSummary()}");
 
-    public void OnReserveFilled(float added) =>
-        Log($"heart added={added:0.#} reserve={Reserve()}");
+    public void OnHeartCollected(float healed, float stored) =>
+        Log($"heart healed={healed:0.#} added={stored:0.#} hp={Player.Health.Current:0}/{Player.Health.Max:0} reserve={Reserve()}");
 
     private string Reserve() => $"{Run.Potions.Reserve:0.#}/{Run.Potions.ReserveCapacity:0}";
 
@@ -311,7 +311,7 @@ public partial class Autoplay : Node
     }
 
     // Health: drinks when the next potion's whole heal fits, or when under 35% HP (Space picks a full
-    // potion before the reserve). Buff potions: drinks one when a crowd is around and it isn't active.
+    // reserve first, then a full potion, then a partial reserve). Buff potions: drinks one when a crowd is around and it isn't active.
     // Sends the real input actions. The press is handled later in the frame, so wait a bit between them.
     private void MaybeDrink(float delta)
     {

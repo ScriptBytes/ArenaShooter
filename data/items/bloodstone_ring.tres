@@ -5,13 +5,13 @@
 
 [sub_resource type="Resource" id="StatModifier_0"]
 script = ExtResource("2_mod")
-Stat = 8
+Stat = 0
 Value = 4.0
 
 [sub_resource type="Resource" id="StatModifier_1"]
 script = ExtResource("2_mod")
 Stat = 2
-Value = 5.0
+Value = 8.0
 
 [resource]
 script = ExtResource("1_item")

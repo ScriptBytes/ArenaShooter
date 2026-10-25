@@ -3,8 +3,10 @@ using Godot;
 namespace ArenaShooter;
 
 /// <summary>
-/// Generic enemy driven by <see cref="EnemyData"/>. Melee types chase the player; ranged
-/// types hold at their preferred distance and shoot projectiles that hit the player.
+/// Generic enemy driven by <see cref="EnemyData"/>. Melee types chase their target; ranged
+/// types hold at their preferred distance and shoot projectiles that hit the player and
+/// targetable minions. The target is the nearest member of <see cref="Groups.EnemyTargets"/>
+/// (the player, or a minion whose type is Targetable), re-picked a few times per second.
 /// </summary>
 public partial class Enemy : CharacterBody2D, IDamageable
 {
@@ -13,7 +15,8 @@ public partial class Enemy : CharacterBody2D, IDamageable
     private const float KnockbackDecay = 1800f;
     private const float HitPopTime = 0.12f;
     private const float DotTickInterval = 0.5f;
-    private const uint ShotCollisionMask = 1 | 2; // world + player
+    private const uint ShotCollisionMask = 1 | 2 | 16; // world + player + minions
+    private const float RetargetInterval = 0.25f;
     private static readonly Color ShotColor = new("ff6b6b");
 
     /// <summary>Set before the enemy enters the tree (Enemy.tscn defaults to the grunt).</summary>
@@ -30,6 +33,7 @@ public partial class Enemy : CharacterBody2D, IDamageable
     public bool IsDoomed => Health.Current <= IncomingDamage + 0.001f;
 
     private Node2D _target;
+    private float _retargetLeft;
     private float _speed;
     private float _shotDamage;
     private float _shotCooldown;
@@ -55,7 +59,9 @@ public partial class Enemy : CharacterBody2D, IDamageable
         AddToGroup(Groups.Enemies);
         Health = GetNode<Health>("Health");
         Health.Died += OnDied;
-        _target = GetTree().GetFirstNodeInGroup(Groups.Player) as Node2D;
+        // Staggered so spawns don't all retarget on one frame. Not random: seeded runs stay repeatable.
+        _retargetLeft = GetInstanceId() % 8 / 8f * RetargetInterval;
+        _target = FindTarget();
 
         // Each enemy gets its own shape; editing the scene's shared shape would resize them all.
         GetNode<CollisionShape2D>("CollisionShape2D").Shape = new CircleShape2D { Radius = Data.Size / 2f };
@@ -124,6 +130,13 @@ public partial class Enemy : CharacterBody2D, IDamageable
     {
         float dt = (float)delta;
 
+        _retargetLeft -= dt;
+        if (_retargetLeft <= 0f || !IsInstanceValid(_target) || _target.IsQueuedForDeletion())
+        {
+            _retargetLeft = RetargetInterval;
+            _target = FindTarget();
+        }
+
         if (IsInstanceValid(_target))
         {
             var toTarget = _target.GlobalPosition - GlobalPosition;
@@ -142,6 +155,26 @@ public partial class Enemy : CharacterBody2D, IDamageable
         // Last, since a tick can kill.
         if (_dotLeft > 0f)
             TickDot(dt);
+    }
+
+    /// <summary>Nearest of the player and the targetable minions.</summary>
+    private Node2D FindTarget()
+    {
+        Node2D nearest = null;
+        float nearestDistSq = float.MaxValue;
+        foreach (var node in GetTree().GetNodesInGroup(Groups.EnemyTargets))
+        {
+            if (node is not Node2D candidate || candidate.IsQueuedForDeletion())
+                continue;
+
+            float distSq = GlobalPosition.DistanceSquaredTo(candidate.GlobalPosition);
+            if (distSq < nearestDistSq)
+            {
+                nearest = candidate;
+                nearestDistSq = distSq;
+            }
+        }
+        return nearest;
     }
 
     private void TickDot(float dt)

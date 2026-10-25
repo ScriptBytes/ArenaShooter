@@ -190,7 +190,7 @@ public partial class Main : Node2D
         WaveStarted += autoplay.OnWaveStarted;
         WaveEnded += autoplay.OnWaveEnded;
         RunEnded += autoplay.OnRunEnded;
-        Player.ReserveFilled += autoplay.OnReserveFilled;
+        Player.HeartCollected += autoplay.OnHeartCollected;
 
         // Run-start grants, applied before the class's first ApplyStats in StartRun.
         Player.Invulnerable = _autoplay.God;

@@ -8,8 +8,8 @@ public partial class Player : CharacterBody2D, IDamageable
 {
     [Signal] public delegate void GoldCollectedEventHandler(int amount);
 
-    /// <summary>A heart poured <paramref name="added"/> HP into the potion reserve.</summary>
-    [Signal] public delegate void ReserveFilledEventHandler(float added);
+    /// <summary>A heart healed <paramref name="healed"/> HP and poured <paramref name="stored"/> into the potion reserve.</summary>
+    [Signal] public delegate void HeartCollectedEventHandler(float healed, float stored);
 
     /// <summary>Space, keys 5+: what drinking will do next.</summary>
     public enum PotionSource { None, Charge, Bought, Reserve }
@@ -74,6 +74,7 @@ public partial class Player : CharacterBody2D, IDamageable
     public override void _Ready()
     {
         AddToGroup(Groups.Player);
+        AddToGroup(Groups.EnemyTargets);
         Health = GetNode<Health>("Health");
         Camera = GetNode<ShakeCamera>("Camera2D");
         Abilities = GetNode<AbilityCaster>("Abilities");
@@ -173,30 +174,38 @@ public partial class Player : CharacterBody2D, IDamageable
 
     public void RefillPotions() => Potions.RefillCharges(PotionsPerWave);
 
-    /// <summary>Called by a heart. Returns false (and the heart stays put) when the reserve is full.</summary>
-    public bool FillReserve(float amount)
-    {
-        float added = Potions.FillReserve(amount);
-        if (added <= 0f)
-            return false;
+    /// <summary>A heart is worth picking up: you're hurt, or the reserve has room.</summary>
+    public bool WantsHeart => !Health.IsDead && (Health.Current < Health.Max || !Potions.ReserveFull);
 
-        FloatingText.Spawn(GetTree().CurrentScene, GlobalPosition + new Vector2(0, -Radius),
-            $"+{added:0.#}", Heart.HeartColor, 14);
-        EmitSignal(SignalName.ReserveFilled, added);
-        return true;
+    /// <summary>
+    /// Called by a heart. Hurt: it heals you, and only what's left over beyond full HP goes into
+    /// the reserve. At full HP it all goes into the reserve (what doesn't fit is lost).
+    /// </summary>
+    public void CollectHeart(float amount)
+    {
+        float healed = Health.Heal(amount);
+        float stored = Potions.FillReserve(amount - healed);
+        var at = GlobalPosition + new Vector2(0, -Radius);
+        if (healed > 0f)
+            FloatingText.Spawn(GetTree().CurrentScene, at, $"+{healed:0.#}", HealColor, 16);
+        if (stored > 0f)
+            FloatingText.Spawn(GetTree().CurrentScene, at + new Vector2(0, -14f), $"+{stored:0.#}", Heart.HeartColor, 14);
+        EmitSignal(SignalName.HeartCollected, healed, stored);
     }
 
     /// <summary>Which health potion Space would drink now (None at full health or with nothing left).</summary>
     public PotionSource NextPotion =>
         Health.IsDead || Health.Current >= Health.Max ? PotionSource.None
+        : Potions.ReserveFull ? PotionSource.Reserve
         : Potions.Charges > 0 ? PotionSource.Charge
         : Potions.HealthPotions > 0 ? PotionSource.Bought
         : Potions.Reserve > 0f ? PotionSource.Reserve
         : PotionSource.None;
 
     /// <summary>
-    /// Drinks a health potion (Space): a full one if there is one (free charge, then bought), otherwise
-    /// the reserve, whatever its fill. Does nothing at full health, so a misclick doesn't waste it.
+    /// Drinks a health potion (Space): the reserve first when it's full (making room for hearts), then a
+    /// full potion (free charge, then bought), then the reserve whatever its fill. Does nothing at full
+    /// health, so a misclick doesn't waste it.
     /// </summary>
     public bool UsePotion()
     {

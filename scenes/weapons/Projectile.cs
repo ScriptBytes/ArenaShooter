@@ -64,6 +64,9 @@ public partial class Projectile : Area2D
         // Two bodies can enter on the same physics step; only resolve the first.
         if (_spent)
             return;
+        // Enemy shots fly through minions that enemies ignore.
+        if (body is Minion { Targetable: false })
+            return;
         _spent = true;
         ReleaseReservation();
 

@@ -18,6 +18,12 @@ public partial class MinionData : Resource
     [Export] public float Armor { get; set; }
     [Export] public float Speed { get; set; } = 230f;
 
+    /// <summary>
+    /// On: enemies may chase it instead of the player, their contact hurts it and enemy shots hit it
+    /// (a tank). Off: enemies ignore it, it takes no damage and only its lifetime ends it.
+    /// </summary>
+    [Export] public bool Targetable { get; set; } = true;
+
     /// <summary>Seconds before it crumbles on its own.</summary>
     [Export] public float Lifetime { get; set; } = 18f;
 
