@@ -23,6 +23,7 @@ public partial class Main : Node2D
     [Export] public int TotalWaves { get; set; } = 5;
     [Export] public Godot.Collections.Array<ClassData> Classes { get; set; } = new();
     [Export] public ItemCatalog ItemCatalog { get; set; }
+    [Export] public RaritySettings Rarities { get; set; }
     [Export] public Arena Arena { get; set; }
     [Export] public Player Player { get; set; }
     [Export] public EnemySpawner Spawner { get; set; }
@@ -59,6 +60,7 @@ public partial class Main : Node2D
         Player.Health.Died += () => EndRun(GameState.Defeat);
         Player.GoldCollected += OnGoldCollected;
         Spawner.EnemyKilled += () => _run.Kills++;
+        Shop.Rarities = Rarities;
         Shop.Purchased += ApplyLoadout;
         Shop.ContinueRequested += () => StartWave(_run.Wave + 1);
         Hud.RestartRequested += Restart;
@@ -122,23 +124,36 @@ public partial class Main : Node2D
             SpellSelect.Open(playerClass);
     }
 
-    /// <summary>The class's saved heirloom, or null if none or its item no longer exists.</summary>
-    private ItemData Heirloom(ClassData playerClass)
+    /// <summary>The class's saved heirloom with its rarity, or null if none or its item no longer exists.</summary>
+    private ItemInstance Heirloom(ClassData playerClass)
     {
-        string id = Career.Peek(playerClass).Heirloom;
+        var character = Career.Peek(playerClass);
+        string id = character.Heirloom;
         if (id == null)
             return null;
         var item = ItemCatalog.Items.Concat(playerClass.Weapons).FirstOrDefault(i => Career.ItemId(i) == id);
         if (item == null)
+        {
             GD.PushWarning($"[career] heirloom '{id}' of {Career.ClassId(playerClass)} isn't a known item; ignored");
-        return item;
+            return null;
+        }
+
+        // Saves from before rarity have no HeirloomRarity: Common.
+        var rarity = Rarity.Common;
+        if (character.HeirloomRarity != null && !System.Enum.TryParse(character.HeirloomRarity, ignoreCase: true, out rarity))
+        {
+            GD.PushWarning($"[career] heirloom rarity '{character.HeirloomRarity}' of {Career.ClassId(playerClass)} is unknown; using Common");
+            rarity = Rarity.Common;
+        }
+        return new ItemInstance(item, Rarities.Tier(rarity));
     }
 
     private void StartRun(ClassData playerClass, Godot.Collections.Array<AbilityData> spells)
     {
         _class = playerClass;
-        _run.Equipment.StartingWeapon = playerClass.StartingWeapon;
-        _run.AddItem(playerClass.StartingWeapon);
+        // Starting weapons are always Common.
+        _run.Equipment.StartingWeapon = new ItemInstance(playerClass.StartingWeapon, Rarities.Common);
+        _run.AddItem(_run.Equipment.StartingWeapon);
         _run.Potions.SetCatalog(ItemCatalog.Consumables);
         if (IsCareer)
             ApplyCareer(playerClass);
@@ -191,27 +206,32 @@ public partial class Main : Node2D
         WaveEnded += autoplay.OnWaveEnded;
         RunEnded += autoplay.OnRunEnded;
         Player.HeartCollected += autoplay.OnHeartCollected;
+        Shop.OffersRolled += autoplay.OnOffersRolled;
 
         // Run-start grants, applied before the class's first ApplyStats in StartRun.
         Player.Invulnerable = _autoplay.God;
+        Shop.ForcedRarity = _autoplay.Rarity;
         foreach (var (stat, value) in _autoplay.Stats)
             _run.GrantStat(stat, value);
     }
 
-    // --item grants. They wait for the class, since its weapons are part of the pool.
+    // --item grants (at --rarity, default Common). They wait for the class, since its weapons are part of the pool.
     private void GrantAutoplayItems()
     {
         foreach (var name in _autoplay.Items)
         {
-            if (_autoplayDriver.FindItem(ShopPool.Concat(ItemCatalog.Consumables), name) is { } item)
-                _run.AddItem(item);
+            var item = _autoplayDriver.FindItem(ShopPool.Concat(ItemCatalog.Consumables), name);
+            if (item is ConsumableData potion)
+                _run.AddPotion(potion);
+            else if (item != null)
+                _run.AddItem(new ItemInstance(item, Rarities.Tier(_autoplay.Rarity ?? Rarity.Common)));
         }
     }
 
     /// <summary>Pushes the run's gear and stats to the player. Call whenever either changes.</summary>
     private void ApplyLoadout()
     {
-        Player.SetWeapon(_run.Equipment.Weapon);
+        Player.SetWeapon(_run.Equipment.Weapon, _run.Equipment.WeaponDamageMultiplier);
         Player.ApplyStats(_run.Stats);
     }
 
@@ -303,13 +323,15 @@ public partial class Main : Node2D
         Career.Persist();
 
         // Any worn gear except the class's starting weapon, which you always have anyway.
-        var keepable = _run.Equipment.Worn.Where(i => i != _class.StartingWeapon);
+        var keepable = _run.Equipment.Worn.Where(i => i.Item != _class.StartingWeapon);
         CareerSummary.Open(_class, CareerSettings, character, reward, levelBefore, _run.Wave, Heirloom(_class), keepable);
     }
 
-    private void OnHeirloomChosen(ItemData item)
+    private void OnHeirloomChosen(ItemInstance item)
     {
-        Career.For(_class).Heirloom = Career.ItemId(item);
+        var character = Career.For(_class);
+        character.Heirloom = Career.ItemId(item.Item);
+        character.HeirloomRarity = item.Rarity.ToString();
         Career.Persist();
     }
 

@@ -90,8 +90,8 @@ public partial class Player : CharacterBody2D, IDamageable
         Abilities.Setup(spells);
     }
 
-    /// <summary>Sets the basic attack from the main-hand weapon. Call before ApplyStats.</summary>
-    public void SetWeapon(AbilityData weapon) => Abilities.SetWeapon(weapon);
+    /// <summary>Sets the basic attack from the main-hand weapon and its rarity's damage multiplier. Call before ApplyStats.</summary>
+    public void SetWeapon(AbilityData weapon, float damageMultiplier = 1f) => Abilities.SetWeapon(weapon, damageMultiplier);
 
     /// <summary>Sets the run's stat bonuses and applies them, plus any active buffs.</summary>
     public void ApplyStats(PlayerStats runStats)

@@ -124,7 +124,7 @@ public partial class Autoplay : Node
     public void OnRunEnded(bool victory)
     {
         Log($"run_end result={(victory ? "victory" : "defeat")} wave={Run.Wave} kills={Run.Kills} " +
-            $"gold={Run.Gold} gear=\"{Gear()}\" trinkets={Run.Trinkets.Count}");
+            $"gold={Run.Gold} gear=\"{Gear()}\" trinkets={Run.Trinkets.Count} trinket_list=\"{string.Join(",", Run.Trinkets.Select(t => t.LogName))}\"");
         _runEnded = true;
         if (CareerSummary.Visible)
             return; // SummaryStep banks the career, then quits or restarts.
@@ -146,7 +146,7 @@ public partial class Autoplay : Node
         string talents = string.Join(",", CareerSettings.Talents
             .Where(t => character.Rank(t.Id) > 0).Select(t => $"{t.Id}:{character.Rank(t.Id)}"));
         return $"level={CareerSettings.LevelFor(character.Xp)} xp={character.Xp} points={CareerSettings.PointsFree(character)} " +
-               $"talents=\"{talents}\" heirloom=\"{character.Heirloom}\" runs={character.Runs} victories={character.Victories}";
+               $"talents=\"{talents}\" heirloom=\"{character.Heirloom}\" heirloom_rarity={character.HeirloomRarity ?? "-"} runs={character.Runs} victories={character.Victories}";
     }
 
     // Logs the character once, spends one point per frame (--talents=spread), then continues to spells.
@@ -188,7 +188,7 @@ public partial class Autoplay : Node
             if (Options.Heirloom == HeirloomStrategy.Priciest && choice.Button != null)
             {
                 Press(choice.Button);
-                Log($"heirloom item=\"{choice.Item.DisplayName}\"");
+                Log($"heirloom item=\"{choice.Item.DisplayName}\" rarity={choice.Item.Rarity.ToString().ToLower()}");
                 return;
             }
         }
@@ -200,7 +200,11 @@ public partial class Autoplay : Node
             Press(CareerSummary.ContinueButton);
     }
 
-    private string Gear() => string.Join(",", Run.Equipment.Worn.Select(i => i.DisplayName));
+    private string Gear() => string.Join(",", Run.Equipment.Worn.Select(i => i.LogName));
+
+    /// <summary>Logs what the shop offers (with rarities), each time it opens or rerolls.</summary>
+    public void OnOffersRolled() =>
+        Log($"offers wave={Run.Wave} items=\"{string.Join(",", Shop.Offers.Select(o => $"{o.Item.LogName}:{o.Price}"))}\"");
 
     /// <summary>Resolves --item names against the shop's pool (display name, Id or .tres file name).</summary>
     public ItemData FindItem(IEnumerable<ItemData> pool, string name)
@@ -298,11 +302,12 @@ public partial class Autoplay : Node
         if (offer != null)
         {
             // The first button is the first target slot (Shop builds them in TargetsFor order).
-            var replaces = offer.Item.IsGear
-                ? Run.Equipment.Displaced(offer.Item, Run.Equipment.TargetsFor(offer.Item)[0]).Select(i => i.DisplayName)
-                : Enumerable.Empty<string>();
-            Log($"buy item=\"{offer.Item.DisplayName}\" price={offer.Price} gold_left={Run.Gold - offer.Price} " +
-                $"replaces=\"{string.Join(",", replaces)}\"");
+            var replaced = offer.Item.IsGear
+                ? Run.Equipment.Displaced(offer.Item.Item, Run.Equipment.TargetsFor(offer.Item.Item)[0])
+                : new List<ItemInstance>();
+            Log($"buy item=\"{offer.Item.DisplayName}\" rarity={offer.Item.Rarity.ToString().ToLower()} price={offer.Price} " +
+                $"gold_left={Run.Gold - offer.Price} stats=\"{offer.Item.Describe().Replace("\n", ", ")}\" " +
+                $"replaces=\"{string.Join(",", replaced.Select(i => i.LogName))}\" refund={replaced.Sum(i => i.SellValue)}");
             Press(offer.BuyButton);
             return;
         }

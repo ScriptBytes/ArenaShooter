@@ -138,3 +138,36 @@ Implemented the answered questions from §1 and §2; decisions are in `Goals.md`
 - Should some minion types be non-targetable (e.g. skeletons as tanks, golem untouchable, or the reverse)? Today both are targetable.
 - Should non-targetable minions still lose HP on contact (the old behavior), or stay untouchable?
 - Should enemies prefer the player (e.g. only switch to a minion that's much closer), so minions don't trivialize melee waves?
+
+## 6. Item rarity
+
+**Judgment calls**
+
+- **4 tiers:** Common (white), Uncommon (green), Rare (blue), Epic (purple), Diablo colors. No Legendary yet: I'd rather keep orange for a later tier with a unique effect (Diablo legendaries, Brotato's tier IV) than a fifth "bigger numbers" step. Adding one is a new `Rarity` entry plus a `RarityTier` in `data/RaritySettings.tres`, no save change.
+- **Numbers (all in `data/RaritySettings.tres`):** stats ×1 / 1.25 / 1.5 / 2, price ×1 / 1.2 / 1.45 / 1.8, weapon damage ×1 / 1.15 / 1.3 / 1.5. Price grows slower than stats, so rarer items are slightly better value per gold (gear slots are limited, so power per slot matters more than per gold).
+- **Rounding:** stats are whole numbers, rounded half up, and a higher tier always adds at least 1 over Common so the card never shows the same number. Side effect: tiny stats jump a lot (+1 Armor → +2 at Uncommon, Rare and Epic alike).
+- **Downsides don't scale.** Chainmail's −5% Move Speed and Assassin's Mark's −3 Max HP stay the same at every tier, so a rarer copy is strictly better. Scaling them too would be "more of the item", which reads oddly as an upgrade.
+- **Weapons:** rarity scales the basic attack's damage (and its DoT) through a separate weapon `AbilityContext`, multiplied with the Damage stat. Spells and minions aren't affected. A smaller curve than stats, because the weapon is a big share of total damage. Starting weapons are always Common.
+- **Odds:** each non-Common tier has a chance at the first shop plus a per-wave increase, capped; Common gets the rest. Uncommon 15% +8/wave (max 45), Rare 3% +5/wave (max 30), Epic 0% +2.5/wave (max 15). The shop shows the current odds in tier colors under the gold line. Rerolls roll rarity again.
+- **Shop still hides gear you wear, at any rarity** (rings excepted). So a Rare Spear never shows while you hold a Common Spear. Alternative: allow it when the offer is rarer than the worn one.
+- **Refund** = half the rarity-scaled base price (no wave scaling, as before).
+- Trinkets of different rarities are separate rows in the equipment panel (Whetstone, Whetstone x2 in green…) and their stats just add up.
+- `CareerSummary.HeirloomChosen` became a plain C# event instead of a `[Signal]`, because signal arguments must be Godot types and `ItemInstance` is plain C#.
+- **Heirloom save:** new `heirloomRarity` field next to `heirloom` (enum name, e.g. "Epic"), no version bump. Missing or unknown → Common (unknown logs a warning). Caveat: an older build keeps the field as unknown data, so if an older build changed the heirloom, the new build would apply the stale rarity to the new item. Only matters if you switch between builds.
+
+**Balance concerns**
+
+- The last shop is now ~64% non-Common, so late-run gold buys more power than before; waves 4–5 may get easier. Epic gear (+100% stats) on a Ring of Fury or Tome of Power is a big spike.
+- An Epic heirloom from one lucky victory starts every later run strong (e.g. Epic Bloodstone Ring: +8 Max HP, +16% Damage at wave 1). This adds to the talent power creep in §3. Heirloom upgrades should probably cap or cost something.
+- Price ×1.8 for Epic at the last shop can be 70–90 gold, more than a typical wave's income, so Epics may often be unaffordable. That's partly the point (a reason to save), but watch it.
+
+**Unverified**
+
+- Shop card colors were checked in Movie Maker frames only. The blue and purple were picked for contrast on the dark panels; not checked for color blindness (green/white is the risky pair, but the slot line also spells out the tier name).
+- Tooltips (equipment panel, heirloom buttons) now include the tier and slot line; not hovered by hand.
+
+**Questions**
+
+- Is ×2 for Epic the right ceiling, or should Epic be ×1.75 and leave room for Legendary?
+- Should the shop offer a rarer copy of gear you already wear (as an upgrade)?
+- Heirloom upgrades (§3 Q6): bump the tier by one per victory it's carried, capped at Epic? That uses this ladder directly.

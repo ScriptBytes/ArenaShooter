@@ -24,11 +24,13 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/CareerScreen.tscn" id="22_career_screen"]
 [ext_resource type="PackedScene" path="res://scenes/ui/CareerSummary.tscn" id="23_career_summary"]
 [ext_resource type="Resource" path="res://data/career/CareerSettings.tres" id="24_career_settings"]
+[ext_resource type="Resource" path="res://data/RaritySettings.tres" id="25_rarities"]
 
 [node name="Main" type="Node2D" node_paths=PackedStringArray("Arena", "Player", "Spawner", "Hud", "Shop", "ClassSelect", "SpellSelect", "ModeSelect", "CareerScreen", "CareerSummary")]
 script = ExtResource("1_main")
 Classes = Array[ExtResource("10_class_data")]([ExtResource("11_fighter"), ExtResource("12_mage"), ExtResource("19_warlock"), ExtResource("20_necromancer")])
 ItemCatalog = ExtResource("8_catalog")
+Rarities = ExtResource("25_rarities")
 Arena = NodePath("Arena")
 Player = NodePath("Player")
 Spawner = NodePath("Spawner")

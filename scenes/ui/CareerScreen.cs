@@ -98,7 +98,7 @@ public partial class CareerScreen : CanvasLayer
         Hide();
     }
 
-    public void Open(ClassData playerClass, CareerSettings settings, CareerCharacter character, ItemData heirloom)
+    public void Open(ClassData playerClass, CareerSettings settings, CareerCharacter character, ItemInstance heirloom)
     {
         _class = playerClass;
         _settings = settings;
@@ -113,8 +113,11 @@ public partial class CareerScreen : CanvasLayer
         }
 
         _heirloom.Text = heirloom != null
-            ? $"Heirloom: {heirloom.DisplayName} (starts equipped)  ·  {heirloom.Describe().Replace("\n", ", ")}"
+            ? $"Heirloom: {heirloom.FullName} (starts equipped)  ·  {heirloom.Describe().Replace("\n", ", ")}"
             : "Heirloom: none yet. Win a run to keep one piece of gear for the next.";
+
+        // Tinted by the heirloom's rarity, like everywhere else items are shown.
+        _heirloom.AddThemeColorOverride("font_color", heirloom?.Color ?? UiStyles.Dim);
 
         BuildTalents();
         Refresh();

@@ -28,7 +28,7 @@ public enum HeirloomStrategy { Priciest, Keep }
 /// <item><c>--shop=cheapest|first|skip</c> what to buy between waves (default cheapest, until broke).</item>
 /// <item><c>--move=circle|still</c> circle the arena (collects coins) or stand in the middle (default circle).</item>
 /// <item><c>--autocast</c> turns auto-cast on for every spell, including manual-by-default ones.</item>
-/// <item><c>--item=NAME</c> grants an item at run start (display name or .tres file name). Repeatable.</item>
+/// <item><c>--item=NAME</c> grants an item at run start (display name, Id or .tres file name; Common unless --rarity). Repeatable.</item>
 /// <item><c>--buy-potion=NAME</c> buys one of this potion at every shop visit, before other purchases. Repeatable.</item>
 /// <item><c>--menu-delay=SECONDS</c> waits before each menu action, so Movie Maker can record the menus (default 0).</item>
 /// <item><c>--mode=arcade|career</c> mode to pick on the mode select screen (default arcade).</item>
@@ -37,6 +37,7 @@ public enum HeirloomStrategy { Priciest, Keep }
 /// <item><c>--runs=N</c> plays N runs in a row through the real end-of-run restart (default 1); run k uses seed+k.</item>
 /// <item><c>--talents=spread|none</c> career: spend free points one at a time on the lowest-rank talent (default spread).</item>
 /// <item><c>--heirloom=priciest|keep</c> career victory: keep the priciest worn gear (default) or the current heirloom.</item>
+/// <item><c>--rarity=common|uncommon|rare|epic</c> every shop offer and every --item grant gets this rarity instead of a roll.</item>
 /// <item><c>--stat=STAT:VALUE</c> adds a stat bonus at run start, e.g. <c>--stat=CritChance:20</c>. Repeatable.</item>
 /// </list>
 /// </summary>
@@ -60,6 +61,7 @@ public sealed class AutoplayOptions
     public int Runs { get; private set; } = 1;
     public TalentStrategy Talents { get; private set; } = TalentStrategy.Spread;
     public HeirloomStrategy Heirloom { get; private set; } = HeirloomStrategy.Priciest;
+    public Rarity? Rarity { get; private set; }
 
     /// <summary>Problems with the flags. Autoplay logs them and quits with exit code 1.</summary>
     public List<string> Errors { get; } = new();
@@ -133,6 +135,9 @@ public sealed class AutoplayOptions
                     break;
                 case "--heirloom" when Enum.TryParse(value, ignoreCase: true, out HeirloomStrategy heirloom):
                     options.Heirloom = heirloom;
+                    break;
+                case "--rarity" when Enum.TryParse(value, ignoreCase: true, out Rarity rarity) && Enum.IsDefined(rarity):
+                    options.Rarity = rarity;
                     break;
                 case "--stat" when TryParseStat(value, out var stat):
                     options.Stats.Add(stat);

@@ -9,20 +9,31 @@ namespace ArenaShooter;
 /// Mutates the RunState directly (gold, items) and signals Main to re-apply gear and stats.
 /// Gear that replaces something refunds half the old item's price. Below the random offers is a
 /// potion shelf: every consumable, always in stock, buyable until the player carries its MaxCarry.
+/// Each offer rolls a rarity (<see cref="RaritySettings"/>, odds rising with the wave; rerolls roll again),
+/// which scales its stats and price and colors its card. Potions have no rarity.
 /// </summary>
 public partial class Shop : CanvasLayer
 {
     [Signal] public delegate void PurchasedEventHandler();
     [Signal] public delegate void ContinueRequestedEventHandler();
 
+    /// <summary>New offers are on display (shop opened or rerolled).</summary>
+    [Signal] public delegate void OffersRolledEventHandler();
+
     [Export] public int OfferCount { get; set; } = 4;
     [Export] public int BaseRerollCost { get; set; } = 3;
     [Export] public int RerollCostIncrease { get; set; } = 2;
     [Export] public float PriceIncreasePerWave { get; set; } = 0.1f;
 
+    /// <summary>Rarity tuning and odds. Set by Main before the first Open.</summary>
+    public RaritySettings Rarities { get; set; }
+
+    /// <summary>Debug (Autoplay --rarity): every offer gets this rarity instead of a roll.</summary>
+    public Rarity? ForcedRarity { get; set; }
+
     public class Offer
     {
-        public ItemData Item;
+        public ItemInstance Item;
         public int Price;
         public bool Sold;
 
@@ -56,6 +67,7 @@ public partial class Shop : CanvasLayer
 
     private Label _title;
     private Label _gold;
+    private HBoxContainer _odds;
     private HBoxContainer _offerRow;
     private Label _stats;
     private VBoxContainer _equipment;
@@ -67,6 +79,9 @@ public partial class Shop : CanvasLayer
     {
         _title = GetNode<Label>("%Title");
         _gold = GetNode<Label>("%Gold");
+        _odds = new HBoxContainer { Alignment = BoxContainer.AlignmentMode.Center };
+        _odds.AddThemeConstantOverride("separation", 18);
+        _gold.AddSibling(_odds);
         _offerRow = GetNode<HBoxContainer>("%Offers");
         _stats = GetNode<Label>("%Stats");
         _equipment = GetNode<VBoxContainer>("%Equipment");
@@ -98,6 +113,7 @@ public partial class Shop : CanvasLayer
         _continue.Text = $"Start Wave {run.Wave + 1}";
 
         BuildPotionShelf();
+        BuildOdds();
         RollOffers();
         Show();
         _continue.GrabFocus();
@@ -117,15 +133,45 @@ public partial class Shop : CanvasLayer
         float priceScale = PriceScale;
         foreach (var item in PickRandom(pool, OfferCount))
         {
-            var offer = new Offer { Item = item, Price = Mathf.RoundToInt(item.Price * priceScale) };
+            var tier = ForcedRarity is { } forced ? Rarities.Tier(forced) : Rarities.Roll(_run.Wave);
+            var instance = new ItemInstance(item, tier);
+            var offer = new Offer { Item = instance, Price = Mathf.RoundToInt(instance.Price * priceScale) };
             _offers.Add(offer);
             _offerRow.AddChild(BuildCard(offer));
         }
 
         Refresh();
+        EmitSignal(SignalName.OffersRolled);
     }
 
     private float PriceScale => 1f + PriceIncreasePerWave * (_run.Wave - 1);
+
+    // "Common 82%  Uncommon 15%  Rare 3%" in each tier's color, so the odds (and the colors) are learnable.
+    private void BuildOdds()
+    {
+        foreach (var child in _odds.GetChildren())
+        {
+            _odds.RemoveChild(child);
+            child.QueueFree();
+        }
+
+        var chances = Rarities.Chances(_run.Wave);
+        for (int i = 0; i < chances.Length; i++)
+        {
+            if (chances[i] <= 0f && ForcedRarity == null)
+                continue;
+            var tier = Rarities.Tiers[i];
+            string text = ForcedRarity is { } forced
+                ? (forced == tier.Rarity ? $"{tier.Label} (forced)" : null)
+                : $"{tier.Label} {chances[i]:0.#}%";
+            if (text == null)
+                continue;
+            var label = new Label { Text = text };
+            label.AddThemeFontSizeOverride("font_size", 15);
+            label.AddThemeColorOverride("font_color", tier.Color);
+            _odds.AddChild(label);
+        }
+    }
 
     private void BuildPotionShelf()
     {
@@ -194,7 +240,7 @@ public partial class Shop : CanvasLayer
         if (!_run.Potions.CanCarryMore(offer.Item) || !_run.TrySpend(offer.Price))
             return;
 
-        _run.AddItem(offer.Item);
+        _run.AddPotion(offer.Item);
         EmitSignal(SignalName.Purchased);
         Refresh();
     }
@@ -211,18 +257,24 @@ public partial class Shop : CanvasLayer
 
     private Control BuildCard(Offer offer)
     {
+        var item = offer.Item;
         var card = new PanelContainer { CustomMinimumSize = new Vector2(170, 280) };
-        card.AddThemeStyleboxOverride("panel", UiStyles.Panel());
+        // Common gets a faint border so the colored ones stand out.
+        card.AddThemeStyleboxOverride("panel", item.Rarity == Rarity.Common
+            ? UiStyles.BorderedPanel(new Color(item.Color, 0.25f), 1)
+            : UiStyles.BorderedPanel(item.Color, 3));
         var content = new VBoxContainer();
         content.AddThemeConstantOverride("separation", 8);
         card.AddChild(content);
 
-        content.AddChild(new ColorRect { Color = offer.Item.IconColor, CustomMinimumSize = new Vector2(0, 48) });
+        content.AddChild(new ColorRect { Color = item.Item.IconColor, CustomMinimumSize = new Vector2(0, 48) });
 
-        content.AddChild(UiStyles.WrappedLabel(offer.Item.DisplayName, 20));
+        var name = UiStyles.WrappedLabel(item.DisplayName, 20);
+        name.AddThemeColorOverride("font_color", item.Color);
+        content.AddChild(name);
 
-        var slot = UiStyles.WrappedLabel(offer.Item.SlotLabel, 14);
-        slot.AddThemeColorOverride("font_color", UiStyles.Dim);
+        var slot = UiStyles.WrappedLabel(item.SlotLabel, 14);
+        slot.AddThemeColorOverride("font_color", item.Rarity == Rarity.Common ? UiStyles.Dim : item.Color);
         content.AddChild(slot);
 
         var description = UiStyles.WrappedLabel(offer.Item.Describe());
@@ -289,14 +341,14 @@ public partial class Shop : CanvasLayer
         }
         offer.Buttons.Clear();
 
-        var targets = offer.Item.IsGear && !offer.Sold ? _run.Equipment.TargetsFor(offer.Item) : new List<int> { -1 };
+        var targets = offer.Item.IsGear && !offer.Sold ? _run.Equipment.TargetsFor(offer.Item.Item) : new List<int> { -1 };
         offer.Replaces.Text = "";
         foreach (int position in targets)
         {
-            var replaced = position >= 0 ? _run.Equipment.Displaced(offer.Item, position) : new List<ItemData>();
+            var replaced = position >= 0 ? _run.Equipment.Displaced(offer.Item.Item, position) : new List<ItemInstance>();
             string text = offer.Sold ? "Sold" : $"Buy ({offer.Price})";
             if (targets.Count > 1)
-                text += $"\nover {string.Join(", ", replaced.Select(i => i.DisplayName))}";
+                text += $"\nover {string.Join(", ", replaced.Select(i => i.FullName))}";
             else if (replaced.Count > 0)
                 offer.Replaces.Text = DescribeReplacement(offer.Item, replaced);
 
@@ -315,10 +367,10 @@ public partial class Shop : CanvasLayer
             offer.Replaces.Text = $"Both {EquipSlotInfo.Label(offer.Item.Slot).ToLower()} slots full: pick one to replace (half its price back)";
     }
 
-    private string DescribeReplacement(ItemData item, List<ItemData> replaced)
+    private string DescribeReplacement(ItemInstance item, List<ItemInstance> replaced)
     {
         int refund = replaced.Sum(i => i.SellValue);
-        string names = string.Join(" and ", replaced.Select(i => i.DisplayName));
+        string names = string.Join(" and ", replaced.Select(i => i.FullName));
         string text = refund > 0 ? $"Replaces {names} (+{refund} gold back)" : $"Replaces {names}";
 
         // An off-hand item pushing out a two-hander leaves the main hand to the starting weapon.
@@ -350,17 +402,22 @@ public partial class Shop : CanvasLayer
         AddEquipmentRow("\nTrinkets", null);
         if (_run.Trinkets.Count == 0)
             AddEquipmentRow("-", null);
-        foreach (var group in _run.Trinkets.GroupBy(t => t))
-            AddEquipmentRow(group.Count() > 1 ? $"{group.Key.DisplayName} x{group.Count()}" : group.Key.DisplayName, group.Key);
+        // One row per item and rarity: a Common and a Rare Whetstone are listed apart (their stats just add up).
+        foreach (var group in _run.Trinkets.GroupBy(t => (t.Item, t.Rarity)))
+        {
+            var first = group.First();
+            AddEquipmentRow(group.Count() > 1 ? $"{first.DisplayName} x{group.Count()}" : first.DisplayName, first);
+        }
     }
 
-    private void AddEquipmentRow(string text, ItemData item)
+    private void AddEquipmentRow(string text, ItemInstance item)
     {
         var row = new Label { Text = text };
         row.AddThemeFontSizeOverride("font_size", 15);
         if (item != null)
         {
-            row.TooltipText = $"{item.DisplayName}\n{item.Describe()}";
+            row.AddThemeColorOverride("font_color", item.Color);
+            row.TooltipText = item.Tooltip();
             // Labels ignore the mouse by default, which would also stop the tooltip.
             row.MouseFilter = Control.MouseFilterEnum.Pass;
         }

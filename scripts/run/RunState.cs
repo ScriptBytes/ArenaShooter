@@ -24,8 +24,8 @@ public class RunState
 
     public Equipment Equipment { get; } = new();
 
-    /// <summary>Slotless items. Copies stack.</summary>
-    public List<ItemData> Trinkets { get; } = new();
+    /// <summary>Slotless items. Copies stack, and copies of different rarities just add up.</summary>
+    public List<ItemInstance> Trinkets { get; } = new();
 
     /// <summary>Health potion charges, bought potions and the heart-filled reserve.</summary>
     public PotionBelt Potions { get; } = new();
@@ -56,20 +56,14 @@ public class RunState
     }
 
     /// <summary>
-    /// Adds an item. Consumables go into <see cref="Potions"/>. Gear goes into <paramref name="position"/> (default: its first target, see
+    /// Adds an item. Gear goes into <paramref name="position"/> (default: its first target, see
     /// <see cref="Equipment.TargetsFor"/>). Returns the gear it replaced.
     /// </summary>
-    public List<ItemData> AddItem(ItemData item, int position = -1)
+    public List<ItemInstance> AddItem(ItemInstance item, int position = -1)
     {
-        var removed = new List<ItemData>();
-        if (item is ConsumableData consumable)
-        {
-            Potions.Add(consumable);
-            return removed;
-        }
-
+        var removed = new List<ItemInstance>();
         if (item.IsGear)
-            removed = Equipment.Equip(item, position >= 0 ? position : Equipment.TargetsFor(item)[0]);
+            removed = Equipment.Equip(item, position >= 0 ? position : Equipment.TargetsFor(item.Item)[0]);
         else
             Trinkets.Add(item);
 
@@ -77,13 +71,16 @@ public class RunState
         return removed;
     }
 
+    /// <summary>Consumables have no rarity: they go straight into <see cref="Potions"/>.</summary>
+    public void AddPotion(ConsumableData potion) => Potions.Add(potion);
+
     private void RecalculateStats()
     {
         var stats = _granted.Copy();
         foreach (var item in Trinkets.Concat(Equipment.Worn))
         {
-            foreach (var modifier in item.Modifiers)
-                stats.Add(modifier.Stat, modifier.Value);
+            foreach (var (stat, value) in item.Modifiers)
+                stats.Add(stat, value);
         }
         Stats = stats;
     }

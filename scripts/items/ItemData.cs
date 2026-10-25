@@ -8,7 +8,8 @@ namespace ArenaShooter;
 /// Definition of a buyable item. Each item is a .tres file under data/items/, editable
 /// in the Inspector; [GlobalClass] makes it show up in the editor's "New Resource" list.
 /// Items with a <see cref="Slot"/> are gear (one per slot, see Equipment); the rest are
-/// trinkets, which stack.
+/// trinkets, which stack. Shared and never mutated: what the player owns is an <see cref="ItemInstance"/>
+/// (this item plus a rolled <see cref="Rarity"/>).
 /// </summary>
 [GlobalClass]
 public partial class ItemData : Resource
@@ -34,23 +35,24 @@ public partial class ItemData : Resource
 
     public bool IsGear => Slot != EquipSlot.None;
 
-    /// <summary>Gold back when this gear is replaced.</summary>
-    public int SellValue => Price / 2;
-
     public virtual string SlotLabel => !IsGear ? "Trinket · stacks"
         : TwoHanded ? "Main Hand · two-handed"
         : EquipSlotInfo.Label(Slot);
 
-    public virtual string Describe()
+    /// <summary>The item's Common stats. Owned and offered items describe themselves through ItemInstance.</summary>
+    public virtual string Describe() => Describe(Modifiers.Select(m => (m.Stat, m.Value)), 1f);
+
+    /// <summary>Describes the item with the given (rarity-scaled) modifiers and weapon damage multiplier.</summary>
+    public string Describe(IEnumerable<(StatType Stat, float Value)> modifiers, float weaponDamageMultiplier)
     {
         var lines = new List<string>();
         if (Weapon != null)
         {
-            lines.Add($"{Weapon.Damage:0.#} damage every {Weapon.Cooldown:0.##}s");
+            lines.Add($"{Weapon.Damage * weaponDamageMultiplier:0.#} damage every {Weapon.Cooldown:0.##}s");
             if (Weapon.Description != "")
                 lines.Add(Weapon.Description);
         }
-        lines.AddRange(Modifiers.Select(m => m.Describe()));
+        lines.AddRange(modifiers.Select(m => StatInfo.Format(m.Stat, m.Value)));
         return string.Join("\n", lines);
     }
 }

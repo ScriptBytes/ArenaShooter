@@ -19,11 +19,15 @@ public partial class AbilityCaster : Node2D
 
     private readonly List<AbilitySlot> _spells = new();
     private AbilityContext _context;
+    // The weapon's own copy of the context, so its rarity can scale its damage without touching spells.
+    private AbilityContext _weaponContext;
     private float _weaponCooldownMultiplier = 1f;
+    private float _weaponDamageMultiplier = 1f;
 
     public override void _Ready()
     {
         _context = new AbilityContext(this);
+        _weaponContext = new AbilityContext(this);
     }
 
     public void Setup(IEnumerable<AbilityData> spells)
@@ -37,9 +41,13 @@ public partial class AbilityCaster : Node2D
         }
     }
 
-    /// <summary>Swaps the basic attack (the main-hand weapon). Keeps the slot if it's unchanged.</summary>
-    public void SetWeapon(AbilityData weapon)
+    /// <summary>
+    /// Swaps the basic attack (the main-hand weapon). Keeps the slot if it's unchanged.
+    /// <paramref name="damageMultiplier"/> is the weapon's rarity bonus; it applies from the next ApplyStats.
+    /// </summary>
+    public void SetWeapon(AbilityData weapon, float damageMultiplier = 1f)
     {
+        _weaponDamageMultiplier = damageMultiplier;
         if (Weapon?.Ability == weapon)
             return;
         Weapon = new AbilitySlot(weapon, autoCast: true) { CooldownMultiplier = _weaponCooldownMultiplier };
@@ -47,15 +55,21 @@ public partial class AbilityCaster : Node2D
 
     public void ApplyStats(PlayerStats stats)
     {
-        _context.DamageMultiplier = stats.Multiplier(StatType.Damage);
-        _context.RangeBonus = stats.Get(StatType.Range);
-        _context.CritChanceBonus = stats.Get(StatType.CritChance);
-        _context.LifeStealBonus = stats.Get(StatType.LifeSteal);
-        _context.MinionDamageMultiplier = Mathf.Max(
-            1f + (stats.Get(StatType.Damage) + stats.Get(StatType.MinionDamage)) / 100f, 0.1f);
+        Fill(_context, stats, 1f);
+        Fill(_weaponContext, stats, _weaponDamageMultiplier);
         _weaponCooldownMultiplier = 1f / stats.Multiplier(StatType.AttackSpeed);
         if (Weapon != null)
             Weapon.CooldownMultiplier = _weaponCooldownMultiplier;
+    }
+
+    private static void Fill(AbilityContext context, PlayerStats stats, float damageMultiplier)
+    {
+        context.DamageMultiplier = stats.Multiplier(StatType.Damage) * damageMultiplier;
+        context.RangeBonus = stats.Get(StatType.Range);
+        context.CritChanceBonus = stats.Get(StatType.CritChance);
+        context.LifeStealBonus = stats.Get(StatType.LifeSteal);
+        context.MinionDamageMultiplier = Mathf.Max(
+            1f + (stats.Get(StatType.Damage) + stats.Get(StatType.MinionDamage)) / 100f, 0.1f);
     }
 
     public void ResetCooldowns()
@@ -118,6 +132,8 @@ public partial class AbilityCaster : Node2D
         Cast(slot, target, null);
     }
 
+    private AbilityContext ContextFor(AbilitySlot slot) => slot == Weapon ? _weaponContext : _context;
+
     private static void Tick(AbilitySlot slot, float dt)
     {
         slot.CooldownLeft = Mathf.Max(slot.CooldownLeft - dt, 0f);
@@ -125,13 +141,13 @@ public partial class AbilityCaster : Node2D
 
     private void TryAutoCast(AbilitySlot slot)
     {
-        if (slot.IsReady && slot.Ability.TryAutoTarget(_context, out var target, out var targetEnemy))
+        if (slot.IsReady && slot.Ability.TryAutoTarget(ContextFor(slot), out var target, out var targetEnemy))
             Cast(slot, target, targetEnemy);
     }
 
     private void Cast(AbilitySlot slot, Vector2 target, Enemy targetEnemy)
     {
-        slot.Ability.Cast(_context, target, targetEnemy);
+        slot.Ability.Cast(ContextFor(slot), target, targetEnemy);
         slot.CooldownLeft = slot.EffectiveCooldown;
     }
 }

@@ -16,6 +16,22 @@ public static class UiStyles
         return style;
     }
 
+    /// <summary>A panel with a border in <paramref name="border"/> (e.g. an item's rarity color).</summary>
+    public static StyleBoxFlat BorderedPanel(Color border, int width = 2)
+    {
+        var style = Panel();
+        style.BorderColor = border;
+        style.SetBorderWidthAll(width);
+        return style;
+    }
+
+    /// <summary>Tints a button's text in every state but disabled (which stays greyed out).</summary>
+    public static void ColorButtonText(Button button, Color color)
+    {
+        foreach (var state in new[] { "font_color", "font_hover_color", "font_pressed_color", "font_focus_color", "font_hover_pressed_color" })
+            button.AddThemeColorOverride(state, color);
+    }
+
     /// <summary>Hover tooltips styled like the panels. Set it as the Theme of a container to cover its children.</summary>
     public static Theme TooltipTheme()
     {

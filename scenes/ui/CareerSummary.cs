@@ -11,7 +11,11 @@ namespace ArenaShooter;
 /// </summary>
 public partial class CareerSummary : CanvasLayer
 {
-    [Signal] public delegate void HeirloomChosenEventHandler(ItemData item);
+    /// <summary>
+    /// A plain C# event rather than a [Signal]: signal arguments must be Godot types, and an
+    /// ItemInstance (item + rarity) is plain C#.
+    /// </summary>
+    public event System.Action<ItemInstance> HeirloomChosen;
     [Signal] public delegate void ContinueRequestedEventHandler();
 
     private Label _title;
@@ -23,10 +27,10 @@ public partial class CareerSummary : CanvasLayer
     private HBoxContainer _heirloomButtons;
     private Button _continue;
 
-    private readonly List<(ItemData Item, Button Button)> _heirloomChoices = new();
+    private readonly List<(ItemInstance Item, Button Button)> _heirloomChoices = new();
 
     /// <summary>"Keep" buttons for the worn gear after a victory (empty otherwise); Autoplay presses one (--heirloom).</summary>
-    public IReadOnlyList<(ItemData Item, Button Button)> HeirloomChoices => _heirloomChoices;
+    public IReadOnlyList<(ItemInstance Item, Button Button)> HeirloomChoices => _heirloomChoices;
     public Button ContinueButton => _continue;
 
     public override void _Ready()
@@ -69,7 +73,7 @@ public partial class CareerSummary : CanvasLayer
     }
 
     public void Open(ClassData playerClass, CareerSettings settings, CareerCharacter character,
-        CareerSettings.Reward reward, int levelBefore, int wave, ItemData heirloom, IEnumerable<ItemData> keepable)
+        CareerSettings.Reward reward, int levelBefore, int wave, ItemInstance heirloom, IEnumerable<ItemInstance> keepable)
     {
         _title.Text = reward.Victory ? "Victory!" : $"Defeated on wave {wave}";
 
@@ -95,12 +99,12 @@ public partial class CareerSummary : CanvasLayer
             _xpBar.Value = character.Xp - settings.XpForLevel(level);
         }
 
-        BuildHeirloomChoices(reward.Victory, reward.Victory ? keepable.ToList() : new List<ItemData>(), heirloom);
+        BuildHeirloomChoices(reward.Victory, reward.Victory ? keepable.ToList() : new List<ItemInstance>(), heirloom);
         Show();
         _continue.GrabFocus();
     }
 
-    private void BuildHeirloomChoices(bool victory, List<ItemData> keepable, ItemData heirloom)
+    private void BuildHeirloomChoices(bool victory, List<ItemInstance> keepable, ItemInstance heirloom)
     {
         foreach (var child in _heirloomButtons.GetChildren())
         {
@@ -109,7 +113,7 @@ public partial class CareerSummary : CanvasLayer
         }
         _heirloomChoices.Clear();
 
-        string current = heirloom != null ? $"Current heirloom: {heirloom.DisplayName}." : "No heirloom yet.";
+        string current = heirloom != null ? $"Current heirloom: {heirloom.FullName}." : "No heirloom yet.";
         if (keepable.Count == 0)
         {
             _heirloomLabel.Text = victory
@@ -123,23 +127,24 @@ public partial class CareerSummary : CanvasLayer
         {
             var button = new Button
             {
-                Text = $"Keep {item.DisplayName}",
-                TooltipText = item.Describe(),
+                Text = $"Keep {item.FullName}",
+                TooltipText = item.Tooltip(),
                 CustomMinimumSize = new Vector2(0, 36),
-                Disabled = item == heirloom,
+                Disabled = heirloom != null && item.Item == heirloom.Item && item.Rarity == heirloom.Rarity,
             };
+            UiStyles.ColorButtonText(button, item.Color);
             button.Pressed += () => Choose(item);
             _heirloomButtons.AddChild(button);
             _heirloomChoices.Add((item, button));
         }
     }
 
-    private void Choose(ItemData item)
+    private void Choose(ItemInstance item)
     {
         foreach (var (_, button) in _heirloomChoices)
             button.Disabled = true;
-        _heirloomLabel.Text = $"Heirloom: {item.DisplayName}. It starts equipped in your next runs.";
-        EmitSignal(SignalName.HeirloomChosen, item);
+        _heirloomLabel.Text = $"Heirloom: {item.FullName}. It starts equipped in your next runs.";
+        HeirloomChosen?.Invoke(item);
         _continue.GrabFocus();
     }
 

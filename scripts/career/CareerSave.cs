@@ -49,6 +49,12 @@ public class CareerCharacter
     /// <summary><see cref="ItemData.Id"/> of the gear kept from a victory; starts equipped. Null for none.</summary>
     public string Heirloom { get; set; }
 
+    /// <summary>
+    /// The heirloom's <see cref="Rarity"/> by name ("Rare"). Missing (saves from before rarity) or unknown
+    /// means Common. Added without a version bump: an older build keeps it as an unknown field.
+    /// </summary>
+    public string HeirloomRarity { get; set; }
+
     public int Runs { get; set; }
     public int Victories { get; set; }
     public int BestWave { get; set; }
@@ -66,5 +72,7 @@ public class CareerCharacter
             Talents[key] = System.Math.Max(Talents[key], 0);
         if (string.IsNullOrWhiteSpace(Heirloom))
             Heirloom = null;
+        if (Heirloom == null || string.IsNullOrWhiteSpace(HeirloomRarity))
+            HeirloomRarity = null;
     }
 }
