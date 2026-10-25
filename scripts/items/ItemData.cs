@@ -52,7 +52,9 @@ public partial class ItemData : Resource
             if (Weapon.Description != "")
                 lines.Add(Weapon.Description);
         }
-        lines.AddRange(modifiers.Select(m => StatInfo.Format(m.Stat, m.Value)));
+        var list = modifiers.ToList();
+        lines.AddRange(list.Select(m => StatInfo.Format(m.Stat, m.Value)));
+        lines.AddRange(list.Where(m => m.Value > 0f).Select(m => StatInfo.CapNote(m.Stat)).Where(n => n != null).Distinct());
         return string.Join("\n", lines);
     }
 }

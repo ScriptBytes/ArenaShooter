@@ -29,6 +29,7 @@ public partial class Player : CharacterBody2D, IDamageable
     [Export] public int PotionsPerWave { get; set; } = 1;
 
     public static readonly Color HealColor = new("5ee07a");
+    public static readonly Color DodgeColor = new("b8d8ff");
 
     public float PotionHeal { get; private set; } = 10f;
 
@@ -39,6 +40,17 @@ public partial class Player : CharacterBody2D, IDamageable
 
     /// <summary>Flat reduction to each hit taken (minimum 1 damage).</summary>
     public float Armor { get; private set; }
+
+    /// <summary>Chance (0–1) to avoid a hit entirely, already capped. A dodge starts i-frames like a hit.</summary>
+    public float DodgeChance { get; private set; }
+
+    /// <summary>HP healed per second by the HP Regen stat.</summary>
+    public float RegenPerSecond { get; private set; }
+
+    /// <summary>This run's totals, for Autoplay's logs: hits that landed, hits dodged, HP from regen.</summary>
+    public int HitsTaken { get; private set; }
+    public int HitsDodged { get; private set; }
+    public float RegenHealed { get; private set; }
 
     public Health Health { get; private set; }
     public ShakeCamera Camera { get; private set; }
@@ -65,6 +77,11 @@ public partial class Player : CharacterBody2D, IDamageable
     private float _lifeStealBudget;
     private float _lifeStealShown;
     private float _lifeStealTextLeft;
+
+    // HP Regen: heals a little every frame; the "+N" is batched so it shows about once per whole HP.
+    private const float RegenTextInterval = 1f;
+    private float _regenShown;
+    private float _regenTextLeft;
 
     public bool IsLeaping => _leapLeft > 0f;
 
@@ -124,6 +141,8 @@ public partial class Player : CharacterBody2D, IDamageable
         Speed = _class.MoveSpeed * stats.Multiplier(StatType.MoveSpeed, floor: 0.3f);
         PickupRange = Mathf.Max(_basePickupRange + stats.Get(StatType.PickupRange), 0f);
         Armor = _class.Armor + stats.Get(StatType.Armor);
+        DodgeChance = StatInfo.Capped(StatType.Dodge, stats.Get(StatType.Dodge)) / 100f;
+        RegenPerSecond = Mathf.Max(stats.Get(StatType.HpRegen), 0f) / StatInfo.RegenPeriod;
         Health.SetMax(_class.MaxHealth + stats.Get(StatType.MaxHealth), refill: false);
         PotionHeal = Mathf.Max(BasePotionHeal + stats.Get(StatType.PotionHeal), 1f);
         Potions.ReserveCapacity = PotionHeal;
@@ -170,6 +189,26 @@ public partial class Player : CharacterBody2D, IDamageable
         FloatingText.Spawn(GetTree().CurrentScene, GlobalPosition + new Vector2(0, -Radius),
             $"+{_lifeStealShown:0.#}", HealColor, 14);
         _lifeStealShown = 0f;
+    }
+
+    // Regen only heals HP: it never fills the potion reserve (that's what hearts are for).
+    private void UpdateRegen(float dt)
+    {
+        if (RegenPerSecond > 0f && !Health.IsDead && Health.Current < Health.Max)
+        {
+            float healed = Health.Heal(RegenPerSecond * dt);
+            RegenHealed += healed;
+            _regenShown += healed;
+        }
+
+        _regenTextLeft -= dt;
+        if (_regenTextLeft > 0f || _regenShown < 1f)
+            return;
+
+        _regenTextLeft = RegenTextInterval;
+        FloatingText.Spawn(GetTree().CurrentScene, GlobalPosition + new Vector2(0, -Radius),
+            $"+{_regenShown:0.#}", HealColor, 14);
+        _regenShown = 0f;
     }
 
     public void RefillPotions() => Potions.RefillCharges(PotionsPerWave);
@@ -276,6 +315,7 @@ public partial class Player : CharacterBody2D, IDamageable
         if (Buffs.Tick(dt))
             RefreshStats();
         UpdateLifeSteal(dt);
+        UpdateRegen(dt);
         QueueRedraw();
 
         if (IsLeaping)
@@ -306,9 +346,20 @@ public partial class Player : CharacterBody2D, IDamageable
         if (Invulnerable || _invulnerableLeft > 0f || Health.IsDead)
             return;
 
+        // A dodge uses the i-frames a hit would have, so standing in a crowd rolls once per
+        // InvulnerabilityTime, not every frame. The roll only happens with Dodge > 0, so runs
+        // without it draw the same random numbers as before.
+        _invulnerableLeft = InvulnerabilityTime;
+        if (DodgeChance > 0f && GD.Randf() < DodgeChance)
+        {
+            HitsDodged++;
+            FloatingText.Spawn(GetTree().CurrentScene, GlobalPosition + new Vector2(0, -Radius), "Dodge", DodgeColor, 15);
+            return;
+        }
+
+        HitsTaken++;
         float taken = Mathf.Max(amount - Armor, 1f);
         Health.TakeDamage(taken);
-        _invulnerableLeft = InvulnerabilityTime;
         Camera.AddTrauma(HurtShake);
         FloatingText.SpawnDamage(GetTree().CurrentScene, GlobalPosition + new Vector2(0, -Radius), taken, new Color("ff5a5a"));
     }

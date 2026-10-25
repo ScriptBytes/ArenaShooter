@@ -171,3 +171,34 @@ Implemented the answered questions from §1 and §2; decisions are in `Goals.md`
 - Is ×2 for Epic the right ceiling, or should Epic be ×1.75 and leave room for Legendary?
 - Should the shop offer a rarer copy of gear you already wear (as an upgrade)?
 - Heirloom upgrades (§3 Q6): bump the tier by one per victory it's carried, capped at Epic? That uses this ladder directly.
+
+## 7. New stats
+
+**Judgment calls**
+
+- **Max HP and Attack Speed** already worked end to end (checked with `--stat`: Max HP 16 → 26, Wand cooldown 0.35 → 0.23s at +50%) and were well covered (6 items each, plus the Toughness and Haste talents), so I added no items for them.
+- **Cooldown Reduction** affects **spells only**. Attack Speed already speeds up the weapon; letting CDR do it too would make it a strictly better Attack Speed. Cap **50%** (LoL's old 40% felt low for a game where spells are the stars; 50% means at most twice as often). A cooldown already running keeps its time; the next cast uses the new value (matters for War Cry-style buffs later).
+- **HP Regen = HP per 10 seconds.** Item stats are whole numbers (rarity rounds them), so "per second" would need decimals and "per 5s" would make +1 the smallest step and too coarse for rarity (+1 → +2 is ×2). Per 10s gives +2/+3 items that rarity can scale. Heals every frame (smooth), the green "+N" shows at most once a second and only once a whole HP is healed. It only heals HP, never fills the potion reserve. No cap.
+- **Dodge** covers contact and enemy shots, cap **60%**. A dodge **does** start i-frames: contact damage is checked every frame, so without them a crowd would roll 60 times a second and dodge would never save you from contact. Side effect: the player blinks after a dodge, like after a hit. `--god` skips the roll entirely.
+- **Determinism:** dodge only draws a random number when the chance is above 0, so seeded runs without dodge are identical to before (verified: Fighter/Mage/Warlock seeds 1–5 identical with the old catalog; with the new catalog only `offers` lines differ). Necromancer runs weren't comparable (the known minion non-determinism; three runs of the same build gave 102/104/106 kills).
+- **Caps on display:** item cards and tooltips add a "Dodge caps at 60%" line. The shop's "Your stats" panel now lists **only non-zero stats** (with 14 stat types the full list pushed the shop off screen) and shows "+60% Dodge (capped)" past the cap. Totals over the cap are kept, so a later minus can eat into the excess.
+- Items: Hourglass (trinket, +8% CDR, 25), Sage's Amulet (amulet, +15% CDR +5% Damage, 35), Mending Herb (trinket, +2 Regen, 20), Ring of Regeneration (ring, +3 Regen +3 Max HP, 25), Feather Charm (trinket, +5% Dodge, 20), Shadow Cloak (armor, +10% Dodge +5% Move Speed, 30). Ids = file names.
+- Talents: Focus +3% CDR ×5, Evasion +2% Dodge ×5, Recovery +1 Regen ×3. Total ranks 33 → 46 for 24 points.
+
+**Balance concerns**
+
+- Dodge stacks with trinkets without limit up to 60%: 12 Feather Charms (240 gold) hits the cap. Brotato has the same shape; watch for a dodge-stacking Mage being unkillable.
+- Autoplay average death wave, seeds 1–5: Fighter none 2.6 / Dodge 30 3.0 / Regen 4 2.8 / CDR 30 2.6; Mage none 2.6 / 3.0 / 3.0 / 3.2. Dodge 30% removed about a third of hits as expected (e.g. Fighter seed 3: 30 landed, 15 dodged).
+- Regen on the Mage (16 HP) is relatively strong: Ring of Regeneration ≈ 18 HP per 60s wave, more than a potion.
+- CDR 50% on Meteor/War Cry may be strong (War Cry 15s → 7.5s, 6s uptime = 80%).
+
+**Unverified**
+
+- "Dodge" and regen "+1.5" texts seen in Movie Maker frames only, not played; the shop and career talent screens checked in frames (they fit).
+- The equipment panel tooltip for the new items wasn't hovered (same `Describe()` text as cards, checked via a temporary print).
+
+**Questions**
+
+- Should Cooldown Reduction also shorten the weapon (and Attack Speed become weapon-only damage tempo)? I chose spells only.
+- Regen per 10s OK, or would you prefer Brotato's abstract "HP Regeneration" points?
+- Should a dodge give the full 0.5s i-frames (current) or a shorter window?

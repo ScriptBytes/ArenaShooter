@@ -106,7 +106,10 @@ public partial class Autoplay : Node
 
     public void OnWaveEnded(int wave) =>
         Log($"wave_end wave={wave} kills={Run.Kills} gold={Run.Gold} bag={Run.Bag} " +
-            $"hp={Player.Health.Current:0}/{Player.Health.Max:0} {PotionSummary()}");
+            $"hp={Player.Health.Current:0}/{Player.Health.Max:0} {PotionSummary()} {Defense()}");
+
+    // Run totals so far: hits that landed, hits dodged, HP healed by regen.
+    private string Defense() => $"hits={Player.HitsTaken} dodged={Player.HitsDodged} regen={Player.RegenHealed:0.#}";
 
     public void OnHeartCollected(float healed, float stored) =>
         Log($"heart healed={healed:0.#} added={stored:0.#} hp={Player.Health.Current:0}/{Player.Health.Max:0} reserve={Reserve()}");
@@ -124,7 +127,7 @@ public partial class Autoplay : Node
     public void OnRunEnded(bool victory)
     {
         Log($"run_end result={(victory ? "victory" : "defeat")} wave={Run.Wave} kills={Run.Kills} " +
-            $"gold={Run.Gold} gear=\"{Gear()}\" trinkets={Run.Trinkets.Count} trinket_list=\"{string.Join(",", Run.Trinkets.Select(t => t.LogName))}\"");
+            $"gold={Run.Gold} gear=\"{Gear()}\" trinkets={Run.Trinkets.Count} trinket_list=\"{string.Join(",", Run.Trinkets.Select(t => t.LogName))}\" {Defense()}");
         _runEnded = true;
         if (CareerSummary.Visible)
             return; // SummaryStep banks the career, then quits or restarts.

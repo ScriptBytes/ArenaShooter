@@ -325,8 +325,10 @@ public partial class Shop : CanvasLayer
         foreach (var offer in _potionOffers)
             RefreshPotionOffer(offer);
 
-        _stats.Text = "Your stats\n\n" + string.Join("\n",
-            System.Enum.GetValues<StatType>().Select(s => StatInfo.Format(s, _run.Stats.Get(s))));
+        // Only stats you have: listing every stat at +0 no longer fits the screen (14 stats).
+        var owned = System.Enum.GetValues<StatType>().Where(s => _run.Stats.Get(s) != 0f)
+            .Select(s => StatInfo.FormatTotal(s, _run.Stats.Get(s))).ToList();
+        _stats.Text = "Your stats\n\n" + (owned.Count > 0 ? string.Join("\n", owned) : "No bonuses yet");
         BuildEquipment();
     }
 

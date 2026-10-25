@@ -59,6 +59,30 @@ Stat = 6
 PerRank = 12.0
 MaxRank = 5
 
+[sub_resource type="Resource" id="Talent_focus"]
+script = ExtResource("2_talent")
+Id = "focus"
+DisplayName = "Focus"
+Stat = 11
+PerRank = 3.0
+MaxRank = 5
+
+[sub_resource type="Resource" id="Talent_evasion"]
+script = ExtResource("2_talent")
+Id = "evasion"
+DisplayName = "Evasion"
+Stat = 13
+PerRank = 2.0
+MaxRank = 5
+
+[sub_resource type="Resource" id="Talent_recovery"]
+script = ExtResource("2_talent")
+Id = "recovery"
+DisplayName = "Recovery"
+Stat = 12
+PerRank = 1.0
+MaxRank = 3
+
 [resource]
 script = ExtResource("1_settings")
-Talents = Array[ExtResource("2_talent")]([SubResource("Talent_toughness"), SubResource("Talent_might"), SubResource("Talent_haste"), SubResource("Talent_fleet"), SubResource("Talent_iron_skin"), SubResource("Talent_precision"), SubResource("Talent_magnetism")])
+Talents = Array[ExtResource("2_talent")]([SubResource("Talent_toughness"), SubResource("Talent_might"), SubResource("Talent_haste"), SubResource("Talent_fleet"), SubResource("Talent_iron_skin"), SubResource("Talent_precision"), SubResource("Talent_magnetism"), SubResource("Talent_focus"), SubResource("Talent_evasion"), SubResource("Talent_recovery")])

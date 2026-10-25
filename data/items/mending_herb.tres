@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/items/ItemData.cs" id="1_item"]
+[ext_resource type="Script" path="res://scripts/items/StatModifier.cs" id="2_mod"]
+
+[sub_resource type="Resource" id="StatModifier_0"]
+script = ExtResource("2_mod")
+Stat = 12
+Value = 2.0
+
+[resource]
+script = ExtResource("1_item")
+Id = "mending_herb"
+DisplayName = "Mending Herb"
+Price = 20
+IconColor = Color(0.4, 0.85, 0.45, 1)
+Modifiers = Array[ExtResource("2_mod")]([SubResource("StatModifier_0")])

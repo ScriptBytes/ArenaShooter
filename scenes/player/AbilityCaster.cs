@@ -22,6 +22,7 @@ public partial class AbilityCaster : Node2D
     // The weapon's own copy of the context, so its rarity can scale its damage without touching spells.
     private AbilityContext _weaponContext;
     private float _weaponCooldownMultiplier = 1f;
+    private float _spellCooldownMultiplier = 1f;
     private float _weaponDamageMultiplier = 1f;
 
     public override void _Ready()
@@ -37,7 +38,7 @@ public partial class AbilityCaster : Node2D
         {
             if (_spells.Count == SpellSlotCount)
                 break;
-            _spells.Add(new AbilitySlot(spell, spell.AutoCastByDefault));
+            _spells.Add(new AbilitySlot(spell, spell.AutoCastByDefault) { CooldownMultiplier = _spellCooldownMultiplier });
         }
     }
 
@@ -60,6 +61,12 @@ public partial class AbilityCaster : Node2D
         _weaponCooldownMultiplier = 1f / stats.Multiplier(StatType.AttackSpeed);
         if (Weapon != null)
             Weapon.CooldownMultiplier = _weaponCooldownMultiplier;
+
+        // Cooldown Reduction: spells only (the weapon has Attack Speed), capped. A cooldown already
+        // running keeps its remaining time; the next cast uses the new multiplier.
+        _spellCooldownMultiplier = 1f - StatInfo.Capped(StatType.CooldownReduction, stats.Get(StatType.CooldownReduction)) / 100f;
+        foreach (var slot in _spells)
+            slot.CooldownMultiplier = _spellCooldownMultiplier;
     }
 
     private static void Fill(AbilityContext context, PlayerStats stats, float damageMultiplier)
