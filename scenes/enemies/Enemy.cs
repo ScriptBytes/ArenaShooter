@@ -84,8 +84,8 @@ public partial class Enemy : CharacterBody2D, IDamageable
     public void ApplyWave(WaveSettings wave)
     {
         Health.SetMax(Health.Max * wave.EnemyHealthMultiplier, refill: true);
-        ContactDamage += wave.EnemyDamageBonus;
-        _shotDamage += wave.EnemyDamageBonus;
+        ContactDamage *= wave.EnemyDamageMultiplier;
+        _shotDamage *= wave.EnemyDamageMultiplier;
         _speed *= wave.EnemySpeedMultiplier;
     }
 

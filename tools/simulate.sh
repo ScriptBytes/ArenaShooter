@@ -30,8 +30,8 @@ mkdir -p "$logs"
 
 run_one() {
   local class=$1 mode=$2
-  # A full run is ~8s (about 30x real time); allow plenty of frames per run before the safety quit.
-  "$godot" --headless --path . --fixed-fps 60 --disable-vsync --quit-after $((runs * 40000)) -- \
+  # A full 20-wave run is ~70k frames (~35s at about 30x real time); this is only a safety quit.
+  "$godot" --headless --path . --fixed-fps 60 --disable-vsync --quit-after $((runs * 90000)) -- \
     --autoplay --class="$class" --move="$mode" --seed="$seed" --runs="$runs" ${extra[@]+"${extra[@]}"} \
     > "$logs/$class.$mode.log" 2>&1 || echo "warning: $class/$mode exited with $?" >&2
 }

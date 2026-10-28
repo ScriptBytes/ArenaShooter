@@ -21,7 +21,7 @@ public partial class Main : Node2D
 
     private const int CameraPadding = 80;
 
-    [Export] public int TotalWaves { get; set; } = 5;
+    [Export] public int TotalWaves { get; set; } = 20;
     [Export] public Godot.Collections.Array<ClassData> Classes { get; set; } = new();
     [Export] public ItemCatalog ItemCatalog { get; set; }
     [Export] public RaritySettings Rarities { get; set; }
@@ -210,6 +210,8 @@ public partial class Main : Node2D
     {
         // A scratch save by default, so tests never touch the player's career. Only the first launch's call counts.
         Career.Configure(_autoplay.SavePath, _autoplay.ResetCareer);
+        if (_autoplay.Waves is { } waves)
+            TotalWaves = waves;
         if (_autoplay.Seed is { } seed)
             GD.Seed(seed + (ulong)Autoplay.RunsDone);
 
@@ -231,6 +233,7 @@ public partial class Main : Node2D
             Run = _run,
             ArenaCenter = Arena.Size / 2f,
             ArenaBounds = Arena.Bounds,
+            TotalWaves = TotalWaves,
             Spawner = Spawner,
         };
         AddChild(autoplay);

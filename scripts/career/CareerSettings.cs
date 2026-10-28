@@ -13,9 +13,11 @@ namespace ArenaShooter;
 public partial class CareerSettings : Resource
 {
     [ExportGroup("XP")]
-    [Export] public int XpPerKill { get; set; } = 1;
+    // Tuned for 20-wave runs, where a full run is ~3000 kills: kills are worth a tenth of a point each
+    // (rounded per run), so waves and victory still matter.
+    [Export] public float XpPerKill { get; set; } = 0.1f;
     [Export] public int XpPerWaveCleared { get; set; } = 20;
-    [Export] public int XpVictoryBonus { get; set; } = 50;
+    [Export] public int XpVictoryBonus { get; set; } = 100;
 
     [ExportGroup("Levels")]
     /// <summary>XP from level 1 to 2; each later level costs <see cref="XpStepPerLevel"/> more.</summary>
@@ -32,7 +34,7 @@ public partial class CareerSettings : Resource
 
     public Reward RewardFor(int kills, int wavesCleared, bool victory) => new(
         kills, wavesCleared, victory,
-        kills * XpPerKill, wavesCleared * XpPerWaveCleared, victory ? XpVictoryBonus : 0);
+        Mathf.RoundToInt(kills * XpPerKill), wavesCleared * XpPerWaveCleared, victory ? XpVictoryBonus : 0);
 
     /// <summary>XP needed to go from <paramref name="level"/> to the next.</summary>
     public int XpToNext(int level) => XpFirstLevel + XpStepPerLevel * (level - 1);

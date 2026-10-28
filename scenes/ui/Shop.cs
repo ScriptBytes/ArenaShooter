@@ -64,6 +64,8 @@ public partial class Shop : CanvasLayer
     public IReadOnlyList<Offer> Offers => _offers;
     public IReadOnlyList<PotionOffer> PotionOffers => _potionOffers;
     public Button ContinueButton => _continue;
+    public Button RerollButton => _reroll;
+    public int RerollCost => _rerollCost;
     private RunState _run;
     private IReadOnlyList<ItemData> _pool;
     private int _rerollCost;

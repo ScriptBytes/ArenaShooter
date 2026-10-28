@@ -5,7 +5,7 @@ using Godot;
 
 namespace ArenaShooter;
 
-public enum ShopStrategy { Cheapest, First, Skip }
+public enum ShopStrategy { Cheapest, First, Skip, Smart, Random }
 
 public enum MoveMode { Circle, Still, Smart }
 
@@ -23,9 +23,11 @@ public enum HeirloomStrategy { Priciest, Keep }
 /// <item><c>--class=NAME|INDEX</c> class to pick on the select screen (default: the first).</item>
 /// <item><c>--spells=A,B,C</c> spells to pick, in slot order (display or .tres file names; default: the list's first N).</item>
 /// <item><c>--wave=N</c> wave to start on (default 1).</item>
+/// <item><c>--waves=N</c> run length: the run is won after wave N (default: the game's, Main.TotalWaves).</item>
 /// <item><c>--seed=N</c> fixes the random seed, so before/after comparisons see the same run.</item>
 /// <item><c>--god</c> the player takes no damage.</item>
-/// <item><c>--shop=cheapest|first|skip</c> what to buy between waves (default cheapest, until broke).</item>
+/// <item><c>--shop=cheapest|first|skip|smart|random</c> what to buy between waves (default cheapest, until broke).
+/// smart values offers for the class and rerolls; random explores the item space (see <see cref="ShopBot"/>).</item>
 /// <item><c>--move=circle|still|smart</c> circle the arena (collects coins), stand in the middle, or steer like a player:
 /// dodge enemies and shots, keep the weapon's range, grab pickups (<see cref="SteeringBot"/>; default circle).</item>
 /// <item><c>--bot-aggression=0..1</c> smart movement: how hard it engages vs. how much room it gives enemies (default 0.5).</item>
@@ -53,6 +55,7 @@ public sealed class AutoplayOptions
     public string ClassName { get; private set; }
     public List<string> Spells { get; } = new();
     public int StartWave { get; private set; } = 1;
+    public int? Waves { get; private set; }
     public ulong? Seed { get; private set; }
     public bool God { get; private set; }
     public ShopStrategy Shop { get; private set; } = ShopStrategy.Cheapest;
@@ -105,6 +108,9 @@ public sealed class AutoplayOptions
                     break;
                 case "--wave" when int.TryParse(value, out int wave) && wave >= 1:
                     options.StartWave = wave;
+                    break;
+                case "--waves" when int.TryParse(value, out int waves) && waves >= 1:
+                    options.Waves = waves;
                     break;
                 case "--seed" when ulong.TryParse(value, out ulong seed):
                     options.Seed = seed;

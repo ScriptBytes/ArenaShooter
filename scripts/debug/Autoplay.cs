@@ -35,6 +35,7 @@ public partial class Autoplay : Node
     public RunState Run { get; set; }
     public Vector2 ArenaCenter { get; set; }
     public Rect2 ArenaBounds { get; set; }
+    public int TotalWaves { get; set; }
     public EnemySpawner Spawner { get; set; }
 
     private const float DrinkCooldown = 0.5f;
@@ -42,6 +43,8 @@ public partial class Autoplay : Node
 
     private float _moveAngle;
     private SteeringBot _bot;
+    private ShopBot _shopBot;
+    private int _peakEnemies;
     private float _drinkWait;
     private readonly HashSet<ConsumableData> _boughtThisShop = new();
     private bool _failed;
@@ -101,6 +104,7 @@ public partial class Autoplay : Node
         {
             Move((float)delta);
             MaybeDrink((float)delta);
+            _peakEnemies = Mathf.Max(_peakEnemies, GetTree().GetNodesInGroup(Groups.Enemies).Count);
         }
     }
 
@@ -108,10 +112,12 @@ public partial class Autoplay : Node
     {
         _class = playerClass;
         Combat.ResetDamageLog();
+        if (Options.Shop is ShopStrategy.Smart or ShopStrategy.Random)
+            _shopBot = new ShopBot(Shop, Run, Player, playerClass, Options.Shop, (Options.Seed ?? (ulong)GD.Randi()) + (ulong)RunsDone);
         if (Options.Move == MoveMode.Smart)
             _bot = new SteeringBot(Player, ArenaBounds, Spawner, Options.BotAggression, Options.BotDanger);
         string spells = string.Join(",", Player.Abilities.Spells.Select(s => s.Ability.DisplayName));
-        Log($"run_start class={playerClass.DisplayName} spells=\"{spells}\" gear=\"{Gear()}\" wave={Options.StartWave} " +
+        Log($"run_start class={playerClass.DisplayName} spells=\"{spells}\" gear=\"{Gear()}\" wave={Options.StartWave} waves={TotalWaves} " +
             $"seed={(Options.Seed is { } seed ? (seed + (ulong)RunsDone).ToString() : "random")} move={Move()} retry={FromRetry.ToString().ToLower()} dotnet={System.Environment.Version}");
         if (Options.AutoCastAll)
         {
@@ -123,12 +129,16 @@ public partial class Autoplay : Node
     public void OnWaveStarted(int wave)
     {
         _boughtThisShop.Clear();
+        _peakEnemies = 0;
         Log($"wave_start wave={wave} gold={Run.Gold} bag={Run.Bag} {PotionSummary()}");
     }
 
-    public void OnWaveEnded(int wave) =>
+    public void OnWaveEnded(int wave)
+    {
+        _shopBot?.NewVisit();
         Log($"wave_end wave={wave} kills={Run.Kills} gold={Run.Gold} bag={Run.Bag} " +
-            $"hp={Player.Health.Current:0}/{Player.Health.Max:0} {PotionSummary()} {Defense()}");
+            $"hp={Player.Health.Current:0}/{Player.Health.Max:0} {PotionSummary()} {Defense()} peak_enemies={_peakEnemies}");
+    }
 
     // Run totals so far: hits that landed, hits dodged, HP healed by regen, damage absorbed by barriers.
     private string Defense() => $"hits={Player.HitsTaken} dodged={Player.HitsDodged} regen={Player.RegenHealed:0.#} shielded={Player.ShieldAbsorbed:0.#}";
@@ -389,6 +399,12 @@ public partial class Autoplay : Node
             return;
         }
 
+        if (_shopBot != null)
+        {
+            BotShopStep();
+            return;
+        }
+
         var affordable = Shop.Offers.Where(o => !o.BuyButton.Disabled);
         var offer = Options.Shop switch
         {
@@ -400,17 +416,42 @@ public partial class Autoplay : Node
         if (offer != null)
         {
             // The first button is the first target slot (Shop builds them in TargetsFor order).
-            var replaced = offer.Item.IsGear
-                ? Run.Equipment.Displaced(offer.Item.Item, Run.Equipment.TargetsFor(offer.Item.Item)[0])
-                : new List<ItemInstance>();
-            Log($"buy item=\"{offer.Item.DisplayName}\" rarity={offer.Item.Rarity.ToString().ToLower()} price={offer.Price} " +
-                $"gold_left={Run.Gold - offer.Price} stats=\"{offer.Item.Describe().Replace("\n", ", ")}\" " +
-                $"replaces=\"{string.Join(",", replaced.Select(i => i.LogName))}\" refund={replaced.Sum(i => i.SellValue)}");
+            LogBuy(offer, 0);
             Press(offer.BuyButton);
             return;
         }
 
         Press(Shop.ContinueButton);
+    }
+
+    // --shop=smart|random: ShopBot picks one press per frame; logs it like the other strategies.
+    private void BotShopStep()
+    {
+        var choice = _shopBot.Next();
+        switch (choice.Action)
+        {
+            case "buy":
+                LogBuy(choice.Offer, choice.Target);
+                break;
+            case "reroll":
+                Log($"reroll cost={Shop.RerollCost} gold_left={Run.Gold - Shop.RerollCost}");
+                break;
+            case "potion":
+                var potion = Shop.PotionOffers.First(p => p.BuyButton == choice.Button);
+                Log($"buy item=\"{potion.Item.DisplayName}\" price={potion.Price} gold_left={Run.Gold - potion.Price} replaces=\"\"");
+                break;
+        }
+        Press(choice.Button);
+    }
+
+    private void LogBuy(Shop.Offer offer, int target)
+    {
+        var replaced = offer.Item.IsGear
+            ? Run.Equipment.Displaced(offer.Item.Item, Run.Equipment.TargetsFor(offer.Item.Item)[target])
+            : new List<ItemInstance>();
+        Log($"buy item=\"{offer.Item.DisplayName}\" rarity={offer.Item.Rarity.ToString().ToLower()} price={offer.Price} " +
+            $"gold_left={Run.Gold - offer.Price} stats=\"{offer.Item.Describe().Replace("\n", ", ")}\" " +
+            $"replaces=\"{string.Join(",", replaced.Select(i => i.LogName))}\" refund={replaced.Sum(i => i.SellValue)}");
     }
 
     // Health: drinks when the next potion's whole heal fits, or when under 35% HP (Space picks a full
