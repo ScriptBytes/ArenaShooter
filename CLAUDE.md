@@ -40,7 +40,7 @@ No test framework yet. Verify features by running the game and reading logs. Che
 `--autoplay` (after `--`) plays a whole run unattended through the real UI. It presses the mode-select (Arcade unless `--mode=career`), class-select, spell-select and shop buttons, circles the arena collecting coins, logs `[autoplay] event key=value` lines and quits when the run ends. A normal launch ignores it. Flags (full list in `scripts/debug/AutoplayOptions.cs`):
 
 ```bash
-# Full 5-wave run in ~1-2s, uncapped. grep the log for results.
+# Uncapped: about 30x real time on the Mac (a full 5-wave run = 4 min of game time in ~8s; a wave-2 death ~2-3s). grep the log for results.
 $GODOT --headless --path . --fixed-fps 60 --disable-vsync --quit-after 20000 -- --autoplay --class=mage --seed=1
 #   --class=NAME|INDEX  --spells=A,B,C (picks, in slot order; default the list's first N)  --wave=N (start wave)  --seed=N (same seed = identical run, for before/after)
 #   --god  --shop=cheapest|first|skip  --move=circle|still|smart  --autocast (all spells, incl. manual ones)
@@ -62,7 +62,7 @@ $GODOT --headless --path . --fixed-fps 60 --disable-vsync --quit-after 60000 -- 
 
 **Movement:** `--move=circle` (the default) follows a fixed circle and never dodges, so it plays like a weak player and dies by wave 2–3. `--move=smart` (`scripts/debug/SteeringBot.cs`) steers by context steering: each frame it scores 16 directions for interest (coins, hearts, the ring at its preferred distance from the nearest enemy) and danger (enemies about to touch, enemy shots on a collision course, spawn markers, walls) and takes the most interesting safe one. The preferred distance comes from the equipped weapon (`MeleeArcAbility` → 0.7 × reach, else 0.8 × range), so every class works without its own profile, and it kites under 35% HP. Results measure this bot, not a player: use them to compare (class vs class, before/after a change) and keep its logic unchanged while comparing; if you change it, rerun both sides.
 
-**Batch sims:** `tools/simulate.sh` (needs `$GODOT`) runs N seeded runs per class × movement mode in parallel and prints win %, average wave, kills, hits and gold. Flags after `--` go to every run. About 15s per 10 runs per launch on the Mac.
+**Batch sims:** `tools/simulate.sh` (needs `$GODOT`) runs N seeded runs per class × movement mode in parallel and prints win %, average wave, kills, hits and gold. Flags after `--` go to every run. Each launch is single-threaded, so it runs launches in parallel (`-j`, default 8): 80 runs (4 classes × 2 modes × 10) take about 90s on the Mac.
 
 ```bash
 tools/simulate.sh -n 20 -m circle,smart                 # every class, both movement modes

@@ -8,11 +8,11 @@
 #   tools/simulate.sh -c fighter,mage -- --shop=skip    # anything after -- goes to every run
 #
 # Options: -n RUNS (default 20)  -s SEED (default 1)  -c CLASSES (default fighter,mage,warlock,necromancer)
-#          -m MODES (default smart)  -j JOBS (parallel launches, default 4)  -o DIR (keep raw logs there)
+#          -m MODES (default smart)  -j JOBS (parallel launches, default 8)  -o DIR (keep raw logs there)
 # Works with macOS bash 3.2. Needs $GODOT (the Godot .NET binary) and a built C# assembly (dotnet build).
 set -euo pipefail
 
-runs=20 seed=1 classes=fighter,mage,warlock,necromancer modes=smart jobs=4 out=""
+runs=20 seed=1 classes=fighter,mage,warlock,necromancer modes=smart jobs=8 out=""
 while getopts "n:s:c:m:j:o:" opt; do
   case $opt in
     n) runs=$OPTARG ;; s) seed=$OPTARG ;; c) classes=$OPTARG ;; m) modes=$OPTARG ;;
@@ -30,7 +30,7 @@ mkdir -p "$logs"
 
 run_one() {
   local class=$1 mode=$2
-  # A full run is ~1-2s; allow plenty of frames per run before the safety quit.
+  # A full run is ~8s (about 30x real time); allow plenty of frames per run before the safety quit.
   "$godot" --headless --path . --fixed-fps 60 --disable-vsync --quit-after $((runs * 40000)) -- \
     --autoplay --class="$class" --move="$mode" --seed="$seed" --runs="$runs" ${extra[@]+"${extra[@]}"} \
     > "$logs/$class.$mode.log" 2>&1 || echo "warning: $class/$mode exited with $?" >&2
