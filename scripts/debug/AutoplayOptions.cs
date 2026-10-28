@@ -7,7 +7,7 @@ namespace ArenaShooter;
 
 public enum ShopStrategy { Cheapest, First, Skip }
 
-public enum MoveMode { Circle, Still }
+public enum MoveMode { Circle, Still, Smart }
 
 public enum TalentStrategy { Spread, None }
 
@@ -26,7 +26,10 @@ public enum HeirloomStrategy { Priciest, Keep }
 /// <item><c>--seed=N</c> fixes the random seed, so before/after comparisons see the same run.</item>
 /// <item><c>--god</c> the player takes no damage.</item>
 /// <item><c>--shop=cheapest|first|skip</c> what to buy between waves (default cheapest, until broke).</item>
-/// <item><c>--move=circle|still</c> circle the arena (collects coins) or stand in the middle (default circle).</item>
+/// <item><c>--move=circle|still|smart</c> circle the arena (collects coins), stand in the middle, or steer like a player:
+/// dodge enemies and shots, keep the weapon's range, grab pickups (<see cref="SteeringBot"/>; default circle).</item>
+/// <item><c>--bot-aggression=0..1</c> smart movement: how hard it engages vs. how much room it gives enemies (default 0.5).</item>
+/// <item><c>--bot-danger=PIXELS</c> smart movement: distance beyond contact at which enemies count as danger (default 60).</item>
 /// <item><c>--autocast</c> turns auto-cast on for every spell, including manual-by-default ones.</item>
 /// <item><c>--item=NAME</c> grants an item at run start (display name, Id or .tres file name; Common unless --rarity). Repeatable.</item>
 /// <item><c>--buy-potion=NAME</c> buys one of this potion at every shop visit, before other purchases. Repeatable.</item>
@@ -54,6 +57,8 @@ public sealed class AutoplayOptions
     public bool God { get; private set; }
     public ShopStrategy Shop { get; private set; } = ShopStrategy.Cheapest;
     public MoveMode Move { get; private set; } = MoveMode.Circle;
+    public float BotAggression { get; private set; } = 0.5f;
+    public float BotDanger { get; private set; } = 60f;
     public bool AutoCastAll { get; private set; }
     public float MenuDelay { get; private set; }
     public List<string> Items { get; } = new();
@@ -112,6 +117,12 @@ public sealed class AutoplayOptions
                     break;
                 case "--move" when Enum.TryParse(value, ignoreCase: true, out MoveMode move):
                     options.Move = move;
+                    break;
+                case "--bot-aggression" when float.TryParse(value, System.Globalization.CultureInfo.InvariantCulture, out float aggression) && aggression is >= 0f and <= 1f:
+                    options.BotAggression = aggression;
+                    break;
+                case "--bot-danger" when float.TryParse(value, System.Globalization.CultureInfo.InvariantCulture, out float danger) && danger >= 0f:
+                    options.BotDanger = danger;
                     break;
                 case "--autocast":
                     options.AutoCastAll = true;

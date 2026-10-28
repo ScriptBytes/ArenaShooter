@@ -230,6 +230,8 @@ public partial class Main : Node2D
             Player = Player,
             Run = _run,
             ArenaCenter = Arena.Size / 2f,
+            ArenaBounds = Arena.Bounds,
+            Spawner = Spawner,
         };
         AddChild(autoplay);
 

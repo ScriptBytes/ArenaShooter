@@ -34,11 +34,14 @@ public partial class Autoplay : Node
     public Player Player { get; set; }
     public RunState Run { get; set; }
     public Vector2 ArenaCenter { get; set; }
+    public Rect2 ArenaBounds { get; set; }
+    public EnemySpawner Spawner { get; set; }
 
     private const float DrinkCooldown = 0.5f;
     private const int BuffPotionMinEnemies = 5;
 
     private float _moveAngle;
+    private SteeringBot _bot;
     private float _drinkWait;
     private readonly HashSet<ConsumableData> _boughtThisShop = new();
     private bool _failed;
@@ -105,9 +108,11 @@ public partial class Autoplay : Node
     {
         _class = playerClass;
         Combat.ResetDamageLog();
+        if (Options.Move == MoveMode.Smart)
+            _bot = new SteeringBot(Player, ArenaBounds, Spawner, Options.BotAggression, Options.BotDanger);
         string spells = string.Join(",", Player.Abilities.Spells.Select(s => s.Ability.DisplayName));
         Log($"run_start class={playerClass.DisplayName} spells=\"{spells}\" gear=\"{Gear()}\" wave={Options.StartWave} " +
-            $"seed={(Options.Seed is { } seed ? (seed + (ulong)RunsDone).ToString() : "random")} retry={FromRetry.ToString().ToLower()} dotnet={System.Environment.Version}");
+            $"seed={(Options.Seed is { } seed ? (seed + (ulong)RunsDone).ToString() : "random")} move={Move()} retry={FromRetry.ToString().ToLower()} dotnet={System.Environment.Version}");
         if (Options.AutoCastAll)
         {
             foreach (var slot in Player.Abilities.Spells)
@@ -447,16 +452,26 @@ public partial class Autoplay : Node
         }
     }
 
+    // Movement mode for run_start; smart adds its weapon profile and tuning.
+    private string Move() => Options.Move == MoveMode.Smart
+        ? $"smart profile={_bot.Profile()} aggression={Options.BotAggression:0.##} danger={Options.BotDanger:0}"
+        : Options.Move.ToString().ToLower();
+
     private void Move(float delta)
     {
-        if (Options.Move != MoveMode.Circle)
+        Vector2 direction;
+        if (Options.Move == MoveMode.Smart)
+            direction = _bot?.Steer() ?? Vector2.Zero;
+        else if (Options.Move == MoveMode.Circle)
+        {
+            _moveAngle += CircleSpeed * delta;
+            var target = ArenaCenter + Vector2.FromAngle(_moveAngle) * CircleRadius;
+            direction = Player.GlobalPosition.DistanceTo(target) > 8f
+                ? Player.GlobalPosition.DirectionTo(target)
+                : Vector2.Zero;
+        }
+        else
             return;
-
-        _moveAngle += CircleSpeed * delta;
-        var target = ArenaCenter + Vector2.FromAngle(_moveAngle) * CircleRadius;
-        var direction = Player.GlobalPosition.DistanceTo(target) > 8f
-            ? Player.GlobalPosition.DirectionTo(target)
-            : Vector2.Zero;
 
         // Drives the same input actions the keyboard does, so Player code is untouched.
         SetAxis("move_left", "move_right", direction.X);

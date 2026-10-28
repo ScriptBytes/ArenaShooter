@@ -43,7 +43,8 @@ No test framework yet. Verify features by running the game and reading logs. Che
 # Full 5-wave run in ~1-2s, uncapped. grep the log for results.
 $GODOT --headless --path . --fixed-fps 60 --disable-vsync --quit-after 20000 -- --autoplay --class=mage --seed=1
 #   --class=NAME|INDEX  --spells=A,B,C (picks, in slot order; default the list's first N)  --wave=N (start wave)  --seed=N (same seed = identical run, for before/after)
-#   --god  --shop=cheapest|first|skip  --move=circle|still  --autocast (all spells, incl. manual ones)
+#   --god  --shop=cheapest|first|skip  --move=circle|still|smart  --autocast (all spells, incl. manual ones)
+#   --bot-aggression=0..1 (default 0.5)  --bot-danger=PIXELS (default 60): tuning for --move=smart
 #   --item="Rabbit's Foot" (repeatable; gear is equipped, class weapons work)  --stat=CritChance:20 (repeatable)
 #   --rarity=common|uncommon|rare|epic (every shop offer and --item grant gets this rarity instead of a roll)
 #   --buy-potion="Potion of Fury" (repeatable; buys one per shop visit before other buys; --item grants potions too)
@@ -57,6 +58,15 @@ $GODOT --headless --path . --fixed-fps 60 --disable-vsync --quit-after 20000 -- 
 
 # Career progression in one launch against a scratch save (or separate launches without --runs, to test reloading the file):
 $GODOT --headless --path . --fixed-fps 60 --disable-vsync --quit-after 60000 -- --autoplay --mode=career --class=fighter --seed=1 --save=<scratch>/c.json --reset-career --runs=3
+```
+
+**Movement:** `--move=circle` (the default) follows a fixed circle and never dodges, so it plays like a weak player and dies by wave 2–3. `--move=smart` (`scripts/debug/SteeringBot.cs`) steers by context steering: each frame it scores 16 directions for interest (coins, hearts, the ring at its preferred distance from the nearest enemy) and danger (enemies about to touch, enemy shots on a collision course, spawn markers, walls) and takes the most interesting safe one. The preferred distance comes from the equipped weapon (`MeleeArcAbility` → 0.7 × reach, else 0.8 × range), so every class works without its own profile, and it kites under 35% HP. Results measure this bot, not a player: use them to compare (class vs class, before/after a change) and keep its logic unchanged while comparing; if you change it, rerun both sides.
+
+**Batch sims:** `tools/simulate.sh` (needs `$GODOT`) runs N seeded runs per class × movement mode in parallel and prints win %, average wave, kills, hits and gold. Flags after `--` go to every run. About 15s per 10 runs per launch on the Mac.
+
+```bash
+tools/simulate.sh -n 20 -m circle,smart                 # every class, both movement modes
+tools/simulate.sh -c mage -n 30 -o <scratch>/sims -- --spells=Fireball,Blizzard,Blink   # keep raw logs
 ```
 
 `--quit-after 20000` is a safety net: Autoplay is C#, so if the C# assembly fails to load (build missing, wrong .NET), nothing quits the game. `run_start` logs the .NET runtime version. Events: `run_start` (class, spells, gear, `retry=true` when started by Retry), `damage` (at run end: damage landed per source — weapon, spell or minion type — via `Combat.DamageBySource`; the tool for spell tuning), `wave_start`, `wave_end` (kills, gold, bag, hp, potions, reserve, buff potions), `offers` (each shop roll: items with rarity and price), `buy` (rarity, scaled stats, what it replaces and the refund), `potion` (source charge/bought/reserve, hp before, heal), `heart` (healed, added to reserve, hp, reserve after), `drink` (buff potion; Autoplay drinks one when 5+ enemies are alive and it isn't active), `run_end` (result, wave, kills, gold, gear, trinkets, hits/dodged/regen/shielded; items logged as `Name[rarity]`), `error`. Career adds `career` (save path, load status, level, xp, free points, talents, heirloom, record; logged on the talents screen), `talent` (each point spent), `heirloom` (gear and rarity kept after a victory) and `career_end` (the character once the run is banked). `--tour` adds `tour step=…` (fails with `error tour: …` if a screen didn't open, close or pause as expected). The `GameSettings` autoload prints `[settings] PATH: fresh|loaded` (or `in memory (autoplay)`) with the values. The `Career` autoload prints `[career] save PATH: fresh|loaded|migrated|corrupt|newer`. Never point `--save` at `user://career.json`. Bad flags log `error` and exit with code 1. To measure something new, add a temporary `GD.Print` where it happens, run with fixed seeds before and after the change, compare, then remove the print. If a test needs control Autoplay doesn't offer yet, add a flag to `AutoplayOptions` rather than a throwaway hook.
