@@ -70,8 +70,6 @@ public partial class Shop : CanvasLayer
     private IReadOnlyList<ItemData> _pool;
     private int _rerollCost;
 
-    private Control _layout;
-    private Vector2 _lastNeeded;
     private Label _title;
     private Label _gold;
     private HBoxContainer _odds;
@@ -84,7 +82,7 @@ public partial class Shop : CanvasLayer
 
     public override void _Ready()
     {
-        _layout = GetNode<Control>("%Layout");
+        ScreenFit.Attach(GetNode<Control>("%Layout"));
         _title = GetNode<Label>("%Title");
         _gold = GetNode<Label>("%Gold");
         _odds = new HBoxContainer { Alignment = BoxContainer.AlignmentMode.Center };
@@ -261,30 +259,6 @@ public partial class Shop : CanvasLayer
         offer.Carried.Text = $"Carrying {carried}/{offer.Item.MaxCarry}";
         offer.BuyButton.Text = full ? "Full" : $"Buy ({offer.Price})";
         offer.BuyButton.Disabled = full || _run.Gold < offer.Price;
-    }
-
-    // Checked every frame while open: a wrapped label reports a huge minimum size until the layout
-    // has given it a width (a frame or two after a roll), and no Resized signal reliably follows.
-    public override void _Process(double delta)
-    {
-        if (Visible)
-            FitToScreen();
-    }
-
-    // A tall roll (two-line names, long weapon text) can outgrow the screen, and the CenterContainer
-    // would push it off both edges. Shrink the whole layout around its center until it fits.
-    private void FitToScreen()
-    {
-        var available = GetViewport().GetVisibleRect().Size - new Vector2(32f, 24f);
-        var needed = _layout.GetCombinedMinimumSize();
-        // Wait until the size holds for two frames, so that settling doesn't flash a tiny shop.
-        bool settled = needed == _lastNeeded;
-        _lastNeeded = needed;
-        if (!settled)
-            return;
-        float scale = Mathf.Min(1f, Mathf.Min(available.X / needed.X, available.Y / needed.Y));
-        _layout.PivotOffset = _layout.Size / 2f;
-        _layout.Scale = Vector2.One * scale;
     }
 
     private Control BuildCard(Offer offer)

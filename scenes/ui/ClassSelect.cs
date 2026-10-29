@@ -19,6 +19,7 @@ public partial class ClassSelect : CanvasLayer
     public override void _Ready()
     {
         _cards = GetNode<HBoxContainer>("%Cards");
+        ScreenFit.Attach(_cards.GetParent<Control>());
         GetNode<Button>("%BackButton").Pressed += () =>
         {
             Hide();
@@ -61,7 +62,7 @@ public partial class ClassSelect : CanvasLayer
             content.AddChild(new TextureRect
             {
                 Texture = playerClass.Sprite,
-                CustomMinimumSize = new Vector2(0, 96),
+                CustomMinimumSize = new Vector2(0, 72),
                 ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
                 StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
                 TextureFilter = CanvasItem.TextureFilterEnum.LinearWithMipmaps,

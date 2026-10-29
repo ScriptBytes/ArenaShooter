@@ -41,6 +41,7 @@ public partial class SpellSelect : CanvasLayer
         _title = GetNode<Label>("%Title");
         _hint = GetNode<Label>("%Hint");
         _cards = GetNode<GridContainer>("%Cards");
+        ScreenFit.Attach(_cards.GetParent<Control>());
         _back = GetNode<Button>("%BackButton");
         _start = GetNode<Button>("%StartButton");
 

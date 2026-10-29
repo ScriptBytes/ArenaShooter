@@ -64,6 +64,7 @@ public static class UiStyles
         var layout = new VBoxContainer();
         layout.AddThemeConstantOverride("separation", separation);
         center.AddChild(layout);
+        ScreenFit.Attach(layout);
         return layout;
     }
 

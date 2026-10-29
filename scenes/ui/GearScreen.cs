@@ -34,6 +34,7 @@ public partial class GearScreen : CanvasLayer
         var layout = new VBoxContainer();
         layout.AddThemeConstantOverride("separation", 16);
         center.AddChild(layout);
+        ScreenFit.Attach(layout);
 
         _title = UiStyles.Title("", 34);
         layout.AddChild(_title);
