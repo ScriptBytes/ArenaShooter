@@ -14,4 +14,5 @@ Id = "bone_charm"
 DisplayName = "Bone Charm"
 Price = 20
 IconColor = Color(0.922, 0.898, 0.812, 1)
+Classes = PackedStringArray("necromancer")
 Modifiers = Array[ExtResource("2_mod")]([SubResource("StatModifier_0")])

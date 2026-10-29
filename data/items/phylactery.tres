@@ -20,4 +20,5 @@ DisplayName = "Phylactery"
 Price = 30
 IconColor = Color(0.3, 0.75, 0.6, 1)
 Slot = 5
+Classes = PackedStringArray("necromancer")
 Modifiers = Array[ExtResource("2_mod")]([SubResource("StatModifier_0"), SubResource("StatModifier_1")])

@@ -20,4 +20,5 @@ DisplayName = "Book of the Dead"
 Price = 35
 IconColor = Color(0.435, 0.878, 0.753, 1)
 Slot = 2
+Classes = PackedStringArray("necromancer")
 Modifiers = Array[ExtResource("2_mod")]([SubResource("StatModifier_0"), SubResource("StatModifier_1")])

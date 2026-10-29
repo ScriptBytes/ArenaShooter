@@ -26,6 +26,16 @@ public partial class ItemData : Resource
     [Export] public EquipSlot Slot { get; set; }
     [Export] public Godot.Collections.Array<StatModifier> Modifiers { get; set; } = new();
 
+    /// <summary>
+    /// <see cref="ClassData.Id"/>s of the classes the shop offers this item to; empty = every class.
+    /// Tag items whose only value is class-specific (Minion Damage → necromancer), so they aren't dead offers.
+    /// </summary>
+    [Export] public string[] Classes { get; set; } = System.Array.Empty<string>();
+
+    /// <summary>Whether the shop may offer this item to the class (see <see cref="Classes"/>).</summary>
+    public bool OfferedTo(ClassData playerClass) =>
+        Classes == null || Classes.Length == 0 || Classes.Contains(Career.ClassId(playerClass));
+
     /// <summary>Main-hand items only: the basic attack this weapon gives.</summary>
     [ExportGroup("Weapon")]
     [Export] public AbilityData Weapon { get; set; }

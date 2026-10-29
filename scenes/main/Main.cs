@@ -51,8 +51,8 @@ public partial class Main : Node2D
     private Career Career => Career.Instance;
     private bool IsCareer => Career.Mode == GameMode.Career;
 
-    /// <summary>What the shop can offer at random: the shared catalog plus the class's own weapons.</summary>
-    private IEnumerable<ItemData> ShopPool => ItemCatalog.Items.Concat(_class.Weapons);
+    /// <summary>What the shop can offer at random: the shared catalog items offered to this class plus its own weapons.</summary>
+    private IEnumerable<ItemData> ShopPool => ItemCatalog.Items.Where(i => i.OfferedTo(_class)).Concat(_class.Weapons);
 
     public override void _Ready()
     {
@@ -106,6 +106,10 @@ public partial class Main : Node2D
                 .Concat(Classes.SelectMany(c => c.Weapons.Append(c.StartingWeapon))),
             CareerSettings.Talents,
             Classes.SelectMany(c => c.Spells));
+        var classIds = Classes.Select(Career.ClassId).ToHashSet();
+        foreach (var item in ItemCatalog.Items)
+            foreach (var id in (item.Classes ?? System.Array.Empty<string>()).Where(id => !classIds.Contains(id)))
+                GD.PushError($"[items] {item.ResourcePath} is offered to unknown class Id '{id}'");
 
         _autoplay = AutoplayOptions.FromCommandLine();
         if (_autoplay != null)
@@ -257,7 +261,8 @@ public partial class Main : Node2D
     {
         foreach (var name in _autoplay.Items)
         {
-            var item = _autoplayDriver.FindItem(ShopPool.Concat(ItemCatalog.Consumables), name);
+            // Any catalog item, even one restricted to another class: --item is a test hook.
+            var item = _autoplayDriver.FindItem(ItemCatalog.Items.Concat(_class.Weapons).Concat(ItemCatalog.Consumables), name);
             if (item is ConsumableData potion)
                 _run.AddPotion(potion);
             else if (item != null)
