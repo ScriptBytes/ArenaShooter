@@ -27,29 +27,27 @@ public readonly record struct HitEffects(
 public static class Combat
 {
     /// <summary>
-    /// Damage that landed (no overkill) per source name since the last <see cref="ResetDamageLog"/>.
+    /// Damage that landed (no overkill) per source name (weapon, spell, minion type) this run.
     /// Autoplay logs it at run end; it's how spells are compared when tuning.
     /// </summary>
-    public static Dictionary<string, float> DamageBySource { get; } = new();
+    public static MeterLog Damage { get; } = new();
 
-    /// <summary><see cref="DamageBySource"/> as it stood when the current wave started, for "this wave" totals.</summary>
-    public static Dictionary<string, float> DamageAtWaveStart { get; } = new();
+    /// <summary>
+    /// HP the player regained per source this run (no overheal), plus barrier absorption. Filled by
+    /// <see cref="Player"/>: potions, hearts, HP Regen, healing spells, life steal per ability.
+    /// </summary>
+    public static MeterLog Healing { get; } = new();
 
-    /// <summary>Bar color per source name in the damage meter (weapons, spells, minion types).</summary>
-    public static Dictionary<string, Color> SourceColors { get; } = new();
-
-    public static void ResetDamageLog()
+    public static void ResetMeters()
     {
-        DamageBySource.Clear();
-        DamageAtWaveStart.Clear();
-        SourceColors.Clear();
+        Damage.Reset();
+        Healing.Reset();
     }
 
     public static void MarkWaveStart()
     {
-        DamageAtWaveStart.Clear();
-        foreach (var (source, damage) in DamageBySource)
-            DamageAtWaveStart[source] = damage;
+        Damage.MarkWaveStart();
+        Healing.MarkWaveStart();
     }
 
     /// <summary>Gives <paramref name="ability"/>'s damage, and that of the minions it summons or raises, a meter color.</summary>
@@ -57,11 +55,11 @@ public static class Combat
     {
         if (ability == null)
             return;
-        SourceColors[ability.DisplayName] = ability.IconColor;
+        Damage.SetColor(ability.DisplayName, ability.IconColor);
         if (ability is SummonAbility { Minion: { } summoned })
-            SourceColors[summoned.DisplayName] = summoned.GlowColor;
+            Damage.SetColor(summoned.DisplayName, summoned.GlowColor);
         if (ability.RaiseMinion is { } raised)
-            SourceColors[raised.DisplayName] = raised.GlowColor;
+            Damage.SetColor(raised.DisplayName, raised.GlowColor);
     }
     /// <summary>Nearest enemy worth targeting: skips ones that damage already in flight will kill.</summary>
     public static Enemy NearestEnemy(SceneTree tree, Vector2 from, float range)
@@ -190,15 +188,12 @@ public static class Combat
     {
         float landed = Mathf.Min(damage, enemy.Health.Current);
         if (landed > 0f && !enemy.Health.IsDead)
-        {
-            string key = source ?? "other";
-            DamageBySource[key] = DamageBySource.GetValueOrDefault(key) + landed;
-        }
+            Damage.Add(source ?? "other", landed);
         var player = lifeSteal > 0f ? enemy.GetTree().GetFirstNodeInGroup(Groups.Player) as Player : null;
 
         enemy.TakeDamage(damage, crit, color);
         if (player != null && landed > 0f)
-            player.StealLife(landed * lifeSteal);
+            player.StealLife(landed * lifeSteal, source ?? "other");
     }
 
     public static void DamageArea(SceneTree tree, Vector2 center, float radius, float damage, HitEffects effects)

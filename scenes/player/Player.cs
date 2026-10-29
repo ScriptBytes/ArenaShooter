@@ -29,6 +29,10 @@ public partial class Player : CharacterBody2D, IDamageable
     [Export] public int PotionsPerWave { get; set; } = 1;
 
     public static readonly Color HealColor = new("5ee07a");
+
+    // Healing meter bars: health potions, and life steal from an ability with no damage color yet.
+    private static readonly Color PotionColor = new("e5484d");
+    private static readonly Color LifeStealColor = new("c0304f");
     public static readonly Color DodgeColor = new("b8d8ff");
 
     public float PotionHeal { get; private set; } = 10f;
@@ -73,6 +77,7 @@ public partial class Player : CharacterBody2D, IDamageable
     private float _shieldMax;
     private float _shieldLeft;
     private Color _shieldColor;
+    private string _shieldSource = "Barrier";
 
     /// <summary>HP of damage the current barrier still absorbs.</summary>
     public float Shield => _shieldLeft > 0f ? _shield : 0f;
@@ -143,8 +148,10 @@ public partial class Player : CharacterBody2D, IDamageable
     }
 
     /// <summary>Gives a barrier of <paramref name="amount"/> HP for <paramref name="duration"/> seconds. Recasting refreshes it (no stacking).</summary>
-    public void AddShield(float amount, float duration, Color color)
+    /// <param name="source">Names the barrier in the healing meter, which counts what it absorbs.</param>
+    public void AddShield(float amount, float duration, Color color, string source)
     {
+        _shieldSource = $"{source} (barrier)";
         _shield = _shieldMax = Mathf.Max(Shield, amount);
         _shieldLeft = duration;
         _shieldColor = color;
@@ -180,18 +187,24 @@ public partial class Player : CharacterBody2D, IDamageable
 
     public void CollectGold(int amount) => EmitSignal(SignalName.GoldCollected, amount);
 
-    public void Heal(float amount)
+    /// <summary>Heals and logs it under <paramref name="source"/> in <see cref="Combat.Healing"/>.</summary>
+    public void Heal(float amount, string source, Color color)
     {
         float healed = Health.Heal(amount);
+        Combat.Healing.Add(source, healed, color);
         if (healed > 0f)
             FloatingText.Spawn(GetTree().CurrentScene, GlobalPosition + new Vector2(0, -Radius),
                 $"+{healed:0.#}", HealColor, 16);
     }
 
-    /// <summary>Heals from life steal, limited to <see cref="LifeStealCap"/> HP per second.</summary>
-    public void StealLife(float amount)
+    /// <summary>
+    /// Heals from life steal, limited to <see cref="LifeStealCap"/> HP per second. Logged per
+    /// ability (<paramref name="source"/>), so the healing meter shows which steal pulls its weight.
+    /// </summary>
+    public void StealLife(float amount, string source)
     {
         float healed = Health.Heal(Mathf.Min(amount, _lifeStealBudget));
+        Combat.Healing.Add($"{source} (life steal)", healed, Combat.Damage.ColorOf(source, LifeStealColor));
         _lifeStealBudget -= healed;
         _lifeStealShown += healed;
     }
@@ -227,6 +240,7 @@ public partial class Player : CharacterBody2D, IDamageable
         {
             float healed = Health.Heal(RegenPerSecond * dt);
             RegenHealed += healed;
+            Combat.Healing.Add("HP Regen", healed, HealColor);
             _regenShown += healed;
         }
 
@@ -252,6 +266,7 @@ public partial class Player : CharacterBody2D, IDamageable
     public void CollectHeart(float amount)
     {
         float healed = Health.Heal(amount);
+        Combat.Healing.Add("Hearts", healed, Heart.HeartColor);
         float stored = Potions.FillReserve(amount - healed);
         var at = GlobalPosition + new Vector2(0, -Radius);
         if (healed > 0f)
@@ -282,10 +297,10 @@ public partial class Player : CharacterBody2D, IDamageable
             case PotionSource.Charge:
             case PotionSource.Bought:
                 Potions.TakeHealthPotion();
-                Heal(PotionHeal);
+                Heal(PotionHeal, "Health Potion", PotionColor);
                 return true;
             case PotionSource.Reserve:
-                Heal(Potions.DrainReserve());
+                Heal(Potions.DrainReserve(), "Reserve potion", Heart.HeartColor);
                 return true;
             default:
                 return false;
@@ -400,6 +415,7 @@ public partial class Player : CharacterBody2D, IDamageable
             float absorbed = Mathf.Min(_shield, taken);
             _shield -= absorbed;
             ShieldAbsorbed += absorbed;
+            Combat.Healing.Add(_shieldSource, absorbed, _shieldColor);
             taken -= absorbed;
             if (taken <= 0f)
             {

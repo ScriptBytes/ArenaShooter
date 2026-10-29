@@ -191,7 +191,7 @@ public partial class Main : Node2D
             GrantAutoplayItems();
 
         Player.Setup(playerClass, spells, _run.Potions);
-        Combat.ResetDamageLog();
+        Combat.ResetMeters();
         foreach (var spell in spells)
             Combat.RegisterSource(spell);
         ApplyLoadout();

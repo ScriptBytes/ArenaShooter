@@ -160,8 +160,11 @@ public partial class Autoplay : Node
         Log($"run_end result={(victory ? "victory" : "defeat")} wave={Run.Wave} kills={Run.Kills} " +
             $"gold={Run.Gold} gear=\"{Gear()}\" trinkets={Run.Trinkets.Count} trinket_list=\"{string.Join(",", Run.Trinkets.Select(t => t.LogName))}\" {Defense()}");
         // Damage that landed per source (weapon, spell, minion type), biggest first.
-        var damage = Combat.DamageBySource.OrderByDescending(p => p.Value).ToList();
+        var damage = Combat.Damage.Totals.OrderByDescending(p => p.Value).ToList();
         Log($"damage total={damage.Sum(p => p.Value):0} by=\"{string.Join(",", damage.Select(p => $"{p.Key}:{p.Value:0}"))}\"");
+        // HP regained per source (potions, hearts, regen, spells, life steal, barriers), biggest first.
+        var healing = Combat.Healing.Totals.OrderByDescending(p => p.Value).ToList();
+        Log($"healing total={healing.Sum(p => p.Value):0} by=\"{string.Join(",", healing.Select(p => $"{p.Key}:{p.Value:0}"))}\"");
         // SummaryStep (career) or EndStep (arcade) then quits or restarts, after --menu-delay.
         _runEnded = true;
     }

@@ -67,11 +67,11 @@ public partial class BuffAbility : AreaAbility
             player.PayHealth(HealthCost);
 
         if (HealPerMaxHealth > 0f)
-            player.Heal(player.Health.Max * HealPerMaxHealth);
+            player.Heal(player.Health.Max * HealPerMaxHealth, DisplayName, IconColor);
 
         float shield = Shield + player.Health.Max * ShieldPerMaxHealth;
         if (shield > 0f)
-            player.AddShield(shield, Duration, IconColor);
+            player.AddShield(shield, Duration, IconColor, DisplayName);
         // A pure barrier draws itself; a ring for it would outlive a broken shield.
         if (Modifiers.Count > 0)
             player.AddBuff(this, Modifiers, Duration, IconColor);

@@ -97,7 +97,7 @@ public partial class Shop : CanvasLayer
         GetNode<PanelContainer>("%StatsPanel").AddThemeStyleboxOverride("panel", UiStyles.Panel());
         var damagePanel = GetNode<PanelContainer>("%DamagePanel");
         damagePanel.AddThemeStyleboxOverride("panel", UiStyles.Panel());
-        damagePanel.AddChild(new DamageMeter { ShowTabs = true });
+        damagePanel.AddChild(new CombatMeters { Tabbed = true });
         var equipmentPanel = GetNode<PanelContainer>("%EquipmentPanel");
         equipmentPanel.AddThemeStyleboxOverride("panel", UiStyles.Panel());
         // Tooltips take their look from the theme of the control they're hovering.
