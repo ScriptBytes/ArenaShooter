@@ -6,7 +6,9 @@ namespace ArenaShooter;
 /// Difficulty knobs for one wave. A formula for now; swap for per-wave Resources once
 /// waves need hand-authored enemy mixes. Tuned for a 20-wave run (Main.TotalWaves): damage grows
 /// by percent so weak and strong enemies keep their difference, and speed stops growing at +40%
-/// so the fastest enemy (Runner, 165) stays slower than every class.
+/// so the fastest enemy (Runner, 165) stays slower than every class. Minion max HP grows at the
+/// same rate as enemy damage, so a skeleton or golem survives the same number of hits in every
+/// wave (minion damage scales with the player's Damage% / Minion Damage% instead).
 /// </summary>
 public readonly record struct WaveSettings(
     int Number,
@@ -14,7 +16,8 @@ public readonly record struct WaveSettings(
     float SpawnRateMultiplier,
     float EnemyHealthMultiplier,
     float EnemyDamageMultiplier,
-    float EnemySpeedMultiplier)
+    float EnemySpeedMultiplier,
+    float MinionHealthMultiplier)
 {
     public static WaveSettings For(int wave)
     {
@@ -25,6 +28,7 @@ public readonly record struct WaveSettings(
             SpawnRateMultiplier: 1f + 0.2f * i,
             EnemyHealthMultiplier: 1f + 0.35f * i,
             EnemyDamageMultiplier: 1f + 0.15f * i,
-            EnemySpeedMultiplier: Mathf.Min(1f + 0.05f * i, 1.4f));
+            EnemySpeedMultiplier: Mathf.Min(1f + 0.05f * i, 1.4f),
+            MinionHealthMultiplier: 1f + 0.15f * i);
     }
 }

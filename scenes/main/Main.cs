@@ -290,6 +290,7 @@ public partial class Main : Node2D
     {
         _run.Wave = wave;
         _wave = WaveSettings.For(wave);
+        Minion.WaveHealthMultiplier = _wave.MinionHealthMultiplier;
         _timeLeft = _wave.Duration;
         _state = GameState.Wave;
 

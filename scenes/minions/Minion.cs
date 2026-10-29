@@ -24,6 +24,15 @@ public partial class Minion : CharacterBody2D, IDamageable
 
     public MinionData Data { get; set; }
 
+    /// <summary>
+    /// Scales every minion's <see cref="MinionData.MaxHealth"/> for the current wave
+    /// (<see cref="WaveSettings.MinionHealthMultiplier"/>). Set by Main at each wave start; minions
+    /// spawned during the wave read it once, in _Ready.
+    /// </summary>
+    public static float WaveHealthMultiplier { get; set; } = 1f;
+
+    private float _maxHealth;
+
     /// <summary>Spawn order, so the oldest one crumbles first when over the cap.</summary>
     public ulong SpawnOrder { get; private set; }
 
@@ -63,7 +72,8 @@ public partial class Minion : CharacterBody2D, IDamageable
         MotionMode = MotionModeEnum.Floating;
         AddChild(new CollisionShape2D { Shape = new CircleShape2D { Radius = Data.Size / 2f } });
 
-        _health = Data.MaxHealth;
+        _maxHealth = Data.MaxHealth * WaveHealthMultiplier;
+        _health = _maxHealth;
         _lifeLeft = Data.Lifetime;
         _attackLeft = Data.AttackCooldown * 0.5f;
         _followOffset = Vector2.FromAngle(SpawnOrder * 2.4f) * FollowDistance;
@@ -283,11 +293,11 @@ public partial class Minion : CharacterBody2D, IDamageable
         if (Data.IsRanged)
             DrawCircle(offset + _facing * (r + 4f) + side * 1.4f, 3.5f + 1.5f * _lunge, new Color(Data.GlowColor.Lightened(0.3f), alpha));
 
-        if (_health < Data.MaxHealth)
+        if (_health < _maxHealth)
         {
             var bar = new Rect2(-r, -r - 8f, r * 2f, 3f);
             DrawRect(bar.Grow(1f), new Color(0f, 0f, 0f, 0.7f * alpha));
-            DrawRect(bar with { Size = new Vector2(bar.Size.X * _health / Data.MaxHealth, bar.Size.Y) },
+            DrawRect(bar with { Size = new Vector2(bar.Size.X * _health / _maxHealth, bar.Size.Y) },
                 new Color(Data.GlowColor, alpha));
         }
     }
