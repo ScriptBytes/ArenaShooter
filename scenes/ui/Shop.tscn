@@ -62,16 +62,26 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="StatsPanel" type="PanelContainer" parent="Center/Layout/Body"]
+[node name="RightColumn" type="VBoxContainer" parent="Center/Layout/Body"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="StatsPanel" type="PanelContainer" parent="Center/Layout/Body/RightColumn"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(170, 0)
 layout_mode = 2
 
-[node name="Stats" type="Label" parent="Center/Layout/Body/StatsPanel"]
+[node name="Stats" type="Label" parent="Center/Layout/Body/RightColumn/StatsPanel"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 0
 text = "Your stats"
+
+[node name="DamagePanel" type="PanelContainer" parent="Center/Layout/Body/RightColumn"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(210, 0)
+layout_mode = 2
+size_flags_vertical = 3
 
 [node name="PotionShelf" type="HBoxContainer" parent="Center/Layout"]
 unique_name_in_owner = true

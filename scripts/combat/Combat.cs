@@ -32,7 +32,37 @@ public static class Combat
     /// </summary>
     public static Dictionary<string, float> DamageBySource { get; } = new();
 
-    public static void ResetDamageLog() => DamageBySource.Clear();
+    /// <summary><see cref="DamageBySource"/> as it stood when the current wave started, for "this wave" totals.</summary>
+    public static Dictionary<string, float> DamageAtWaveStart { get; } = new();
+
+    /// <summary>Bar color per source name in the damage meter (weapons, spells, minion types).</summary>
+    public static Dictionary<string, Color> SourceColors { get; } = new();
+
+    public static void ResetDamageLog()
+    {
+        DamageBySource.Clear();
+        DamageAtWaveStart.Clear();
+        SourceColors.Clear();
+    }
+
+    public static void MarkWaveStart()
+    {
+        DamageAtWaveStart.Clear();
+        foreach (var (source, damage) in DamageBySource)
+            DamageAtWaveStart[source] = damage;
+    }
+
+    /// <summary>Gives <paramref name="ability"/>'s damage, and that of the minions it summons or raises, a meter color.</summary>
+    public static void RegisterSource(AbilityData ability)
+    {
+        if (ability == null)
+            return;
+        SourceColors[ability.DisplayName] = ability.IconColor;
+        if (ability is SummonAbility { Minion: { } summoned })
+            SourceColors[summoned.DisplayName] = summoned.GlowColor;
+        if (ability.RaiseMinion is { } raised)
+            SourceColors[raised.DisplayName] = raised.GlowColor;
+    }
     /// <summary>Nearest enemy worth targeting: skips ones that damage already in flight will kill.</summary>
     public static Enemy NearestEnemy(SceneTree tree, Vector2 from, float range)
     {

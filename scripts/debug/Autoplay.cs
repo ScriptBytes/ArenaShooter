@@ -111,7 +111,6 @@ public partial class Autoplay : Node
     public void OnRunStarted(ClassData playerClass)
     {
         _class = playerClass;
-        Combat.ResetDamageLog();
         if (Options.Shop is ShopStrategy.Smart or ShopStrategy.Random)
             _shopBot = new ShopBot(Shop, Run, Player, playerClass, Options.Shop, (Options.Seed ?? (ulong)GD.Randi()) + (ulong)RunsDone);
         if (Options.Move == MoveMode.Smart)

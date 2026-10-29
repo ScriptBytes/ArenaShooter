@@ -107,7 +107,7 @@ public partial class GearScreen : CanvasLayer
     private void Refresh()
     {
         _title.Text = $"Wave {_run.Wave}  ·  Paused";
-        GearViews.FillEquipment(_equipment, _run, 17);
+        GearViews.FillEquipment(_equipment, _run, 17, 1.25f);
 
         var health = _player.Health;
         var weapon = _player.Abilities.Weapon;

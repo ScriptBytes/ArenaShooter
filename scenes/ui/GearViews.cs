@@ -6,13 +6,13 @@ namespace ArenaShooter;
 
 /// <summary>
 /// Gear and stat listings shared by the shop and the mid-run gear screen (Tab), so both show
-/// equipment the same way: one row per slot and per trinket, in rarity colors, with the item's
-/// stats as a hover tooltip. Give the container (or a parent) <see cref="UiStyles.TooltipTheme"/>.
+/// equipment the same way: a <see cref="PaperDoll"/> of the worn gear, then one row per trinket, in
+/// rarity colors, with the item's stats as a hover tooltip. Give the container (or a parent) <see cref="UiStyles.TooltipTheme"/>.
 /// </summary>
 public static class GearViews
 {
-    /// <summary>Rebuilds <paramref name="box"/> with the six equipment slots, then the trinkets.</summary>
-    public static void FillEquipment(VBoxContainer box, RunState run, int fontSize = 15)
+    /// <summary>Rebuilds <paramref name="box"/> with the paper doll of the six equipment slots, then the trinkets.</summary>
+    public static void FillEquipment(VBoxContainer box, RunState run, int fontSize = 15, float dollScale = 1f)
     {
         foreach (var child in box.GetChildren())
         {
@@ -20,15 +20,8 @@ public static class GearViews
             child.QueueFree();
         }
 
-        var equipment = run.Equipment;
-        AddRow(box, "Equipment\n", null, fontSize);
-        for (int i = 0; i < Equipment.Layout.Length; i++)
-        {
-            var slot = Equipment.Layout[i];
-            string name = equipment[i]?.DisplayName
-                ?? (slot == EquipSlot.OffHand && equipment.IsTwoHanding ? "(two-handed)" : "-");
-            AddRow(box, $"{EquipSlotInfo.Label(slot)}: {name}", equipment[i], fontSize);
-        }
+        AddRow(box, "Equipment", null, fontSize);
+        box.AddChild(new PaperDoll(run.Equipment, dollScale));
 
         AddRow(box, "\nTrinkets", null, fontSize);
         if (run.Trinkets.Count == 0)

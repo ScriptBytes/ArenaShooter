@@ -191,6 +191,9 @@ public partial class Main : Node2D
             GrantAutoplayItems();
 
         Player.Setup(playerClass, spells, _run.Potions);
+        Combat.ResetDamageLog();
+        foreach (var spell in spells)
+            Combat.RegisterSource(spell);
         ApplyLoadout();
         Hud.BindAbilities(Player.Abilities);
         Hud.BindPotions(Player);
@@ -274,6 +277,7 @@ public partial class Main : Node2D
     private void ApplyLoadout()
     {
         Player.SetWeapon(_run.Equipment.Weapon, _run.Equipment.WeaponDamageMultiplier);
+        Combat.RegisterSource(_run.Equipment.Weapon);
         Player.ApplyStats(_run.Stats);
         Hud.SetWeapon(_run.Equipment.MainHand ?? _run.Equipment.StartingWeapon);
     }
@@ -304,6 +308,7 @@ public partial class Main : Node2D
         Player.RefillPotions();
         Player.Health.Refill();
         Player.Abilities.ResetCooldowns();
+        Combat.MarkWaveStart();
 
         Hud.SetWave(wave, TotalWaves);
         Hud.SetGold(_run.Gold);

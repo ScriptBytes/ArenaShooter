@@ -43,6 +43,8 @@ public partial class Hud : CanvasLayer
         // Hotbar tooltips (weapon, spells, potions) styled like the shop's.
         _abilityBar.Theme = UiStyles.TooltipTheme();
         BuildEndButtons();
+        // Added last so it stays readable over the end screen's dimmed backdrop.
+        AddChild(new DamageMeter { Position = new Vector2(16f, 108f), CustomMinimumSize = new Vector2(240f, 0f) });
     }
 
     private void BuildEndButtons()
