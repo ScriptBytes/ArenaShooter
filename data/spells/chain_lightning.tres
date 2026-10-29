@@ -6,11 +6,11 @@
 script = ExtResource("1_script")
 Id = "chain_lightning"
 DisplayName = "Chain Lightning"
-Description = "Lightning strikes an enemy, then arcs to up to 4 more, weakening with each jump."
+Description = "Lightning strikes an enemy, then arcs to up to 5 more, weakening with each jump."
 IconColor = Color(0.98, 0.96, 0.45, 1)
 Cooldown = 3.5
-Damage = 9.0
+Damage = 12.0
 Range = 400.0
-Jumps = 4
+Jumps = 5
 JumpRange = 180.0
-JumpFalloff = 0.8
+JumpFalloff = 0.85

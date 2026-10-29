@@ -7,13 +7,14 @@
 script = ExtResource("1_script")
 Id = "ice_bolt"
 DisplayName = "Ice Bolt"
-Description = "A shard of ice that hits hard and leaves its target crawling."
+Description = "A shard of ice that pierces through every enemy in its path and leaves them crawling."
 IconColor = Color(0.627, 0.894, 1, 1)
 Cooldown = 2.5
-Damage = 10.0
+Damage = 16.0
 Range = 450.0
 SlowMultiplier = 0.3
 SlowDuration = 3.0
 ProjectileSpeed = 600.0
 ProjectileRadius = 6.0
+Pierce = true
 ProjectileScene = ExtResource("2_projectile")
