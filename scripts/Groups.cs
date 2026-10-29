@@ -9,6 +9,9 @@ public static class Groups
     public const string Player = "player";
     public const string Enemies = "enemies";
 
+    /// <summary>The <see cref="ArenaShooter.Arena"/> (one per scene), for code that needs the play bounds.</summary>
+    public const string Arena = "arena";
+
     /// <summary>The player's allied units (Necromancer). Also Transient, so they're cleared at wave end.</summary>
     public const string Minions = "minions";
 

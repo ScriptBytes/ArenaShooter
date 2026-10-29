@@ -1,20 +1,14 @@
 [gd_resource type="Resource" script_class="BuffAbility" format=3]
 
 [ext_resource type="Script" path="res://scripts/abilities/BuffAbility.cs" id="1_script"]
-[ext_resource type="Script" path="res://scripts/items/StatModifier.cs" id="2_mod"]
-
-[sub_resource type="Resource" id="StatModifier_0"]
-script = ExtResource("2_mod")
-Stat = 12
-Value = 24.0
 
 [resource]
 script = ExtResource("1_script")
 Id = "second_wind"
 DisplayName = "Second Wind"
-Description = "Catch your breath: heal 12 HP over 5 seconds and shove nearby enemies back. Auto-cast waits until you're below half health."
+Description = "Catch your breath: instantly heal 35% of your max HP and shove nearby enemies back. Auto-cast waits until you're below 60% health."
 IconColor = Color(0.55, 0.85, 0.45, 1)
-Cooldown = 20.0
+Cooldown = 15.0
 Damage = 0.0
 Range = 0.0
 Knockback = 200.0
@@ -23,5 +17,5 @@ Radius = 110.0
 CenteredOnCaster = true
 MinTargets = 0
 Duration = 5.0
-CastBelowHealth = 0.5
-Modifiers = Array[ExtResource("2_mod")]([SubResource("StatModifier_0")])
+CastBelowHealth = 0.6
+HealPerMaxHealth = 0.35

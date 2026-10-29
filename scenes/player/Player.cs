@@ -52,6 +52,9 @@ public partial class Player : CharacterBody2D, IDamageable
     public int HitsDodged { get; private set; }
     public float RegenHealed { get; private set; }
 
+    /// <summary>Seconds since an enemy last hit, or tried to hit, the player (dodged and blocked hits count). Drives "cast when hit" auto-casts.</summary>
+    public float SecondsSinceHit { get; private set; } = float.MaxValue;
+
     public Health Health { get; private set; }
     public ShakeCamera Camera { get; private set; }
     public AbilityCaster Abilities { get; private set; }
@@ -146,6 +149,7 @@ public partial class Player : CharacterBody2D, IDamageable
     public void ClearBuffs()
     {
         _shieldLeft = 0f;
+        SecondsSinceHit = float.MaxValue;
         Buffs.Clear();
         RefreshStats();
     }
@@ -333,6 +337,7 @@ public partial class Player : CharacterBody2D, IDamageable
     {
         float dt = (float)delta;
         _invulnerableLeft -= dt;
+        SecondsSinceHit += dt;
         _shieldLeft = Mathf.Max(_shieldLeft - dt, 0f);
         if (Buffs.Tick(dt))
             RefreshStats();
@@ -372,6 +377,7 @@ public partial class Player : CharacterBody2D, IDamageable
         // InvulnerabilityTime, not every frame. The roll only happens with Dodge > 0, so runs
         // without it draw the same random numbers as before.
         _invulnerableLeft = InvulnerabilityTime;
+        SecondsSinceHit = 0f;
         if (DodgeChance > 0f && GD.Randf() < DodgeChance)
         {
             HitsDodged++;

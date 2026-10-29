@@ -20,6 +20,29 @@ public partial class AreaAbility : AbilityData
     /// <summary>Seconds between casting and the blast landing. 0 = instant.</summary>
     [Export] public float Delay { get; set; }
 
+    // When auto-cast fires, for spells centered on the caster (buffs, novas) and Blink.
+    [ExportGroup("Auto-cast")]
+    /// <summary>
+    /// Pixels. Above 0, auto-cast counts <see cref="MinTargets"/> within this distance instead of
+    /// <see cref="Radius"/>: a buff whose blast is small but whose payoff reaches further (Blood Pact
+    /// boosts a ranged weapon, so it should fire once enemies are in weapon range).
+    /// </summary>
+    [Export] public float CastWhenEnemiesWithin { get; set; }
+
+    /// <summary>
+    /// Seconds. Above 0, auto-cast also fires (with fewer than <see cref="MinTargets"/> nearby) when an
+    /// enemy hit, or tried to hit, the caster this recently and at least one is still within range:
+    /// defensive spells react to danger rather than waiting for a crowd.
+    /// </summary>
+    [Export] public float CastWhenHitWithin { get; set; }
+
+    /// <summary>The distance auto-cast counts enemies within.</summary>
+    protected float AutoCastRadius => CastWhenEnemiesWithin > 0f ? CastWhenEnemiesWithin : Radius;
+
+    /// <summary>True when the caster was hit within <see cref="CastWhenHitWithin"/> seconds.</summary>
+    protected bool RecentlyHit(AbilityContext ctx) =>
+        CastWhenHitWithin > 0f && ctx.Caster.GetParent() is Player p && p.SecondsSinceHit <= CastWhenHitWithin;
+
     public override bool NeedsAim => !CenteredOnCaster;
 
     public override bool TryAutoTarget(AbilityContext ctx, out Vector2 target, out Enemy targetEnemy)
@@ -34,7 +57,8 @@ public partial class AreaAbility : AbilityData
 
         target = ctx.Origin;
         targetEnemy = null;
-        return Combat.EnemiesInRadius(ctx.Tree, ctx.Origin, Radius).Count >= MinTargets;
+        int near = Combat.EnemiesInRadius(ctx.Tree, ctx.Origin, AutoCastRadius).Count;
+        return near >= MinTargets || (near > 0 && RecentlyHit(ctx));
     }
 
     public override void Cast(AbilityContext ctx, Vector2 target, Enemy targetEnemy)

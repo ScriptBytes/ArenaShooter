@@ -6,26 +6,26 @@
 [sub_resource type="Resource" id="StatModifier_0"]
 script = ExtResource("2_mod")
 Stat = 2
-Value = 50.0
+Value = 60.0
 
 [sub_resource type="Resource" id="StatModifier_1"]
 script = ExtResource("2_mod")
 Stat = 8
-Value = 15.0
+Value = 20.0
 
 [resource]
 script = ExtResource("1_script")
 Id = "blood_pact"
 DisplayName = "Blood Pact"
-Description = "Pay 4 HP: +50% Damage and +15% Life Steal for 8 seconds. Auto-cast waits until you're above half health."
+Description = "Pay 3 HP: +60% Damage and +20% Life Steal for 10 seconds. Auto-cast waits until you're above half health."
 IconColor = Color(1, 0.35, 0.25, 1)
-Cooldown = 18.0
+Cooldown = 15.0
 Damage = 0.0
 Range = 0.0
 ScreenShake = 0.2
 Radius = 140.0
 CenteredOnCaster = true
 MinTargets = 3
-Duration = 8.0
-HealthCost = 4.0
+Duration = 10.0
+HealthCost = 3.0
 Modifiers = Array[ExtResource("2_mod")]([SubResource("StatModifier_0"), SubResource("StatModifier_1")])
