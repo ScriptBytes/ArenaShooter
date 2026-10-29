@@ -5,12 +5,18 @@ using Godot;
 namespace ArenaShooter;
 
 /// <summary>
-/// Damage dealt this run per source (weapon, spell, minion type), biggest first, with this wave's
-/// share in brackets. Reads <see cref="Combat.DamageBySource"/> on its own a few times a second,
-/// so the HUD and the shop only have to add it. Hidden until something has dealt damage.
+/// Damage dealt per source (weapon, spell, minion type), biggest first: this wave's (since the last
+/// <see cref="Combat.MarkWaveStart"/>, so in the shop it's the wave that just ended) or the whole
+/// run's. Reads <see cref="Combat.DamageBySource"/> on its own a few times a second, so the HUD and
+/// the shop only have to add it. With <see cref="ShowTabs"/> the player switches between the two;
+/// without, it shows the wave and hides itself until something has dealt damage.
 /// </summary>
 public partial class DamageMeter : VBoxContainer
 {
+    /// <summary>Adds "Last wave" / "Whole run" buttons (the shop). Set before adding it to the tree.</summary>
+    public bool ShowTabs { get; init; }
+
+    private bool _wholeRun;
     private const float RefreshInterval = 0.25f;
     private const int MaxRows = 8;
     private const int FontSize = 13;
@@ -28,6 +34,8 @@ public partial class DamageMeter : VBoxContainer
         _title = new Label();
         _title.AddThemeFontSizeOverride("font_size", 15);
         AddChild(_title);
+        if (ShowTabs)
+            AddTabs();
         Refresh();
     }
 
@@ -41,16 +49,47 @@ public partial class DamageMeter : VBoxContainer
         Refresh();
     }
 
+    private void AddTabs()
+    {
+        var tabs = new HBoxContainer();
+        tabs.AddThemeConstantOverride("separation", 6);
+        var group = new ButtonGroup();
+        foreach (var (label, wholeRun) in new[] { ("Last wave", false), ("Whole run", true) })
+        {
+            var tab = new Button
+            {
+                Text = label,
+                ToggleMode = true,
+                ButtonGroup = group,
+                ButtonPressed = wholeRun == _wholeRun,
+                SizeFlagsHorizontal = SizeFlags.ExpandFill,
+                FocusMode = FocusModeEnum.None,
+            };
+            tab.AddThemeFontSizeOverride("font_size", 13);
+            tab.Toggled += on =>
+            {
+                if (!on)
+                    return;
+                _wholeRun = wholeRun;
+                Refresh();
+            };
+            tabs.AddChild(tab);
+        }
+        AddChild(tabs);
+    }
+
     public void Refresh()
     {
-        var sources = Combat.DamageBySource.OrderByDescending(p => p.Value).Take(MaxRows).ToList();
-        Visible = sources.Count > 0;
-        if (!Visible)
-            return;
-
-        float total = Combat.DamageBySource.Values.Sum();
-        float waveTotal = total - Combat.DamageAtWaveStart.Values.Sum();
-        _title.Text = $"Damage {Format(total)}  (+{Format(waveTotal)} this wave)";
+        var sources = Combat.DamageBySource
+            .Select(p => (Source: p.Key, Damage: _wholeRun ? p.Value : p.Value - Combat.DamageAtWaveStart.GetValueOrDefault(p.Key)))
+            .Where(p => p.Damage >= 0.5f)
+            .OrderByDescending(p => p.Damage)
+            .ToList();
+        // The HUD's meter only appears once the wave's first hit lands; the shop's keeps its tabs.
+        Visible = ShowTabs || sources.Count > 0;
+        string scope = _wholeRun ? "this run" : ShowTabs ? "last wave" : "this wave";
+        _title.Text = $"Damage {scope}: {Format(sources.Sum(p => p.Damage))}";
+        sources = sources.Take(MaxRows).ToList();
 
         while (_rows.Count < sources.Count)
         {
@@ -58,7 +97,7 @@ public partial class DamageMeter : VBoxContainer
             _rows.Add(row);
             AddChild(row);
         }
-        float top = sources[0].Value;
+        float top = sources.Count > 0 ? sources[0].Damage : 1f;
         for (int i = 0; i < _rows.Count; i++)
         {
             var row = _rows[i];
@@ -68,8 +107,6 @@ public partial class DamageMeter : VBoxContainer
             var (source, damage) = sources[i];
             row.Source = source;
             row.Value = Format(damage);
-            float wave = damage - Combat.DamageAtWaveStart.GetValueOrDefault(source);
-            row.Wave = wave >= 0.5f ? $"+{Format(wave)}" : "";
             row.Fill = damage / top;
             row.Color = Combat.SourceColors.GetValueOrDefault(source, FallbackColor);
             row.QueueRedraw();
@@ -83,12 +120,11 @@ public partial class DamageMeter : VBoxContainer
         _ => $"{damage:0}",
     };
 
-    // One bar: a fill in the source's color, the name on the left, total and this wave on the right.
+    // One bar: a fill in the source's color, the name on the left, the damage on the right.
     private partial class Row : Control
     {
         public string Source = "";
         public string Value = "";
-        public string Wave = "";
         public float Fill;
         public Color Color;
 
@@ -104,14 +140,10 @@ public partial class DamageMeter : VBoxContainer
             var font = GetThemeDefaultFont();
             float baseline = (size.Y + font.GetAscent(FontSize) - font.GetDescent(FontSize)) / 2f;
             float valueWidth = font.GetStringSize(Value, HorizontalAlignment.Left, -1, FontSize).X;
-            float waveWidth = Wave == "" ? 0f : font.GetStringSize(Wave, HorizontalAlignment.Left, -1, FontSize).X + 6f;
             float right = size.X - 6f;
 
             DrawString(font, new Vector2(right - valueWidth, baseline), Value, HorizontalAlignment.Left, -1, FontSize, Colors.White);
-            if (Wave != "")
-                DrawString(font, new Vector2(right - valueWidth - waveWidth, baseline), Wave,
-                    HorizontalAlignment.Left, -1, FontSize, UiStyles.Dim);
-            float nameWidth = right - valueWidth - waveWidth - 14f;
+            float nameWidth = right - valueWidth - 14f;
             DrawString(font, new Vector2(8f, baseline), Source, HorizontalAlignment.Left, nameWidth, FontSize, Colors.White);
         }
     }
