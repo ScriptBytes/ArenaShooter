@@ -70,6 +70,8 @@ public partial class Shop : CanvasLayer
     private IReadOnlyList<ItemData> _pool;
     private int _rerollCost;
 
+    private Control _layout;
+    private Vector2 _lastNeeded;
     private Label _title;
     private Label _gold;
     private HBoxContainer _odds;
@@ -82,6 +84,7 @@ public partial class Shop : CanvasLayer
 
     public override void _Ready()
     {
+        _layout = GetNode<Control>("%Layout");
         _title = GetNode<Label>("%Title");
         _gold = GetNode<Label>("%Gold");
         _odds = new HBoxContainer { Alignment = BoxContainer.AlignmentMode.Center };
@@ -260,10 +263,34 @@ public partial class Shop : CanvasLayer
         offer.BuyButton.Disabled = full || _run.Gold < offer.Price;
     }
 
+    // Checked every frame while open: a wrapped label reports a huge minimum size until the layout
+    // has given it a width (a frame or two after a roll), and no Resized signal reliably follows.
+    public override void _Process(double delta)
+    {
+        if (Visible)
+            FitToScreen();
+    }
+
+    // A tall roll (two-line names, long weapon text) can outgrow the screen, and the CenterContainer
+    // would push it off both edges. Shrink the whole layout around its center until it fits.
+    private void FitToScreen()
+    {
+        var available = GetViewport().GetVisibleRect().Size - new Vector2(32f, 24f);
+        var needed = _layout.GetCombinedMinimumSize();
+        // Wait until the size holds for two frames, so that settling doesn't flash a tiny shop.
+        bool settled = needed == _lastNeeded;
+        _lastNeeded = needed;
+        if (!settled)
+            return;
+        float scale = Mathf.Min(1f, Mathf.Min(available.X / needed.X, available.Y / needed.Y));
+        _layout.PivotOffset = _layout.Size / 2f;
+        _layout.Scale = Vector2.One * scale;
+    }
+
     private Control BuildCard(Offer offer)
     {
         var item = offer.Item;
-        var card = new PanelContainer { CustomMinimumSize = new Vector2(170, 280) };
+        var card = new PanelContainer { CustomMinimumSize = new Vector2(196, 260) };
         // Common gets a faint border so the colored ones stand out.
         card.AddThemeStyleboxOverride("panel", item.Rarity == Rarity.Common
             ? UiStyles.BorderedPanel(new Color(item.Color, 0.25f), 1)
@@ -272,7 +299,7 @@ public partial class Shop : CanvasLayer
         content.AddThemeConstantOverride("separation", 8);
         card.AddChild(content);
 
-        content.AddChild(new ColorRect { Color = item.Item.IconColor, CustomMinimumSize = new Vector2(0, 48) });
+        content.AddChild(new ColorRect { Color = item.Item.IconColor, CustomMinimumSize = new Vector2(0, 28) });
 
         var name = UiStyles.WrappedLabel(item.DisplayName, 20);
         name.AddThemeColorOverride("font_color", item.Color);
