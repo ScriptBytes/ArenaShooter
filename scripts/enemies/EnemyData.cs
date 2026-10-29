@@ -26,6 +26,13 @@ public partial class EnemyData : Resource
     /// <summary>Draws a health bar once damaged. For tanky types, where progress isn't obvious.</summary>
     [Export] public bool ShowHealthBar { get; set; }
 
+    [ExportGroup("Sprite")]
+    /// <summary>Placeholder art (art/), authored facing right. Unset = the Shape drawn in code.</summary>
+    [Export] public Texture2D Sprite { get; set; }
+
+    /// <summary>Drawn size as a multiple of the body's diameter: the art has a head and feet past the collider.</summary>
+    [Export] public float SpriteScale { get; set; } = 1.6f;
+
     [ExportGroup("Stats")]
     [Export] public float MaxHealth { get; set; } = 10f;
     [Export] public float Speed { get; set; } = 90f;

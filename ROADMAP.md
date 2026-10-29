@@ -42,10 +42,10 @@ Where the project stands and what's next. `Goals.md` holds the vision and the de
 
 ## Next up (suggested order)
 
-1. **Placeholder sprites:** replace the `_Draw()` shapes with simple SVG sprites Claude authors (Mage, Fighter, the 4 enemies), starting with a Mage + Grunt sample to judge the look. Code side: an optional `Texture2D` on `ClassData`/`EnemyData`/`MinionData`, drawn via `Sprite2D`, falling back to `_Draw()` when unset. Decide the art style (pixel vs vector, sprite size, view angle) first, since changing it later means redoing every asset. Kenney CC0 packs or commissioned art can swap in later through the same fields.
-2. **Career follow-ups** (see `FOLLOWUPS.md` §3): difficulty tiers unlocked by career victories to offset talent power, heirloom upgrades, an "unlocks" layer (spells/items gated by level).
-3. **Balance pass**, guided by the first build sweep (see Known issues): Mage and Necromancer base HP/armor, minion HP scaling and the weak damage spells (Siphoning Aura, Crimson Nova, Vampire Bats, Blizzard, Frost Nova, Ice Bolt, Chain Lightning) are done. Rerun the sweep to see where they land (small checks: Necromancer 50% wins / wave 14.2, Mage default spells wave 10.5, still the weakest class, Warlock's weakest spells now win half their runs). The defensive spells (Shield Wall, Second Wind, Blood Pact, Blink) are done too. Next: Curse of Agony (strong; nerf once the other Warlock spells are confirmed to have caught up) and War Cry, and the Mage again if the sweep still has it far behind (caster defense items, or more Mage damage). Rerun `tools/sweep.py` after each change. Also: no new enemy type appears after wave 4, so waves 5–20 only scale numbers; add late enemies or an elite/boss wave.
-4. **Sound:** a few placeholder effects (hit, pickup, level-up) through the Master bus the volume setting already controls.
+1. **Career follow-ups** (see `FOLLOWUPS.md` §3): difficulty tiers unlocked by career victories to offset talent power, heirloom upgrades, an "unlocks" layer (spells/items gated by level).
+2. **Balance pass**, guided by the first build sweep (see Known issues): Mage and Necromancer base HP/armor, minion HP scaling and the weak damage spells (Siphoning Aura, Crimson Nova, Vampire Bats, Blizzard, Frost Nova, Ice Bolt, Chain Lightning) are done. Rerun the sweep to see where they land (small checks: Necromancer 50% wins / wave 14.2, Mage default spells wave 10.5, still the weakest class, Warlock's weakest spells now win half their runs). The defensive spells (Shield Wall, Second Wind, Blood Pact, Blink) are done too. Next: Curse of Agony (strong; nerf once the other Warlock spells are confirmed to have caught up) and War Cry, and the Mage again if the sweep still has it far behind (caster defense items, or more Mage damage). Rerun `tools/sweep.py` after each change. Also: no new enemy type appears after wave 4, so waves 5–20 only scale numbers; add late enemies or an elite/boss wave.
+3. **Sound:** a few placeholder effects (hit, pickup, level-up) through the Master bus the volume setting already controls.
+4. **Real art:** swap the placeholder SVGs for final art through the same `Sprite` fields (Kenney CC0 packs or commissioned). Animation means a `SpriteFrames` (walk/attack/hit) next to `Sprite` and an `AnimatedSprite2D` child, or drawing the current frame from `_Draw()` like now. Pick the final style (pixel vs vector, view angle) before buying or commissioning, since every asset depends on it. Projectiles, pickups and effects are still `_Draw()` shapes.
 
 ## Backlog (ideas, not yet scheduled)
 
@@ -60,7 +60,7 @@ Where the project stands and what's next. `Goals.md` holds the vision and the de
 - More stats: minion count/HP/duration (cooldown reduction, HP regen and dodge are done). Maybe a Luck or Harvesting-style economy stat.
 - Minion upgrades (more skeletons, longer lifetime); a Necromancer item that raises from every kill. A taunt (minion that pulls aggro from further away).
 - Settings follow-ups: key rebinding, a colorblind-friendly rarity palette, UI scale.
-- Sound and music (the Master volume setting already drives the audio bus), an art pass (replace the `_Draw()` placeholder shapes).
+- Sound and music (the Master volume setting already drives the audio bus).
 
 ## Open design questions
 

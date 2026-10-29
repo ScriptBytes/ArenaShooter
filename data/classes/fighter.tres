@@ -14,6 +14,7 @@
 [ext_resource type="Resource" path="res://data/spells/throwing_axe.tres" id="spell_5"]
 [ext_resource type="Resource" path="res://data/spells/shockwave.tres" id="spell_6"]
 [ext_resource type="Resource" path="res://data/spells/second_wind.tres" id="spell_7"]
+[ext_resource type="Texture2D" uid="uid://ds8puoy34wumw" path="res://art/classes/fighter.svg" id="9_sprite"]
 
 [resource]
 script = ExtResource("1_class")
@@ -21,6 +22,7 @@ Id = "fighter"
 DisplayName = "Fighter"
 Description = "A sturdy warrior who wades into the horde."
 Color = Color(0.878, 0.643, 0.345, 1)
+Sprite = ExtResource("9_sprite")
 MaxHealth = 30.0
 MoveSpeed = 280.0
 Armor = 1.0

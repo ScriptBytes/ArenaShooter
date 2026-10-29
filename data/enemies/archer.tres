@@ -1,6 +1,7 @@
 [gd_resource type="Resource" script_class="EnemyData" format=3]
 
 [ext_resource type="Script" path="res://scripts/enemies/EnemyData.cs" id="1_enemy"]
+[ext_resource type="Texture2D" uid="uid://e3s0rdom6alb" path="res://art/enemies/archer.svg" id="9_sprite"]
 
 [resource]
 script = ExtResource("1_enemy")
@@ -8,6 +9,7 @@ DisplayName = "Archer"
 Shape = 2
 Color = Color(0.298, 0.831, 0.478, 1)
 Size = 22.0
+Sprite = ExtResource("9_sprite")
 MaxHealth = 8.0
 Speed = 80.0
 ContactDamage = 3.0

@@ -86,6 +86,9 @@ public partial class Player : CharacterBody2D, IDamageable
     private bool _leapAirborne;
     private Action _onLanded;
 
+    // The sprite faces the last horizontal direction moved.
+    private bool _faceLeft;
+
     // Life steal: a token bucket that refills at LifeStealCap per second, plus healing not yet
     // shown, so a stream of tiny heals becomes one "+N" every few tenths of a second.
     private const float LifeStealTextInterval = 0.4f;
@@ -112,6 +115,7 @@ public partial class Player : CharacterBody2D, IDamageable
         Abilities = GetNode<AbilityCaster>("Abilities");
         _hurtbox = GetNode<Area2D>("Hurtbox");
         _basePickupRange = PickupRange;
+        TextureFilter = TextureFilterEnum.LinearWithMipmaps;
     }
 
     /// <summary><paramref name="spells"/> are the ones picked from the class's list, in slot order.</summary>
@@ -330,6 +334,8 @@ public partial class Player : CharacterBody2D, IDamageable
         _leapDuration = _leapLeft = duration;
         _leapVelocity = (target - GlobalPosition) / duration;
         _onLanded = onLanded;
+        if (Mathf.Abs(_leapVelocity.X) > 1f)
+            _faceLeft = _leapVelocity.X < 0f;
         _invulnerableLeft = Mathf.Max(_invulnerableLeft, duration + 0.15f);
     }
 
@@ -362,6 +368,8 @@ public partial class Player : CharacterBody2D, IDamageable
 
         var input = Input.GetVector("move_left", "move_right", "move_up", "move_down");
         Velocity = input * Speed;
+        if (Mathf.Abs(input.X) > 0.1f)
+            _faceLeft = input.X < 0f;
         MoveAndSlide();
 
         if (_invulnerableLeft <= 0f)
@@ -425,6 +433,12 @@ public partial class Player : CharacterBody2D, IDamageable
         DrawBuffRings();
         DrawShield();
 
+        if (_class?.Sprite != null)
+        {
+            DrawSprite(_class.Sprite, Radius * 2f * _class.SpriteScale);
+            return;
+        }
+
         if (IsLeaping && !_leapAirborne)
         {
             // Dash: fading afterimages trail behind the body.
@@ -447,6 +461,34 @@ public partial class Player : CharacterBody2D, IDamageable
 
         bool blink = _invulnerableLeft > 0f && (int)(_invulnerableLeft * 20f) % 2 == 0;
         DrawCircle(Vector2.Zero, Radius, blink ? Colors.White : color);
+    }
+
+    // Same three looks as the circle below (dash, jump, standing), with the class sprite.
+    private void DrawSprite(Texture2D sprite, float size)
+    {
+        var feet = SpriteArt.Feet(size);
+        if (IsLeaping && !_leapAirborne)
+        {
+            var back = -_leapVelocity.Normalized();
+            for (int i = 3; i >= 1; i--)
+                SpriteArt.Draw(this, sprite, back * Radius * 0.9f * i, size, _faceLeft, new Color(1f, 1f, 1f, 0.5f - 0.12f * i));
+            SpriteArt.DrawShadow(this, feet, size * 0.55f);
+            SpriteArt.Draw(this, sprite, Vector2.Zero, size, _faceLeft, Colors.White);
+            return;
+        }
+
+        if (IsLeaping)
+        {
+            float t = 1f - _leapLeft / _leapDuration;
+            float lift = Mathf.Sin(Mathf.Pi * t);
+            SpriteArt.DrawShadow(this, feet, size * 0.55f * (1f - 0.3f * lift));
+            SpriteArt.Draw(this, sprite, new Vector2(0, -12f * lift), size * (1f + 0.35f * lift), _faceLeft, Colors.White);
+            return;
+        }
+
+        bool blink = _invulnerableLeft > 0f && (int)(_invulnerableLeft * 20f) % 2 == 0;
+        SpriteArt.DrawShadow(this, feet, size * 0.55f);
+        SpriteArt.Draw(this, sprite, Vector2.Zero, size, _faceLeft, blink ? SpriteArt.Flash : Colors.White);
     }
 
     // Barrier: six bone plates around the body, fading as it's used up.

@@ -16,6 +16,13 @@ public partial class ClassData : Resource
     [Export(PropertyHint.MultilineText)] public string Description { get; set; } = "";
     [Export] public Color Color { get; set; } = Colors.White;
 
+    [ExportGroup("Sprite")]
+    /// <summary>Placeholder art (art/), authored facing right. Unset = the plain circle.</summary>
+    [Export] public Texture2D Sprite { get; set; }
+
+    /// <summary>Drawn size as a multiple of the body's diameter: the art has a head and feet past the collider.</summary>
+    [Export] public float SpriteScale { get; set; } = 1.7f;
+
     [ExportGroup("Base Stats")]
     [Export] public float MaxHealth { get; set; } = 20f;
     [Export] public float MoveSpeed { get; set; } = 300f;

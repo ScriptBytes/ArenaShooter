@@ -57,6 +57,15 @@ public partial class ClassSelect : CanvasLayer
         card.AddChild(content);
 
         content.AddChild(new ColorRect { Color = playerClass.Color, CustomMinimumSize = new Vector2(0, 8) });
+        if (playerClass.Sprite != null)
+            content.AddChild(new TextureRect
+            {
+                Texture = playerClass.Sprite,
+                CustomMinimumSize = new Vector2(0, 96),
+                ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+                StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+                TextureFilter = CanvasItem.TextureFilterEnum.LinearWithMipmaps,
+            });
         content.AddChild(UiStyles.WrappedLabel(playerClass.DisplayName, 30));
         if (badge != null)
         {

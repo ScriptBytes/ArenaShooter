@@ -69,6 +69,7 @@ public partial class Enemy : CharacterBody2D, IDamageable
         // Staggered so spawns don't all retarget on one frame. Not random: seeded runs stay repeatable.
         _retargetLeft = GetInstanceId() % 8 / 8f * RetargetInterval;
         _target = FindTarget();
+        TextureFilter = TextureFilterEnum.LinearWithMipmaps;
 
         // Each enemy gets its own shape; editing the scene's shared shape would resize them all.
         GetNode<CollisionShape2D>("CollisionShape2D").Shape = new CircleShape2D { Radius = Data.Size / 2f };
@@ -318,17 +319,42 @@ public partial class Enemy : CharacterBody2D, IDamageable
 
     public override void _Draw()
     {
-        var color = Data.Color;
-        if (_slowLeft > 0f)
-            color = color.Lerp(new Color("7fc8ff"), 0.6f);
-        if (_dotLeft > 0f)
-            color = color.Lerp(_dotColor, 0.5f);
-        if (IsStunned)
-            color = color.Lerp(StunColor, 0.45f);
-        if (_hitFlashLeft > 0f)
-            color = Colors.White;
-
         float r = Data.Size / 2f;
+        float top = r * 1.2f;
+        if (Data.Sprite != null)
+        {
+            // Modulate multiplies the sprite, so the status tints start from white, not the body color.
+            var tint = _hitFlashLeft > 0f ? SpriteArt.Flash : StatusTint(Colors.White);
+            float size = Data.Size * Data.SpriteScale;
+            top = size * 0.45f;
+            SpriteArt.DrawShadow(this, SpriteArt.Feet(size), size * 0.6f);
+            DrawSetTransform(Vector2.Zero, 0f, Vector2.One * (1f + 0.25f * _hitPop));
+            SpriteArt.Draw(this, Data.Sprite, Vector2.Zero, size, _facing.X < 0f, tint);
+        }
+        else
+            DrawShape(_hitFlashLeft > 0f ? Colors.White : StatusTint(Data.Color), r);
+
+        DrawSetTransform(Vector2.Zero);
+        // Stunned: three little stars circling above its head.
+        if (IsStunned)
+        {
+            float spin = (float)Time.GetTicksMsec() / 1000f * 6f;
+            for (int i = 0; i < 3; i++)
+            {
+                var at = new Vector2(0, -top - 4f) + Vector2.FromAngle(spin + Mathf.Tau * i / 3f) * new Vector2(r * 0.8f, 3f);
+                DrawCircle(at, 2.5f, StunColor);
+            }
+        }
+        // Marked for raising: a ring in the minion's glow color.
+        if (_raiseLeft > 0f && _raiseMinion != null)
+            DrawArc(Vector2.Zero, r + 5f, 0f, Mathf.Tau, 24, new Color(_raiseMinion.GlowColor, 0.8f), 2f);
+        if (Data.ShowHealthBar && Health.Current < Health.Max)
+            DrawHealthBar(r, top);
+    }
+
+    // The placeholder shapes, for types without a sprite.
+    private void DrawShape(Color color, float r)
+    {
         // Swells briefly when hit, so each hit reads even in a crowd.
         DrawSetTransform(Vector2.Zero, 0f, Vector2.One * (1f + 0.25f * _hitPop));
         switch (Data.Shape)
@@ -352,28 +378,22 @@ public partial class Enemy : CharacterBody2D, IDamageable
                 DrawRect(new Rect2(-r, -r, r * 2f, r * 2f), color);
                 break;
         }
-
-        DrawSetTransform(Vector2.Zero);
-        // Stunned: three little stars circling above its head.
-        if (IsStunned)
-        {
-            float spin = (float)Time.GetTicksMsec() / 1000f * 6f;
-            for (int i = 0; i < 3; i++)
-            {
-                var at = new Vector2(0, -r - 8f) + Vector2.FromAngle(spin + Mathf.Tau * i / 3f) * new Vector2(r * 0.8f, 3f);
-                DrawCircle(at, 2.5f, StunColor);
-            }
-        }
-        // Marked for raising: a ring in the minion's glow color.
-        if (_raiseLeft > 0f && _raiseMinion != null)
-            DrawArc(Vector2.Zero, r + 5f, 0f, Mathf.Tau, 24, new Color(_raiseMinion.GlowColor, 0.8f), 2f);
-        if (Data.ShowHealthBar && Health.Current < Health.Max)
-            DrawHealthBar(r);
     }
 
-    private void DrawHealthBar(float r)
+    private Color StatusTint(Color color)
     {
-        var bar = new Rect2(-r, -r * 1.2f - 10f, r * 2f, 4f);
+        if (_slowLeft > 0f)
+            color = color.Lerp(new Color("7fc8ff"), 0.6f);
+        if (_dotLeft > 0f)
+            color = color.Lerp(_dotColor, 0.5f);
+        if (IsStunned)
+            color = color.Lerp(StunColor, 0.45f);
+        return color;
+    }
+
+    private void DrawHealthBar(float r, float top)
+    {
+        var bar = new Rect2(-r, -top - 10f, r * 2f, 4f);
         DrawRect(bar.Grow(1f), new Color(0f, 0f, 0f, 0.7f));
         DrawRect(bar with { Size = new Vector2(bar.Size.X * Health.Current / Health.Max, bar.Size.Y) }, new Color("e5484d"));
     }

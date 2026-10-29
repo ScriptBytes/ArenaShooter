@@ -14,6 +14,7 @@
 [ext_resource type="Resource" path="res://data/spells/siphoning_aura.tres" id="spell_5"]
 [ext_resource type="Resource" path="res://data/spells/corruption.tres" id="spell_6"]
 [ext_resource type="Resource" path="res://data/spells/vampire_bats.tres" id="spell_7"]
+[ext_resource type="Texture2D" uid="uid://hfglq61iku7o" path="res://art/classes/warlock.svg" id="9_sprite"]
 
 [resource]
 script = ExtResource("1_class")
@@ -21,6 +22,7 @@ Id = "warlock"
 DisplayName = "Warlock"
 Description = "Trades blood for power: drains, curses and steals life to stay standing."
 Color = Color(1, 0.42, 0.62, 1)
+Sprite = ExtResource("9_sprite")
 MaxHealth = 22.0
 MoveSpeed = 300.0
 Armor = 0.0

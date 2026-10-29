@@ -66,6 +66,7 @@ public partial class Minion : CharacterBody2D, IDamageable
             AddToGroup(Groups.EnemyTargets);
         SpawnOrder = ++_spawnCounter;
         _player = GetTree().GetFirstNodeInGroup(Groups.Player) as Player;
+        TextureFilter = TextureFilterEnum.LinearWithMipmaps;
 
         CollisionLayer = MinionLayer;
         CollisionMask = WorldLayer | MinionLayer;
@@ -278,6 +279,22 @@ public partial class Minion : CharacterBody2D, IDamageable
         var body = _hitFlashLeft > 0f ? Colors.White : Data.Color;
         var offset = _facing * 4f * _lunge;
 
+        if (Data.Sprite != null)
+        {
+            float size = Data.Size * Data.SpriteScale;
+            // A ring on the floor in the glow color marks allies apart from the enemies.
+            var feet = SpriteArt.Feet(size);
+            SpriteArt.DrawShadow(this, feet, size * 0.6f, alpha);
+            DrawSetTransform(feet, 0f, new Vector2(1f, 1f / 3f));
+            DrawArc(Vector2.Zero, size * 0.32f, 0f, Mathf.Tau, 24, new Color(Data.GlowColor, 0.8f * alpha), 3f);
+            DrawSetTransform(Vector2.Zero);
+            var modulate = _hitFlashLeft > 0f ? SpriteArt.Flash : new Color(1f, 1f, 1f, alpha);
+            SpriteArt.Draw(this, Data.Sprite, offset, size, _facing.X < 0f, modulate);
+            if (_health < _maxHealth)
+                DrawHealthBar(r, size * 0.45f, alpha);
+            return;
+        }
+
         // Bone-white body with a glowing outline, so allies read apart from the colored enemies.
         DrawCircle(offset, r, new Color(body, alpha));
         DrawArc(offset, r + 1.5f, 0f, Mathf.Tau, 24, new Color(Data.GlowColor, alpha), 2.5f);
@@ -294,11 +311,14 @@ public partial class Minion : CharacterBody2D, IDamageable
             DrawCircle(offset + _facing * (r + 4f) + side * 1.4f, 3.5f + 1.5f * _lunge, new Color(Data.GlowColor.Lightened(0.3f), alpha));
 
         if (_health < _maxHealth)
-        {
-            var bar = new Rect2(-r, -r - 8f, r * 2f, 3f);
-            DrawRect(bar.Grow(1f), new Color(0f, 0f, 0f, 0.7f * alpha));
-            DrawRect(bar with { Size = new Vector2(bar.Size.X * _health / _maxHealth, bar.Size.Y) },
-                new Color(Data.GlowColor, alpha));
-        }
+            DrawHealthBar(r, r, alpha);
+    }
+
+    private void DrawHealthBar(float r, float top, float alpha)
+    {
+        var bar = new Rect2(-r, -top - 8f, r * 2f, 3f);
+        DrawRect(bar.Grow(1f), new Color(0f, 0f, 0f, 0.7f * alpha));
+        DrawRect(bar with { Size = new Vector2(bar.Size.X * _health / _maxHealth, bar.Size.Y) },
+            new Color(Data.GlowColor, alpha));
     }
 }

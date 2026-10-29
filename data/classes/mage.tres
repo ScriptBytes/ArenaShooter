@@ -14,6 +14,7 @@
 [ext_resource type="Resource" path="res://data/spells/arcane_missiles.tres" id="spell_5"]
 [ext_resource type="Resource" path="res://data/spells/blizzard.tres" id="spell_6"]
 [ext_resource type="Resource" path="res://data/spells/blink.tres" id="spell_7"]
+[ext_resource type="Texture2D" uid="uid://ub0edevdglmf" path="res://art/classes/mage.svg" id="9_sprite"]
 
 [resource]
 script = ExtResource("1_class")
@@ -21,6 +22,7 @@ Id = "mage"
 DisplayName = "Mage"
 Description = "Fragile, but commands fire and frost from a distance."
 Color = Color(0.608, 0.482, 1, 1)
+Sprite = ExtResource("9_sprite")
 MaxHealth = 20.0
 MoveSpeed = 310.0
 Armor = 1.0

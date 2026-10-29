@@ -13,6 +13,13 @@ public partial class MinionData : Resource
     [Export] public Color GlowColor { get; set; } = new("6fe0c0");
     [Export] public float Size { get; set; } = 18f;
 
+    [ExportGroup("Sprite")]
+    /// <summary>Placeholder art (art/), authored facing right. Unset = the skull drawn in code.</summary>
+    [Export] public Texture2D Sprite { get; set; }
+
+    /// <summary>Drawn size as a multiple of the body's diameter: the art has a head and feet past the collider.</summary>
+    [Export] public float SpriteScale { get; set; } = 1.8f;
+
     [ExportGroup("Stats")]
     [Export] public float MaxHealth { get; set; } = 14f;
     [Export] public float Armor { get; set; }

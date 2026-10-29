@@ -1,6 +1,7 @@
 [gd_resource type="Resource" script_class="EnemyData" format=3]
 
 [ext_resource type="Script" path="res://scripts/enemies/EnemyData.cs" id="1_enemy"]
+[ext_resource type="Texture2D" uid="uid://cfc0etrh77mpy" path="res://art/enemies/brute.svg" id="9_sprite"]
 
 [resource]
 script = ExtResource("1_enemy")
@@ -8,6 +9,7 @@ DisplayName = "Brute"
 Shape = 3
 Color = Color(0.659, 0.196, 0.431, 1)
 Size = 40.0
+Sprite = ExtResource("9_sprite")
 ShowHealthBar = true
 MaxHealth = 45.0
 Speed = 55.0
