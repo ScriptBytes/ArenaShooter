@@ -149,24 +149,53 @@ public sealed class ShopBot
             return 0f;
 
         bool melee = _player.Abilities.Weapon?.Ability is MeleeArcAbility;
+        var (weaponShare, minionShare) = DamageShares();
+        float cdr = Mathf.Min(_run.Stats.Get(StatType.CooldownReduction), 90f) / 100f;
         return stat switch
         {
             StatType.MaxHealth => 1.2f,
             StatType.Armor => 3f,
             StatType.Damage => 1f,
-            StatType.AttackSpeed => 0.7f,
+            // Scaled by where this run's damage comes from: +1% Attack Speed is +1% weapon damage, +1% Cooldown
+            // Reduction is a bit more than +1% spell damage (more as it nears its cap); Minion Damage only boosts minions.
+            StatType.AttackSpeed => Mathf.Max(weaponShare, 0.2f),
             StatType.MoveSpeed => 0.5f,
             StatType.Range => melee ? 0.03f : 0.06f,
             StatType.PickupRange => 0.02f,
             StatType.CritChance => 0.7f,
             StatType.LifeSteal => StealsLife() ? 1.5f : 0f,
-            StatType.MinionDamage => HasMinions() ? 1f : 0f,
+            StatType.MinionDamage => HasMinions() ? Mathf.Max(minionShare, 0.3f) : 0f,
             StatType.PotionHeal => 0.5f,
-            StatType.CooldownReduction => 1f,
+            StatType.CooldownReduction => Mathf.Max(1f - weaponShare, 0.2f) / (1f - cdr),
             StatType.HpRegen => 1f,
             StatType.Dodge => 1.5f,
             _ => 0f,
         };
+    }
+
+    // Share of this run's damage (Combat.Damage, the meter) from the weapon and from minions. Before any damage
+    // (never in practice: the first shop comes after wave 1) assume a 50/50 weapon/spell split.
+    private (float Weapon, float Minions) DamageShares()
+    {
+        var totals = Combat.Damage.Totals;
+        float sum = totals.Values.Sum();
+        if (sum <= 0f)
+            return (0.5f, 0f);
+
+        var minionNames = new HashSet<string>();
+        foreach (var ability in _player.Abilities.Spells.Select(s => s.Ability).Append(_player.Abilities.Weapon?.Ability))
+        {
+            if (ability is SummonAbility { Minion: { } summoned })
+                minionNames.Add(summoned.DisplayName);
+            if (ability?.RaiseMinion is { } raised)
+                minionNames.Add(raised.DisplayName);
+        }
+        // Every weapon this class can wear counts, so the starter's damage still counts after an upgrade.
+        var weaponNames = _class.Weapons.Append(_class.StartingWeapon)
+            .Where(i => i?.Weapon != null).Select(i => i.Weapon.DisplayName).ToHashSet();
+        float weapon = totals.Where(t => weaponNames.Contains(t.Key)).Sum(t => t.Value);
+        float minions = totals.Where(t => minionNames.Contains(t.Key)).Sum(t => t.Value);
+        return (weapon / sum, minions / sum);
     }
 
     private bool StealsLife() =>

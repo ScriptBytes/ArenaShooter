@@ -294,3 +294,29 @@ Each class went from 5 to 8 spells (pick 3 stays). Numbers and per-spell damage 
 - Should Retry in career go through the talents screen when you have free points?
 - Damage numbers toggle: enemies only (now), or every floating number?
 - Do you want Esc to also work as "Back" on the select screens?
+
+## 10. Class balance pass
+
+**What was done**
+
+- Class parity is now measured on each class's best builds: the top 20% (11 of 56) of a smart-shop `tools/sweep.py` run, replayed on fresh seeds. Before the pass the Fighter won every one of its top builds (100%), the Warlock 91%, the Necromancer 42% and the Mage 36%. After: 73 / 58 / 55 / 58% (Fighter / Mage / Necromancer / Warlock, fresh seeds 101–103). All numbers are in `ROADMAP.md` (Done and Known issues).
+- Fighter nerfed (30 → 24 HP, its three weapons about −20% damage), Warlock nerfed a little (22 → 21 HP, Curse of Agony 5 → 4 dps), Mage and Necromancer buffed (24 HP each, better starting weapons, their weakest damage spells and the minions hit harder).
+- Autoplay's smart shop now values Attack Speed, Cooldown Reduction and Minion Damage by where the run's damage actually comes from, so a spell-heavy Mage buys Cooldown Reduction and a weapon-heavy Fighter buys Attack Speed.
+
+**Judgment calls**
+
+- **The Fighter lost HP, not just damage.** Two quick tests showed HP is what carries it: 24 HP with −10% weapons still won ~68% of top-build runs, 26 HP with −20% weapons 75%. It now has the same 24 HP as the Mage and Necromancer, which is odd for "a sturdy warrior". Alternative: Fighter back to ~28 HP and Fighter armor 1 → 0, or bigger weapon cuts.
+- **Casters got HP rather than armor.** A wave-6 Brute hits for ~17, so two hits kill a 24 HP caster; that's still where most caster runs end. More armor would mostly cut the small hits instead.
+- **War Cry left alone.** It was flagged as maybe too strong, but its lift is +1.1 waves, behind Shield Wall (+3.1).
+- **The Necromancer leans on Grave Curse.** Every one of its top builds has it (+6.6 waves lift). I buffed the minions and the other spells rather than nerfing it.
+
+**Unverified**
+
+- Feel: the Fighter's weapons hit noticeably softer (Sword 8 → 6.5), and the casters now take more hits before dying. All of this is bot play (`SteeringBot` + `ShopBot`), not playtest.
+- With 3 seeds per build, differences under ~10 points are noise. The new numbers have not been checked against career talents or heirlooms.
+
+**Questions**
+
+- Is 24 HP fine for the Fighter, or do you want it visibly tankier than the casters? My recommendation: keep it for now and playtest. If it feels wrong, try 28 HP with armor 0 (more HP for big hits, less help against small ones) and rerun the sweep.
+- Should Grave Curse be a "must-pick" for the Necromancer? My recommendation: no. Next pass, move some of its raise power to the base kit, e.g. a small raise chance on the Bone Wand.
+- Late-game caster deaths come from Brute burst. Do you want a Brute wind-up (a telegraph before the hit) rather than more caster HP? My recommendation: yes, a short wind-up. It rewards dodging and helps every class without more numbers.

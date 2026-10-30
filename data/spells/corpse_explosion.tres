@@ -6,10 +6,10 @@
 script = ExtResource("1_script")
 Id = "corpse_explosion"
 DisplayName = "Corpse Explosion"
-Description = "Up to 3 of your skeletons burst, dealing 14 damage around each. Manual casts pick the ones nearest the cursor."
+Description = "Up to 3 of your skeletons burst, dealing 20 damage around each. Manual casts pick the ones nearest the cursor."
 IconColor = Color(0.55, 0.95, 0.7, 1)
 Cooldown = 6.0
-Damage = 14.0
+Damage = 20.0
 Range = 450.0
 Knockback = 200.0
 ScreenShake = 0.3
