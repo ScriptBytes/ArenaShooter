@@ -3,11 +3,17 @@
 spells and items. Standard library only.
 
     tools/sweep.py run    OUT [--classes mage,fighter] [--runs 5] [--seed 1] [--shop smart] [-j 8] [-- extra autoplay flags]
-    tools/sweep.py report OUT [--json results.json] [--item-window 4]
+    tools/sweep.py run    OUT --top 11 --from results.json --seed 101 [--classes mage] [--runs 3]
+    tools/sweep.py report OUT [--json results.json] [--item-window 4] [--top-share 0.2]
 
 `run` plays C(8,3) = 56 builds per class (all spells auto-cast, smart movement), one Godot launch
 per build with --runs seeds, and writes OUT/<class>/<spells>.log. It skips builds whose log already
 finished, so an interrupted sweep resumes where it stopped. `report` reads every log under OUT.
+
+`--top N --from REPORT.json` plays only each class's N best builds from an earlier report: the quick
+check while tuning (11 builds x 4 classes x 3 runs is ~10 min instead of ~1 h), and, on new seeds,
+the unbiased parity number (ranking builds and scoring them on the same seeds flatters the top).
+`report` ends with that parity table: per class, the top --top-share of builds' win rate and waves.
 
 Score = waves cleared (a victory counts all waves). Read results as relative: they measure the
 Autoplay bot (SteeringBot + ShopBot), not a human player.
@@ -58,7 +64,24 @@ def finished(log):
     return log.exists() and "run_end" in log.read_text(errors="replace").rsplit("run_start", 1)[-1]
 
 
+def builds_for(cls, spells, args):
+    """Every combination, or with --top N --from REPORT.json only the class's N best builds there."""
+    if not args.top:
+        return list(itertools.combinations(spells, args.picks))
+    import json
+    classes = {k.lower(): v for k, v in json.loads(Path(args.from_report).read_text())["classes"].items()}
+    rows = classes.get(cls.lower(), {}).get("builds", [])  # reports use the class name, runs its Id
+    order = {s: i for i, s in enumerate(spells)}  # back to list order, so the log name matches a full sweep
+    return [tuple(sorted(b["spells"], key=lambda s: order.get(s, 99))) for b in top_builds(rows, args.top)]
+
+
+def top_builds(rows, n):
+    return sorted(rows, key=lambda b: (-b["cleared"], -b["win"]))[:n]
+
+
 def run(args, extra):
+    if args.top and not args.from_report:
+        sys.exit("--top needs --from REPORT.json (written by `report --json`)")
     out = Path(args.out)
     spells = class_spells()
     classes = args.classes.split(",") if args.classes else list(spells)
@@ -66,12 +89,12 @@ def run(args, extra):
     for cls in classes:
         if cls not in spells:
             sys.exit(f"unknown class {cls} (have: {', '.join(spells)})")
-        for combo in itertools.combinations(spells[cls], args.picks):
+        for combo in builds_for(cls, spells[cls], args):
             log = out / cls / ("+".join(combo) + ".log")
             if not finished(log):
                 jobs.append((cls, combo, log))
 
-    total = sum(len(list(itertools.combinations(spells[c], args.picks))) for c in classes)
+    total = sum(len(builds_for(c, spells[c], args)) for c in classes)
     print(f"{len(jobs)} of {total} builds to play ({args.runs} runs each, {args.jobs} at a time)", flush=True)
 
     def play(job):
@@ -209,6 +232,14 @@ def report(args):
             cls = ",".join(x["classes"]) if len(x["classes"]) < 4 else "all"
             print(f"  {x['item']:<24}{x['runs']:>5} runs  {x['lift']:+6.2f}  {cls}")
 
+    # Class parity: the top 20% of builds, i.e. what a player who picks and shops well gets.
+    print(f"\n== parity: top {args.top_share:.0%} of builds per class (ranked here; rerun them on new seeds to remove the selection bias)")
+    print(f"  {'class':<14}{'top win':>8}{'top waves':>10}{'all win':>9}{'all waves':>10}")
+    for cls, c in results["classes"].items():
+        top = top_builds(c["builds"], max(1, round(len(c["builds"]) * args.top_share)))
+        c["top"] = {"builds": len(top), "win": mean([b["win"] for b in top]), "cleared": mean([b["cleared"] for b in top])}
+        print(f"  {cls:<14}{100 * c['top']['win']:>7.0f}%{c['top']['cleared']:>10.2f}{100 * c['win']:>8.0f}%{c['cleared']:>10.2f}")
+
     if args.json:
         import json
         Path(args.json).write_text(json.dumps(results, indent=1))
@@ -231,10 +262,13 @@ def main():
     r.add_argument("--shop", default="smart")
     r.add_argument("--picks", type=int, default=3)
     r.add_argument("-j", "--jobs", type=int, default=8)
+    r.add_argument("--top", type=int, default=0)
+    r.add_argument("--from", dest="from_report", default="")
     s = sub.add_parser("report")
     s.add_argument("out")
     s.add_argument("--json", default="")
     s.add_argument("--item-window", type=int, default=4)
+    s.add_argument("--top-share", type=float, default=0.2)
     args = p.parse_args(argv)
     run(args, extra) if args.cmd == "run" else report(args)
 

@@ -72,6 +72,12 @@ tools/sweep.py run <scratch>/sweep-items --runs 3 -j 9 --shop random
 tools/sweep.py report <scratch>/sweep --json <scratch>/sweep.json
 ```
 
+**Balance passes (keep them short).** Each launch is single-threaded and `-j 9` already fills the Mac's 10 cores, so the speedup is simulating less, not more parallelism. Class parity is measured on each class's top 20% of builds (`report` ends with that table; see `Goals.md`).
+1. Baseline: reuse the last full sweep's `--json` if the game hasn't changed since; otherwise one full sweep (`--runs 3`, ~1 h).
+2. While tuning, check only the top builds: `tools/sweep.py run <scratch>/q1 --top 11 --from <scratch>/sweep.json --seed 101 --runs 2` (`--classes` for the ones you touched; ~5–10 min). Don't run checks while a full sweep is running: they share the cores and slow each other down.
+3. The final number is the top 11 replayed on fresh seeds (`--top 11 --seed 101 --runs 3`), since ranking and scoring builds on the same seeds flatters them. Rerun a full sweep only for classes whose spells changed enough to reshuffle the ranking.
+4. A full sweep splits cleanly by `--classes`, so cloud sessions (one class each) can run it in a quarter of the time when it's worth the setup.
+
 **Batch sims:** `tools/simulate.sh` (needs `$GODOT`) runs N seeded runs per class × movement mode in parallel and prints win %, average wave, kills, hits and gold. Flags after `--` go to every run. Each launch is single-threaded, so it runs launches in parallel (`-j`, default 8): 80 five-wave runs (4 classes × 2 modes × 10, `-- --waves=5`) take about 90s on the Mac; 20-wave runs take up to ~4× longer.
 
 ```bash
