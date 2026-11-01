@@ -81,6 +81,14 @@ public partial class Career : Node
 
     public void Persist() => CareerStore.Write(SavePath, Save);
 
+    /// <summary>Erases the class's character from the save (the other classes keep theirs). <see cref="For"/> then starts a new one.</summary>
+    public void ResetCharacter(ClassData playerClass)
+    {
+        Save.Characters.Remove(ClassId(playerClass));
+        Persist();
+        GD.Print($"[career] reset character {ClassId(playerClass)}");
+    }
+
     /// <summary>The class's save key (<see cref="ClassData.Id"/>; the file name if it's missing, which <see cref="ValidateIds"/> reports).</summary>
     public static string ClassId(ClassData playerClass) => IdOrFileName(playerClass.Id, playerClass);
 

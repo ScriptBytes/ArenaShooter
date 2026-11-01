@@ -50,7 +50,7 @@ $GODOT --headless --path . --fixed-fps 60 --disable-vsync --quit-after 90000 -- 
 #   --buy-potion="Potion of Fury" (repeatable; buys one per shop visit before other buys; --item grants potions too)
 #   --menu-delay=SECONDS (wait before each menu click, so Movie Maker records the shop)
 #   --mode=arcade|career (default arcade)  --save=PATH (career save; default user://career_autoplay.json, never the real one)
-#   --reset-career (delete that save first)  --runs=N (N runs in one launch via the real restart; run k uses seed+k)
+#   --reset-career (delete that save first)  --reset-character (career: Reset character on the talents screen: ask, cancel, ask, confirm; logs career_reset)  --runs=N (N runs in one launch via the real restart; run k uses seed+k)
 #   --talents=spread|none  --heirloom=priciest|keep (career: how to spend points / what to keep after a victory)
 #   --retry (with --runs: later runs start via the end screen's "Retry same class", skipping the select screens)
 #   --tour (1s into the first wave: Tab gear screen open/close, Esc pause menu → Settings → flip Damage numbers → Back → Resume)

@@ -64,6 +64,9 @@ public class CareerCharacter
 
     public int Rank(string talentId) => Talents.GetValueOrDefault(talentId);
 
+    /// <summary>Whether there's nothing to lose: no XP, talents, heirloom or record.</summary>
+    public bool IsBlank() => Xp == 0 && Runs == 0 && Talents.Count == 0 && Heirloom == null;
+
     public void Sanitize()
     {
         Talents ??= new();

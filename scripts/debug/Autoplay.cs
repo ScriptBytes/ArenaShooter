@@ -51,6 +51,7 @@ public partial class Autoplay : Node
     private float _menuWait;
     private ClassData _class;
     private bool _careerScreenLogged;
+    private int _resetStep;
     private bool _heirloomDone;
     private bool _runEnded;
 
@@ -269,6 +270,12 @@ public partial class Autoplay : Node
             Log($"career save=\"{Career.Instance.SavePath}\" load={Career.Instance.LoadStatus.ToString().ToLower()} {CareerState(character)}");
         }
 
+        if (Options.ResetCharacter && (_resetStep > 0 ? _resetStep < 4 : !character.IsBlank()))
+        {
+            ResetCharacterStep(character);
+            return;
+        }
+
         if (Options.Talents == TalentStrategy.Spread && CareerScreen.FreePoints > 0)
         {
             var pick = CareerScreen.TalentButtons.Where(t => !t.Button.Disabled)
@@ -282,6 +289,33 @@ public partial class Autoplay : Node
         }
 
         Press(CareerScreen.ContinueButton);
+    }
+
+    // --reset-character: opens the prompt and cancels (nothing may change), then opens it again and confirms.
+    private void ResetCharacterStep(CareerCharacter character)
+    {
+        switch (_resetStep++)
+        {
+            case 0:
+            case 2:
+                Press(CareerScreen.ResetCharacterButton);
+                if (!CareerScreen.ConfirmingReset)
+                    Fail("reset character: the prompt didn't open");
+                Log($"career_reset step=ask {CareerState(character)}");
+                break;
+            case 1:
+                Press(CareerScreen.CancelResetButton);
+                if (CareerScreen.ConfirmingReset || character.IsBlank())
+                    Fail("reset character: Cancel didn't keep the character");
+                Log($"career_reset step=cancel {CareerState(character)}");
+                break;
+            case 3:
+                Press(CareerScreen.ConfirmResetButton);
+                if (CareerScreen.ConfirmingReset || !CareerScreen.Character.IsBlank())
+                    Fail("reset character: the character wasn't erased");
+                Log($"career_reset step=confirm {CareerState(CareerScreen.Character)}");
+                break;
+        }
     }
 
     // After a career run: keep an heirloom on victory (--heirloom), log the banked career, then quit or restart.

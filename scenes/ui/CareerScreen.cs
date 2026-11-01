@@ -7,7 +7,7 @@ namespace ArenaShooter;
 /// <summary>
 /// Career mode's between-run screen, shown after class select: the character's level and record,
 /// its heirloom, and the talents to spend points on (saved on every click; reset is free).
-/// Built in code.
+/// "Reset character" erases the whole character, after an "are you sure" prompt. Built in code.
 /// </summary>
 public partial class CareerScreen : CanvasLayer
 {
@@ -23,6 +23,14 @@ public partial class CareerScreen : CanvasLayer
     private GridContainer _talentGrid;
     private Button _reset;
     private Button _continue;
+    private VBoxContainer _content;
+    private VBoxContainer _confirm;
+    private Label _confirmText;
+    private Button _resetCharacter;
+    private Button _confirmYes;
+    private Button _confirmCancel;
+
+    private static readonly Color DangerColor = new(0.95f, 0.45f, 0.4f);
 
     private ClassData _class;
     private CareerSettings _settings;
@@ -32,13 +40,21 @@ public partial class CareerScreen : CanvasLayer
     /// <summary>Each talent's "+" button; Autoplay presses them (--talents).</summary>
     public IReadOnlyList<(CareerTalent Talent, Button Button)> TalentButtons => _talentButtons;
     public Button ContinueButton => _continue;
+    public Button ResetCharacterButton => _resetCharacter;
+    public Button ConfirmResetButton => _confirmYes;
+    public Button CancelResetButton => _confirmCancel;
+    public bool ConfirmingReset => _confirm.Visible;
     public int FreePoints => _settings.PointsFree(_character);
     public CareerCharacter Character => _character;
 
     public override void _Ready()
     {
-        var layout = UiStyles.ScreenLayout(this, 14);
-        layout.CustomMinimumSize = new Vector2(640, 0);
+        var screen = UiStyles.ScreenLayout(this, 14);
+        screen.CustomMinimumSize = new Vector2(640, 0);
+
+        var layout = _content = new VBoxContainer();
+        layout.AddThemeConstantOverride("separation", 14);
+        screen.AddChild(layout);
 
         _title = UiStyles.Title("");
         layout.AddChild(_title);
@@ -95,6 +111,31 @@ public partial class CareerScreen : CanvasLayer
             EmitSignal(SignalName.ContinueRequested, _class);
         };
         buttons.AddChild(_continue);
+
+        // Its own row, away from Choose spells: this one can't be undone.
+        var danger = new HBoxContainer { Alignment = BoxContainer.AlignmentMode.Center };
+        layout.AddChild(danger);
+        _resetCharacter = new Button { Text = "Reset character", CustomMinimumSize = new Vector2(160, 36) };
+        UiStyles.ColorButtonText(_resetCharacter, DangerColor);
+        _resetCharacter.Pressed += AskResetCharacter;
+        danger.AddChild(_resetCharacter);
+
+        _confirm = new VBoxContainer { Visible = false };
+        _confirm.AddThemeConstantOverride("separation", 20);
+        screen.AddChild(_confirm);
+        _confirmText = UiStyles.WrappedLabel("", 18);
+        _confirmText.HorizontalAlignment = HorizontalAlignment.Center;
+        _confirm.AddChild(_confirmText);
+        var confirmButtons = new HBoxContainer { Alignment = BoxContainer.AlignmentMode.Center };
+        confirmButtons.AddThemeConstantOverride("separation", 16);
+        _confirm.AddChild(confirmButtons);
+        _confirmCancel = new Button { Text = "Cancel", CustomMinimumSize = new Vector2(180, 44) };
+        _confirmCancel.Pressed += CancelResetCharacter;
+        confirmButtons.AddChild(_confirmCancel);
+        _confirmYes = new Button { Text = "Yes, reset character", CustomMinimumSize = new Vector2(220, 44) };
+        UiStyles.ColorButtonText(_confirmYes, DangerColor);
+        _confirmYes.Pressed += ResetCharacter;
+        confirmButtons.AddChild(_confirmYes);
         Hide();
     }
 
@@ -121,8 +162,44 @@ public partial class CareerScreen : CanvasLayer
 
         BuildTalents();
         Refresh();
+        _confirm.Hide();
+        _content.Show();
         Show();
         _continue.GrabFocus();
+    }
+
+    public override void _Input(InputEvent @event)
+    {
+        if (Visible && _confirm.Visible && @event.IsActionPressed("pause"))
+        {
+            GetViewport().SetInputAsHandled();
+            CancelResetCharacter();
+        }
+    }
+
+    // Swaps the screen for the prompt, with Cancel focused so a stray Enter or Space erases nothing.
+    private void AskResetCharacter()
+    {
+        _confirmText.Text = $"Are you sure you want to reset your {_class.DisplayName}?\n\n" +
+                            $"This erases level {_settings.LevelFor(_character.Xp)}, {_character.Xp} XP, all talents, the heirloom and " +
+                            $"the record ({_character.Runs} runs, {_character.Victories} victories) and starts over at level 1. " +
+                            "Your other characters aren't affected. This can't be undone.";
+        _content.Hide();
+        _confirm.Show();
+        _confirmCancel.GrabFocus();
+    }
+
+    private void CancelResetCharacter()
+    {
+        _confirm.Hide();
+        _content.Show();
+        _resetCharacter.GrabFocus();
+    }
+
+    private void ResetCharacter()
+    {
+        Career.Instance.ResetCharacter(_class);
+        Open(_class, _settings, Career.Instance.For(_class), null);
     }
 
     private void BuildTalents()
@@ -197,6 +274,7 @@ public partial class CareerScreen : CanvasLayer
         int free = _settings.PointsFree(_character);
         _points.Text = $"Talent points: {free} free of {_settings.PointsEarned(_character)}";
         _reset.Disabled = _settings.PointsSpent(_character) == 0;
+        _resetCharacter.Disabled = _character.IsBlank();
 
         for (int i = 0; i < _talentButtons.Count; i++)
         {

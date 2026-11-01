@@ -39,6 +39,8 @@ public enum HeirloomStrategy { Priciest, Keep }
 /// <item><c>--mode=arcade|career</c> mode to pick on the mode select screen (default arcade).</item>
 /// <item><c>--save=PATH</c> career save file (default user://career_autoplay.json, never the real save).</item>
 /// <item><c>--reset-career</c> deletes that save file before the first run.</item>
+/// <item><c>--reset-character</c> career: on the talents screen, whenever the character isn't blank, presses Reset character,
+/// Cancel, Reset character again, then confirms. Logs a <c>career_reset</c> event per step.</item>
 /// <item><c>--runs=N</c> plays N runs in a row through the real end-of-run restart (default 1); run k uses seed+k.</item>
 /// <item><c>--talents=spread|none</c> career: spend free points one at a time on the lowest-rank talent (default spread).</item>
 /// <item><c>--heirloom=priciest|keep</c> career victory: keep the priciest worn gear (default) or the current heirloom.</item>
@@ -70,6 +72,7 @@ public sealed class AutoplayOptions
     public GameMode Mode { get; private set; } = GameMode.Arcade;
     public string SavePath { get; private set; } = "user://career_autoplay.json";
     public bool ResetCareer { get; private set; }
+    public bool ResetCharacter { get; private set; }
     public int Runs { get; private set; } = 1;
     public TalentStrategy Talents { get; private set; } = TalentStrategy.Spread;
     public HeirloomStrategy Heirloom { get; private set; } = HeirloomStrategy.Priciest;
@@ -150,6 +153,9 @@ public sealed class AutoplayOptions
                     break;
                 case "--reset-career":
                     options.ResetCareer = true;
+                    break;
+                case "--reset-character":
+                    options.ResetCharacter = true;
                     break;
                 case "--runs" when int.TryParse(value, out int runs) && runs >= 1:
                     options.Runs = runs;
