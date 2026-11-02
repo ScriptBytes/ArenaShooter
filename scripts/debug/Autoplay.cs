@@ -417,6 +417,14 @@ public partial class Autoplay : Node
     // --buy-potion picks come first (one of each per visit), then the --shop strategy.
     private void ShopStep()
     {
+        if (Options.Lock && !Shop.Offers.Any(o => o.Locked && !o.Sold)
+            && Shop.Offers.FirstOrDefault(o => !o.Sold) is { } toLock)
+        {
+            Log($"lock item=\"{toLock.Item.DisplayName}\" rarity={toLock.Item.Rarity.ToString().ToLower()} price={toLock.Price}");
+            Press(toLock.LockButton);
+            return;
+        }
+
         foreach (var name in Options.BuyPotions)
         {
             var potion = Shop.PotionOffers.FirstOrDefault(o =>

@@ -11,6 +11,8 @@ namespace ArenaShooter;
 /// potion shelf: every consumable, always in stock, buyable until the player carries its MaxCarry.
 /// Each offer rolls a rarity (<see cref="RaritySettings"/>, odds rising with the wave; rerolls roll again),
 /// which scales its stats and price and colors its card. Potions have no rarity.
+/// A locked offer keeps its slot and rarity through rerolls and into the next shop, at that wave's price.
+/// A bought offer's card turns invisible but keeps its space, so the other cards don't move.
 /// </summary>
 public partial class Shop : CanvasLayer
 {
@@ -39,6 +41,7 @@ public partial class Shop : CanvasLayer
         public ItemInstance Item;
         public int Price;
         public bool Sold;
+        public bool Locked;
 
         /// <summary>One per slot the item can go into: two when both ring slots are full. Rebuilt on refresh.</summary>
         public List<Button> Buttons { get; } = new();
@@ -46,6 +49,8 @@ public partial class Shop : CanvasLayer
 
         public Label Replaces;
         public VBoxContainer ButtonBox;
+        public Control Card;
+        public Button LockButton;
     }
 
     /// <summary>A potion on the shelf. Not rerolled; the price rises with the wave like the offers.</summary>
@@ -136,16 +141,29 @@ public partial class Shop : CanvasLayer
             _offerRow.RemoveChild(child);
             child.QueueFree();
         }
-        _offers.Clear();
 
         // Gear you're already wearing would only replace itself. Rings are the exception: you can wear two.
-        var pool = _pool.Where(i => i.Slot == EquipSlot.Ring || !_run.Equipment.IsWorn(i)).ToList();
-        float priceScale = PriceScale;
-        foreach (var item in PickRandom(pool, OfferCount))
+        bool Offerable(ItemData item) => item.Slot == EquipSlot.Ring || !_run.Equipment.IsWorn(item);
+
+        // Locked offers stay in their slots; the random picks fill the rest and can't repeat them.
+        var previous = _offers.ToList();
+        _offers.Clear();
+        var kept = previous.Select(o => o.Locked && !o.Sold && Offerable(o.Item.Item) ? o.Item : null).ToList();
+        var pool = _pool.Where(i => Offerable(i) && kept.All(k => k?.Item != i)).ToList();
+        using var picks = PickRandom(pool, OfferCount - kept.Count(k => k != null)).GetEnumerator();
+        for (int slot = 0; slot < OfferCount; slot++)
         {
-            var tier = ForcedRarity is { } forced ? Rarities.Tier(forced) : Rarities.Roll(_run.Wave);
-            var instance = new ItemInstance(item, tier);
-            var offer = new Offer { Item = instance, Price = Mathf.RoundToInt(instance.Price * priceScale) };
+            var instance = slot < kept.Count ? kept[slot] : null;
+            bool locked = instance != null;
+            if (!locked)
+            {
+                if (!picks.MoveNext())
+                    continue;
+                var tier = ForcedRarity is { } forced ? Rarities.Tier(forced) : Rarities.Roll(_run.Wave);
+                instance = new ItemInstance(picks.Current, tier);
+            }
+
+            var offer = new Offer { Item = instance, Price = Mathf.RoundToInt(instance.Price * PriceScale), Locked = locked };
             _offers.Add(offer);
             _offerRow.AddChild(BuildCard(offer));
         }
@@ -269,6 +287,7 @@ public partial class Shop : CanvasLayer
     {
         var item = offer.Item;
         var card = new PanelContainer { CustomMinimumSize = new Vector2(196, 260) };
+        offer.Card = card;
         // Common gets a faint border so the colored ones stand out.
         card.AddThemeStyleboxOverride("panel", item.Rarity == Rarity.Common
             ? UiStyles.BorderedPanel(new Color(item.Color, 0.25f), 1)
@@ -277,7 +296,30 @@ public partial class Shop : CanvasLayer
         content.AddThemeConstantOverride("separation", 8);
         card.AddChild(content);
 
-        content.AddChild(new ColorRect { Color = item.Item.IconColor, CustomMinimumSize = new Vector2(0, 28) });
+        var bar = new ColorRect { Color = item.Item.IconColor, CustomMinimumSize = new Vector2(0, 28) };
+        content.AddChild(bar);
+
+        // Sits on the color bar, so it adds no height to a card that's already tight on screen.
+        offer.LockButton = new Button
+        {
+            TooltipText = "Keep this item through rerolls and into the next shop",
+            Theme = UiStyles.TooltipTheme(),
+            AnchorLeft = 1f,
+            AnchorRight = 1f,
+            AnchorBottom = 1f,
+            OffsetLeft = -62f,
+            OffsetRight = -2f,
+            OffsetTop = 2f,
+            OffsetBottom = -2f,
+        };
+        offer.LockButton.AddThemeFontSizeOverride("font_size", 12);
+        offer.LockButton.Pressed += () =>
+        {
+            offer.Locked = !offer.Locked;
+            ShowLock(offer);
+        };
+        bar.AddChild(offer.LockButton);
+        ShowLock(offer);
 
         var name = UiStyles.WrappedLabel(item.DisplayName, 20);
         name.AddThemeColorOverride("font_color", item.Color);
@@ -301,12 +343,19 @@ public partial class Shop : CanvasLayer
         return card;
     }
 
+    private static void ShowLock(Offer offer)
+    {
+        offer.LockButton.Text = offer.Locked ? "Locked" : "Lock";
+        UiStyles.ColorButtonText(offer.LockButton, offer.Locked ? UiStyles.Gold : Colors.White);
+    }
+
     private void Buy(Offer offer, int position)
     {
         if (offer.Sold || !_run.TrySpend(offer.Price))
             return;
 
         offer.Sold = true;
+        GetViewport().GuiReleaseFocus();
         var replaced = _run.AddItem(offer.Item, position);
         _run.Gold += replaced.Sum(_run.Equipment.RefundFor);
         EmitSignal(SignalName.Purchased);
@@ -346,6 +395,19 @@ public partial class Shop : CanvasLayer
     // so the buttons are rebuilt every refresh.
     private void RefreshOffer(Offer offer)
     {
+        // Transparent rather than hidden: a hidden card would give up its space in the row. Its contents
+        // stay as they are, so the row can't change height either.
+        if (offer.Sold)
+        {
+            offer.Card.Modulate = Colors.Transparent;
+            foreach (var button in offer.Buttons.Append(offer.LockButton))
+            {
+                button.Disabled = true;
+                button.FocusMode = Control.FocusModeEnum.None;
+            }
+            return;
+        }
+
         foreach (var button in offer.Buttons)
         {
             offer.ButtonBox.RemoveChild(button);
@@ -353,12 +415,12 @@ public partial class Shop : CanvasLayer
         }
         offer.Buttons.Clear();
 
-        var targets = offer.Item.IsGear && !offer.Sold ? _run.Equipment.TargetsFor(offer.Item.Item) : new List<int> { -1 };
+        var targets = offer.Item.IsGear ? _run.Equipment.TargetsFor(offer.Item.Item) : new List<int> { -1 };
         offer.Replaces.Text = "";
         foreach (int position in targets)
         {
             var replaced = position >= 0 ? _run.Equipment.Displaced(offer.Item.Item, position) : new List<ItemInstance>();
-            string text = offer.Sold ? "Sold" : $"Buy ({offer.Price})";
+            string text = $"Buy ({offer.Price})";
             if (targets.Count > 1)
                 text += $"\nover {string.Join(", ", replaced.Select(i => i.FullName))}";
             else if (replaced.Count > 0)
@@ -368,7 +430,7 @@ public partial class Shop : CanvasLayer
             {
                 Text = text,
                 CustomMinimumSize = new Vector2(0, 40),
-                Disabled = offer.Sold || _run.Gold < offer.Price,
+                Disabled = _run.Gold < offer.Price,
             };
             button.Pressed += () => Buy(offer, position);
             offer.ButtonBox.AddChild(button);

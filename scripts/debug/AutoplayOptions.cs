@@ -35,6 +35,7 @@ public enum HeirloomStrategy { Priciest, Keep }
 /// <item><c>--autocast</c> turns auto-cast on for every spell, including manual-by-default ones.</item>
 /// <item><c>--item=NAME</c> grants an item at run start (display name, Id or .tres file name; Common unless --rarity). Repeatable.</item>
 /// <item><c>--buy-potion=NAME</c> buys one of this potion at every shop visit, before other purchases. Repeatable.</item>
+/// <item><c>--lock</c> keeps one shop offer locked: presses Lock on the first unsold offer whenever none is locked. Logs a <c>lock</c> event.</item>
 /// <item><c>--menu-delay=SECONDS</c> waits before each menu action, so Movie Maker can record the menus (default 0).</item>
 /// <item><c>--mode=arcade|career</c> mode to pick on the mode select screen (default arcade).</item>
 /// <item><c>--save=PATH</c> career save file (default user://career_autoplay.json, never the real save).</item>
@@ -68,6 +69,7 @@ public sealed class AutoplayOptions
     public float MenuDelay { get; private set; }
     public List<string> Items { get; } = new();
     public List<string> BuyPotions { get; } = new();
+    public bool Lock { get; private set; }
     public List<(StatType Stat, float Value)> Stats { get; } = new();
     public GameMode Mode { get; private set; } = GameMode.Arcade;
     public string SavePath { get; private set; } = "user://career_autoplay.json";
@@ -144,6 +146,9 @@ public sealed class AutoplayOptions
                     break;
                 case "--buy-potion" when value != "":
                     options.BuyPotions.Add(value);
+                    break;
+                case "--lock":
+                    options.Lock = true;
                     break;
                 case "--mode" when Enum.TryParse(value, ignoreCase: true, out GameMode mode) && Enum.IsDefined(mode) && mode != GameMode.None:
                     options.Mode = mode;
