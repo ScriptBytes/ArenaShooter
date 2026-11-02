@@ -43,8 +43,17 @@
 [ext_resource type="Resource" path="res://data/consumables/health_potion.tres" id="potion_0"]
 [ext_resource type="Resource" path="res://data/consumables/potion_of_fury.tres" id="potion_1"]
 [ext_resource type="Resource" path="res://data/consumables/potion_of_swiftness.tres" id="potion_2"]
+[ext_resource type="Resource" path="res://data/items/round_shield.tres" id="item_round_shield"]
+[ext_resource type="Resource" path="res://data/items/smoke_pouch.tres" id="item_smoke_pouch"]
+[ext_resource type="Resource" path="res://data/items/prayer_beads.tres" id="item_prayer_beads"]
+[ext_resource type="Resource" path="res://data/items/healers_satchel.tres" id="item_healers_satchel"]
+[ext_resource type="Resource" path="res://data/items/hooded_lantern.tres" id="item_hooded_lantern"]
+[ext_resource type="Resource" path="res://data/items/sharpened_dirk.tres" id="item_sharpened_dirk"]
+[ext_resource type="Resource" path="res://data/items/war_banner.tres" id="item_war_banner"]
+[ext_resource type="Resource" path="res://data/items/spell_focus.tres" id="item_spell_focus"]
+[ext_resource type="Resource" path="res://data/items/blood_grimoire.tres" id="item_blood_grimoire"]
 
 [resource]
 script = ExtResource("1_catalog")
-Items = Array[ExtResource("2_item")]([ExtResource("item_0"), ExtResource("item_1"), ExtResource("item_2"), ExtResource("item_3"), ExtResource("item_4"), ExtResource("item_5"), ExtResource("item_6"), ExtResource("item_7"), ExtResource("item_8"), ExtResource("item_9"), ExtResource("item_10"), ExtResource("item_11"), ExtResource("item_12"), ExtResource("item_13"), ExtResource("item_14"), ExtResource("item_15"), ExtResource("item_16"), ExtResource("item_17"), ExtResource("item_18"), ExtResource("item_19"), ExtResource("item_20"), ExtResource("item_21"), ExtResource("item_22"), ExtResource("item_23"), ExtResource("item_24"), ExtResource("item_26"), ExtResource("item_27"), ExtResource("item_28"), ExtResource("item_29"), ExtResource("item_30"), ExtResource("item_31"), ExtResource("item_32"), ExtResource("item_33"), ExtResource("item_34"), ExtResource("item_35"), ExtResource("item_36"), ExtResource("item_37")])
+Items = Array[ExtResource("2_item")]([ExtResource("item_0"), ExtResource("item_1"), ExtResource("item_2"), ExtResource("item_3"), ExtResource("item_4"), ExtResource("item_5"), ExtResource("item_6"), ExtResource("item_7"), ExtResource("item_8"), ExtResource("item_9"), ExtResource("item_10"), ExtResource("item_11"), ExtResource("item_12"), ExtResource("item_13"), ExtResource("item_14"), ExtResource("item_15"), ExtResource("item_16"), ExtResource("item_17"), ExtResource("item_18"), ExtResource("item_19"), ExtResource("item_20"), ExtResource("item_21"), ExtResource("item_22"), ExtResource("item_23"), ExtResource("item_24"), ExtResource("item_26"), ExtResource("item_27"), ExtResource("item_28"), ExtResource("item_29"), ExtResource("item_30"), ExtResource("item_31"), ExtResource("item_32"), ExtResource("item_33"), ExtResource("item_34"), ExtResource("item_35"), ExtResource("item_36"), ExtResource("item_37"), ExtResource("item_round_shield"), ExtResource("item_smoke_pouch"), ExtResource("item_prayer_beads"), ExtResource("item_healers_satchel"), ExtResource("item_hooded_lantern"), ExtResource("item_sharpened_dirk"), ExtResource("item_war_banner"), ExtResource("item_spell_focus"), ExtResource("item_blood_grimoire")])
 Consumables = Array[ExtResource("3_consumable")]([ExtResource("potion_0"), ExtResource("potion_1"), ExtResource("potion_2")])

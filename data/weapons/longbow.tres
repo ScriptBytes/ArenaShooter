@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="ProjectileAbility" format=3]
+
+[ext_resource type="Script" path="res://scripts/abilities/ProjectileAbility.cs" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/weapons/Projectile.tscn" id="2_projectile"]
+
+[resource]
+script = ExtResource("1_script")
+DisplayName = "Longbow"
+Description = "Fast arrows from very far away."
+IconColor = Color(0.72, 0.8, 0.45, 1)
+Cooldown = 0.6
+Damage = 7.0
+Range = 520.0
+CritChance = 10.0
+CritMultiplier = 2.0
+Knockback = 40.0
+ProjectileSpeed = 850.0
+ProjectileRadius = 4.0
+Shape = 2
+ProjectileScene = ExtResource("2_projectile")

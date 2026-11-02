@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="MeleeArcAbility" format=3]
+
+[ext_resource type="Script" path="res://scripts/abilities/MeleeArcAbility.cs" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+DisplayName = "Cursed Scythe"
+Description = "Huge slow sweeps that curse and drain what they cut."
+IconColor = Color(0.55, 0.2, 0.6, 1)
+Cooldown = 1.05
+Damage = 12.0
+Range = 110.0
+LifeSteal = 8.0
+DotDamage = 3.0
+DotDuration = 2.0
+Knockback = 130.0
+CritMultiplier = 2.0
+ScreenShake = 0.08
+ArcDegrees = 220.0

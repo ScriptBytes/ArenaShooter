@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/items/ItemData.cs" id="1_item"]
+[ext_resource type="Resource" path="res://data/weapons/cursed_scythe.tres" id="3_weapon"]
+
+[resource]
+script = ExtResource("1_item")
+Id = "cursed_scythe"
+DisplayName = "Cursed Scythe"
+Price = 50
+IconColor = Color(0.55, 0.2, 0.6, 1)
+Slot = 1
+Weapon = ExtResource("3_weapon")
+TwoHanded = true

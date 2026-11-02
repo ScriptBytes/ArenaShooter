@@ -6,6 +6,9 @@
 [ext_resource type="Resource" path="res://data/items/hex_rod.tres" id="3_weapon"]
 [ext_resource type="Resource" path="res://data/items/sacrificial_sickle.tres" id="weapon_0"]
 [ext_resource type="Resource" path="res://data/items/soulfire_staff.tres" id="weapon_1"]
+[ext_resource type="Resource" path="res://data/items/ritual_dagger.tres" id="weapon_ritual_dagger"]
+[ext_resource type="Resource" path="res://data/items/cursed_scythe.tres" id="weapon_cursed_scythe"]
+[ext_resource type="Resource" path="res://data/items/plague_rod.tres" id="weapon_plague_rod"]
 [ext_resource type="Resource" path="res://data/spells/drain_life.tres" id="spell_0"]
 [ext_resource type="Resource" path="res://data/spells/curse_of_agony.tres" id="spell_1"]
 [ext_resource type="Resource" path="res://data/spells/shadow_bolt.tres" id="spell_2"]
@@ -27,5 +30,5 @@ MaxHealth = 21.0
 MoveSpeed = 300.0
 Armor = 0.0
 StartingWeapon = ExtResource("3_weapon")
-Weapons = Array[ExtResource("4_item")]([ExtResource("weapon_0"), ExtResource("weapon_1")])
+Weapons = Array[ExtResource("4_item")]([ExtResource("weapon_0"), ExtResource("weapon_1"), ExtResource("weapon_ritual_dagger"), ExtResource("weapon_cursed_scythe"), ExtResource("weapon_plague_rod")])
 Spells = Array[ExtResource("2_ability")]([ExtResource("spell_0"), ExtResource("spell_1"), ExtResource("spell_2"), ExtResource("spell_3"), ExtResource("spell_4"), ExtResource("spell_5"), ExtResource("spell_6"), ExtResource("spell_7")])

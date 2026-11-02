@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="MeleeArcAbility" format=3]
+
+[ext_resource type="Script" path="res://scripts/abilities/MeleeArcAbility.cs" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+DisplayName = "Ritual Dagger"
+Description = "Very fast, short stabs that steal life."
+IconColor = Color(0.8, 0.25, 0.45, 1)
+Cooldown = 0.35
+Damage = 4.0
+Range = 70.0
+LifeSteal = 10.0
+CritChance = 15.0
+Knockback = 30.0
+CritMultiplier = 2.0
+ArcDegrees = 100.0

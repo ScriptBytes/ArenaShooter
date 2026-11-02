@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="MeleeArcAbility" format=3]
+
+[ext_resource type="Script" path="res://scripts/abilities/MeleeArcAbility.cs" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+DisplayName = "Ember Glaive"
+Description = "A long burning sweep all around you. What it cuts keeps burning."
+IconColor = Color(1, 0.5, 0.2, 1)
+Cooldown = 0.9
+Damage = 8.0
+Range = 110.0
+DotDamage = 3.0
+DotDuration = 2.0
+Knockback = 110.0
+CritMultiplier = 2.0
+ScreenShake = 0.05
+ArcDegrees = 240.0

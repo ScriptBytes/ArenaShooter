@@ -76,6 +76,9 @@ public partial class AbilityData : Resource
             RaiseMinion, RaiseMinion == null ? 0f : RaiseChance / 100f, RaiseWindow,
             StunDuration, DotSpreads, DisplayName);
 
+    /// <summary>Hits within arm's reach, so the player has to get close. Shown on weapons ("Melee" / "Ranged").</summary>
+    public virtual bool IsMelee => false;
+
     /// <summary>Manual casts aim at the mouse when true; otherwise they fire from the caster.</summary>
     public virtual bool NeedsAim => true;
 

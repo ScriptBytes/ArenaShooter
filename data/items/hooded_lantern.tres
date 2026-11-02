@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/items/ItemData.cs" id="1_item"]
+[ext_resource type="Script" path="res://scripts/items/StatModifier.cs" id="2_mod"]
+
+[sub_resource type="Resource" id="StatModifier_0"]
+script = ExtResource("2_mod")
+Stat = 6
+Value = 80.0
+
+[sub_resource type="Resource" id="StatModifier_1"]
+script = ExtResource("2_mod")
+Stat = 5
+Value = 30.0
+
+[resource]
+script = ExtResource("1_item")
+Id = "hooded_lantern"
+DisplayName = "Hooded Lantern"
+Price = 20
+IconColor = Color(1, 0.85, 0.5, 1)
+Slot = 2
+Modifiers = Array[ExtResource("2_mod")]([SubResource("StatModifier_0"), SubResource("StatModifier_1")])

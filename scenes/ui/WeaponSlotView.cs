@@ -51,7 +51,7 @@ public partial class WeaponSlotView : Control
 
             float textX = icon.End.X + 8f;
             float width = Size.X - textX - 6f;
-            DrawString(font, new Vector2(textX, 20f), "WEAPON", HorizontalAlignment.Left, width, 10, UiStyles.Dim);
+            DrawString(font, new Vector2(textX, 20f), $"{_item.Item.WeaponKind?.ToUpper()} WEAPON", HorizontalAlignment.Left, width, 10, UiStyles.Dim);
             DrawMultilineString(font, new Vector2(textX, 36f), _item.FullName, HorizontalAlignment.Left, width, 15,
                 maxLines: 2, modulate: _item.Color);
 

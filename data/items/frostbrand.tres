@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/items/ItemData.cs" id="1_item"]
+[ext_resource type="Resource" path="res://data/weapons/frostbrand.tres" id="3_weapon"]
+
+[resource]
+script = ExtResource("1_item")
+Id = "frostbrand"
+DisplayName = "Frostbrand"
+Price = 40
+IconColor = Color(0.6, 0.9, 1, 1)
+Slot = 1
+Weapon = ExtResource("3_weapon")

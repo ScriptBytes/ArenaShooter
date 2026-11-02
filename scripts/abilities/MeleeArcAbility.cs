@@ -12,6 +12,8 @@ public partial class MeleeArcAbility : AbilityData
     [ExportGroup("Arc")]
     [Export(PropertyHint.Range, "10,360,5")] public float ArcDegrees { get; set; } = 120f;
 
+    public override bool IsMelee => true;
+
     private float Reach(AbilityContext ctx) => Range + ctx.RangeBonus * RangeBonusScale;
 
     public override bool TryAutoTarget(AbilityContext ctx, out Vector2 target, out Enemy targetEnemy)

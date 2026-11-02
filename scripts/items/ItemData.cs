@@ -45,8 +45,11 @@ public partial class ItemData : Resource
 
     public bool IsGear => Slot != EquipSlot.None;
 
+    /// <summary>"Melee" or "Ranged" for weapons, null for everything else.</summary>
+    public string WeaponKind => Weapon == null ? null : Weapon.IsMelee ? "Melee" : "Ranged";
+
     public virtual string SlotLabel => !IsGear ? "Trinket · stacks"
-        : TwoHanded ? "Main Hand · two-handed"
+        : Weapon != null ? $"{WeaponKind} · {(TwoHanded ? "Two-handed" : "Main Hand")}"
         : EquipSlotInfo.Label(Slot);
 
     /// <summary>The item's Common stats. Owned and offered items describe themselves through ItemInstance.</summary>
@@ -58,7 +61,7 @@ public partial class ItemData : Resource
         var lines = new List<string>();
         if (Weapon != null)
         {
-            lines.Add($"{Weapon.Damage * weaponDamageMultiplier:0.#} damage every {Weapon.Cooldown:0.##}s");
+            lines.Add($"{Weapon.Damage * weaponDamageMultiplier:0.#} damage every {Weapon.Cooldown:0.##}s, range {Weapon.Range:0}");
             if (Weapon.Description != "")
                 lines.Add(Weapon.Description);
         }

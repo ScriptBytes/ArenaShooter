@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="MeleeArcAbility" format=3]
+
+[ext_resource type="Script" path="res://scripts/abilities/MeleeArcAbility.cs" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+DisplayName = "Frostbrand"
+Description = "A wide icy sweep that slows everything it cuts."
+IconColor = Color(0.6, 0.9, 1, 1)
+Cooldown = 0.65
+Damage = 6.0
+Range = 90.0
+SlowMultiplier = 0.5
+SlowDuration = 1.5
+Knockback = 70.0
+CritMultiplier = 2.0
+ArcDegrees = 150.0

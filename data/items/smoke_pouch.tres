@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ItemData" format=3]
+
+[ext_resource type="Script" path="res://scripts/items/ItemData.cs" id="1_item"]
+[ext_resource type="Script" path="res://scripts/items/StatModifier.cs" id="2_mod"]
+
+[sub_resource type="Resource" id="StatModifier_0"]
+script = ExtResource("2_mod")
+Stat = 13
+Value = 10.0
+
+[resource]
+script = ExtResource("1_item")
+Id = "smoke_pouch"
+DisplayName = "Smoke Pouch"
+Price = 30
+IconColor = Color(0.6, 0.6, 0.65, 1)
+Slot = 2
+Modifiers = Array[ExtResource("2_mod")]([SubResource("StatModifier_0")])

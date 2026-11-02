@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="ProjectileAbility" format=3]
+
+[ext_resource type="Script" path="res://scripts/abilities/ProjectileAbility.cs" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/weapons/Projectile.tscn" id="2_projectile"]
+
+[resource]
+script = ExtResource("1_script")
+DisplayName = "Plague Rod"
+Description = "Blighted orbs that burst into a sickness. Everything caught keeps losing life."
+IconColor = Color(0.6, 0.8, 0.3, 1)
+Cooldown = 0.85
+Damage = 4.0
+Range = 400.0
+DotDamage = 2.5
+DotDuration = 3.0
+LifeSteal = 5.0
+Knockback = 30.0
+ProjectileSpeed = 520.0
+ProjectileRadius = 7.0
+ExplosionRadius = 55.0
+ProjectileScene = ExtResource("2_projectile")
