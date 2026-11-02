@@ -445,10 +445,27 @@ public partial class Player : CharacterBody2D, IDamageable
 
     public override void _Draw()
     {
-        var color = _class?.Color ?? new Color("4aa3ff");
         DrawBuffRings();
         DrawShield();
+        DrawBody();
+        DrawHealthBar();
+    }
 
+    // Only while hurt, so a healthy player stays uncluttered. Green, so it can't be mistaken for an enemy's red bar.
+    private void DrawHealthBar()
+    {
+        if (Health.IsDead || Health.Current >= Health.Max)
+            return;
+
+        float top = _class?.Sprite != null ? Radius * 2f * _class.SpriteScale * 0.45f : Radius;
+        var bar = new Rect2(-Radius, -top - 10f, Radius * 2f, 4f);
+        DrawRect(bar.Grow(1f), new Color(0f, 0f, 0f, 0.7f));
+        DrawRect(bar with { Size = new Vector2(bar.Size.X * Health.Current / Health.Max, bar.Size.Y) }, new Color("4ccb6b"));
+    }
+
+    private void DrawBody()
+    {
+        var color = _class?.Color ?? new Color("4aa3ff");
         if (_class?.Sprite != null)
         {
             DrawSprite(_class.Sprite, Radius * 2f * _class.SpriteScale);
