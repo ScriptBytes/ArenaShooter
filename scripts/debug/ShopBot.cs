@@ -190,8 +190,8 @@ public sealed class ShopBot
             if (ability?.RaiseMinion is { } raised)
                 minionNames.Add(raised.DisplayName);
         }
-        // Every weapon this class can wear counts, so the starter's damage still counts after an upgrade.
-        var weaponNames = _class.Weapons.Append(_class.StartingWeapon)
+        // Every weapon counts, so the starter's damage still counts after an upgrade.
+        var weaponNames = _shop.Pool.Append(_class.StartingWeapon)
             .Where(i => i?.Weapon != null).Select(i => i.Weapon.DisplayName).ToHashSet();
         float weapon = totals.Where(t => weaponNames.Contains(t.Key)).Sum(t => t.Value);
         float minions = totals.Where(t => minionNames.Contains(t.Key)).Sum(t => t.Value);

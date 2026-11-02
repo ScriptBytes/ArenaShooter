@@ -66,6 +66,7 @@ public partial class Shop : CanvasLayer
     public Button ContinueButton => _continue;
     public Button RerollButton => _reroll;
     public int RerollCost => _rerollCost;
+    public IReadOnlyList<ItemData> Pool => _pool;
     private RunState _run;
     private IReadOnlyList<ItemData> _pool;
     private int _rerollCost;
@@ -307,7 +308,7 @@ public partial class Shop : CanvasLayer
 
         offer.Sold = true;
         var replaced = _run.AddItem(offer.Item, position);
-        _run.Gold += replaced.Sum(i => i.SellValue);
+        _run.Gold += replaced.Sum(_run.Equipment.RefundFor);
         EmitSignal(SignalName.Purchased);
         Refresh();
     }
@@ -380,7 +381,7 @@ public partial class Shop : CanvasLayer
 
     private string DescribeReplacement(ItemInstance item, List<ItemInstance> replaced)
     {
-        int refund = replaced.Sum(i => i.SellValue);
+        int refund = replaced.Sum(_run.Equipment.RefundFor);
         string names = string.Join(" and ", replaced.Select(i => i.FullName));
         string text = refund > 0 ? $"Replaces {names} (+{refund} gold back)" : $"Replaces {names}";
 

@@ -52,8 +52,32 @@
 [ext_resource type="Resource" path="res://data/items/war_banner.tres" id="item_war_banner"]
 [ext_resource type="Resource" path="res://data/items/spell_focus.tres" id="item_spell_focus"]
 [ext_resource type="Resource" path="res://data/items/blood_grimoire.tres" id="item_blood_grimoire"]
+[ext_resource type="Resource" path="res://data/items/bone_wand.tres" id="item_bone_wand"]
+[ext_resource type="Resource" path="res://data/items/crossbow.tres" id="item_crossbow"]
+[ext_resource type="Resource" path="res://data/items/cursed_scythe.tres" id="item_cursed_scythe"]
+[ext_resource type="Resource" path="res://data/items/ember_glaive.tres" id="item_ember_glaive"]
+[ext_resource type="Resource" path="res://data/items/frost_scepter.tres" id="item_frost_scepter"]
+[ext_resource type="Resource" path="res://data/items/frostbrand.tres" id="item_frostbrand"]
+[ext_resource type="Resource" path="res://data/items/gravediggers_spade.tres" id="item_gravediggers_spade"]
+[ext_resource type="Resource" path="res://data/items/greatsword.tres" id="item_greatsword"]
+[ext_resource type="Resource" path="res://data/items/hand_axes.tres" id="item_hand_axes"]
+[ext_resource type="Resource" path="res://data/items/hex_rod.tres" id="item_hex_rod"]
+[ext_resource type="Resource" path="res://data/items/longbow.tres" id="item_longbow"]
+[ext_resource type="Resource" path="res://data/items/plague_rod.tres" id="item_plague_rod"]
+[ext_resource type="Resource" path="res://data/items/reapers_sickle.tres" id="item_reapers_sickle"]
+[ext_resource type="Resource" path="res://data/items/ritual_dagger.tres" id="item_ritual_dagger"]
+[ext_resource type="Resource" path="res://data/items/sacrificial_sickle.tres" id="item_sacrificial_sickle"]
+[ext_resource type="Resource" path="res://data/items/skull_staff.tres" id="item_skull_staff"]
+[ext_resource type="Resource" path="res://data/items/soul_scythe.tres" id="item_soul_scythe"]
+[ext_resource type="Resource" path="res://data/items/soulfire_staff.tres" id="item_soulfire_staff"]
+[ext_resource type="Resource" path="res://data/items/spear.tres" id="item_spear"]
+[ext_resource type="Resource" path="res://data/items/spellblade.tres" id="item_spellblade"]
+[ext_resource type="Resource" path="res://data/items/spirit_lantern.tres" id="item_spirit_lantern"]
+[ext_resource type="Resource" path="res://data/items/staff.tres" id="item_staff"]
+[ext_resource type="Resource" path="res://data/items/sword.tres" id="item_sword"]
+[ext_resource type="Resource" path="res://data/items/wand.tres" id="item_wand"]
 
 [resource]
 script = ExtResource("1_catalog")
-Items = Array[ExtResource("2_item")]([ExtResource("item_0"), ExtResource("item_1"), ExtResource("item_2"), ExtResource("item_3"), ExtResource("item_4"), ExtResource("item_5"), ExtResource("item_6"), ExtResource("item_7"), ExtResource("item_8"), ExtResource("item_9"), ExtResource("item_10"), ExtResource("item_11"), ExtResource("item_12"), ExtResource("item_13"), ExtResource("item_14"), ExtResource("item_15"), ExtResource("item_16"), ExtResource("item_17"), ExtResource("item_18"), ExtResource("item_19"), ExtResource("item_20"), ExtResource("item_21"), ExtResource("item_22"), ExtResource("item_23"), ExtResource("item_24"), ExtResource("item_26"), ExtResource("item_27"), ExtResource("item_28"), ExtResource("item_29"), ExtResource("item_30"), ExtResource("item_31"), ExtResource("item_32"), ExtResource("item_33"), ExtResource("item_34"), ExtResource("item_35"), ExtResource("item_36"), ExtResource("item_37"), ExtResource("item_round_shield"), ExtResource("item_smoke_pouch"), ExtResource("item_prayer_beads"), ExtResource("item_healers_satchel"), ExtResource("item_hooded_lantern"), ExtResource("item_sharpened_dirk"), ExtResource("item_war_banner"), ExtResource("item_spell_focus"), ExtResource("item_blood_grimoire")])
+Items = Array[ExtResource("2_item")]([ExtResource("item_0"), ExtResource("item_1"), ExtResource("item_2"), ExtResource("item_3"), ExtResource("item_4"), ExtResource("item_5"), ExtResource("item_6"), ExtResource("item_7"), ExtResource("item_8"), ExtResource("item_9"), ExtResource("item_10"), ExtResource("item_11"), ExtResource("item_12"), ExtResource("item_13"), ExtResource("item_14"), ExtResource("item_15"), ExtResource("item_16"), ExtResource("item_17"), ExtResource("item_18"), ExtResource("item_19"), ExtResource("item_20"), ExtResource("item_21"), ExtResource("item_22"), ExtResource("item_23"), ExtResource("item_24"), ExtResource("item_26"), ExtResource("item_27"), ExtResource("item_28"), ExtResource("item_29"), ExtResource("item_30"), ExtResource("item_31"), ExtResource("item_32"), ExtResource("item_33"), ExtResource("item_34"), ExtResource("item_35"), ExtResource("item_36"), ExtResource("item_37"), ExtResource("item_round_shield"), ExtResource("item_smoke_pouch"), ExtResource("item_prayer_beads"), ExtResource("item_healers_satchel"), ExtResource("item_hooded_lantern"), ExtResource("item_sharpened_dirk"), ExtResource("item_war_banner"), ExtResource("item_spell_focus"), ExtResource("item_blood_grimoire"), ExtResource("item_bone_wand"), ExtResource("item_crossbow"), ExtResource("item_cursed_scythe"), ExtResource("item_ember_glaive"), ExtResource("item_frost_scepter"), ExtResource("item_frostbrand"), ExtResource("item_gravediggers_spade"), ExtResource("item_greatsword"), ExtResource("item_hand_axes"), ExtResource("item_hex_rod"), ExtResource("item_longbow"), ExtResource("item_plague_rod"), ExtResource("item_reapers_sickle"), ExtResource("item_ritual_dagger"), ExtResource("item_sacrificial_sickle"), ExtResource("item_skull_staff"), ExtResource("item_soul_scythe"), ExtResource("item_soulfire_staff"), ExtResource("item_spear"), ExtResource("item_spellblade"), ExtResource("item_spirit_lantern"), ExtResource("item_staff"), ExtResource("item_sword"), ExtResource("item_wand")])
 Consumables = Array[ExtResource("3_consumable")]([ExtResource("potion_0"), ExtResource("potion_1"), ExtResource("potion_2")])

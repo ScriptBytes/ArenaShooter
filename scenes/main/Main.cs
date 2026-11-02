@@ -52,7 +52,7 @@ public partial class Main : Node2D
     private bool IsCareer => Career.Mode == GameMode.Career;
 
     /// <summary>What the shop can offer at random: the shared catalog items offered to this class plus its own weapons.</summary>
-    private IEnumerable<ItemData> ShopPool => ItemCatalog.Items.Where(i => i.OfferedTo(_class)).Concat(_class.Weapons);
+    private IEnumerable<ItemData> ShopPool => ItemCatalog.Items.Where(i => i.OfferedTo(_class));
 
     public override void _Ready()
     {
@@ -103,7 +103,7 @@ public partial class Main : Node2D
 
         Career.ValidateIds(Classes,
             ItemCatalog.Items.Concat(ItemCatalog.Consumables)
-                .Concat(Classes.SelectMany(c => c.Weapons.Append(c.StartingWeapon))),
+                .Concat(Classes.Select(c => c.StartingWeapon)),
             CareerSettings.Talents,
             Classes.SelectMany(c => c.Spells));
         var classIds = Classes.Select(Career.ClassId).ToHashSet();
@@ -160,7 +160,7 @@ public partial class Main : Node2D
         string id = character.Heirloom;
         if (id == null)
             return null;
-        var item = ItemCatalog.Items.Concat(playerClass.Weapons).FirstOrDefault(i => Career.ItemId(i) == id);
+        var item = ItemCatalog.Items.FirstOrDefault(i => Career.ItemId(i) == id);
         if (item == null)
         {
             GD.PushWarning($"[career] heirloom '{id}' of {Career.ClassId(playerClass)} isn't a known item; ignored");
@@ -259,13 +259,13 @@ public partial class Main : Node2D
             _run.GrantStat(stat, value);
     }
 
-    // --item grants (at --rarity, default Common). They wait for the class, since its weapons are part of the pool.
+    // --item grants (at --rarity, default Common). They wait for the class, since gear swaps need its starting weapon.
     private void GrantAutoplayItems()
     {
         foreach (var name in _autoplay.Items)
         {
             // Any catalog item, even one restricted to another class: --item is a test hook.
-            var item = _autoplayDriver.FindItem(ItemCatalog.Items.Concat(_class.Weapons).Concat(ItemCatalog.Consumables), name);
+            var item = _autoplayDriver.FindItem(ItemCatalog.Items.Concat(ItemCatalog.Consumables), name);
             if (item is ConsumableData potion)
                 _run.AddPotion(potion);
             else if (item != null)
@@ -373,7 +373,7 @@ public partial class Main : Node2D
         Career.Persist();
 
         // Any worn gear except the class's starting weapon, which you always have anyway.
-        var keepable = _run.Equipment.Worn.Where(i => i.Item != _class.StartingWeapon);
+        var keepable = _run.Equipment.Worn.Where(i => i != _run.Equipment.StartingWeapon);
         CareerSummary.Open(_class, CareerSettings, character, reward, levelBefore, _run.Wave, Heirloom(_class), keepable);
     }
 

@@ -2,7 +2,7 @@ using Godot;
 
 namespace ArenaShooter;
 
-/// <summary>A playable class: base stats, weapons, and spell list to pick from (one .tres per class).</summary>
+/// <summary>A playable class: base stats, starting weapon, and spell list to pick from (one .tres per class).</summary>
 [GlobalClass]
 public partial class ClassData : Resource
 {
@@ -31,9 +31,6 @@ public partial class ClassData : Resource
     [ExportGroup("Loadout")]
     /// <summary>Main-hand item at run start, and the fallback whenever the main hand empties.</summary>
     [Export] public ItemData StartingWeapon { get; set; }
-
-    /// <summary>Weapons only this class can buy. They join the shop's pool alongside ItemCatalog.</summary>
-    [Export] public Godot.Collections.Array<ItemData> Weapons { get; set; } = new();
 
     /// <summary>The class's full spell list. The player picks <see cref="SpellPicks"/> of them at run start.</summary>
     [Export] public Godot.Collections.Array<AbilityData> Spells { get; set; } = new();

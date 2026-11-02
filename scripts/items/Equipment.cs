@@ -39,6 +39,9 @@ public class Equipment
 
     private ItemInstance WeaponItem => MainHand?.Item.Weapon != null ? MainHand : StartingWeapon;
 
+    /// <summary>Gold back when <paramref name="item"/> is replaced. The starting weapon was free, so it refunds nothing, even though the shop sells it to other classes.</summary>
+    public int RefundFor(ItemInstance item) => item == StartingWeapon ? 0 : item.SellValue;
+
     /// <summary>Whether any rarity of <paramref name="item"/> is worn.</summary>
     public bool IsWorn(ItemData item) => _items.Any(i => i?.Item == item);
 

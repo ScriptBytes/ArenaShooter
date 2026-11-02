@@ -6,7 +6,7 @@
 [resource]
 script = ExtResource("1_script")
 DisplayName = "Bone Wand"
-Description = "Fires splinters of bone. Weaker than a mage's wand: your minions do the heavy lifting."
+Description = "Fires splinters of bone."
 IconColor = Color(0.9, 0.88, 0.75, 1)
 Cooldown = 0.4
 Damage = 5.0

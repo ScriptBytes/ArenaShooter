@@ -2,13 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/classes/ClassData.cs" id="1_class"]
 [ext_resource type="Script" path="res://scripts/abilities/AbilityData.cs" id="2_ability"]
-[ext_resource type="Script" path="res://scripts/items/ItemData.cs" id="4_item"]
 [ext_resource type="Resource" path="res://data/items/sword.tres" id="3_weapon"]
-[ext_resource type="Resource" path="res://data/items/spear.tres" id="weapon_0"]
-[ext_resource type="Resource" path="res://data/items/greatsword.tres" id="weapon_1"]
-[ext_resource type="Resource" path="res://data/items/hand_axes.tres" id="weapon_hand_axes"]
-[ext_resource type="Resource" path="res://data/items/crossbow.tres" id="weapon_crossbow"]
-[ext_resource type="Resource" path="res://data/items/longbow.tres" id="weapon_longbow"]
 [ext_resource type="Resource" path="res://data/spells/whirlwind.tres" id="spell_0"]
 [ext_resource type="Resource" path="res://data/spells/ground_slam.tres" id="spell_1"]
 [ext_resource type="Resource" path="res://data/spells/charge.tres" id="spell_2"]
@@ -30,5 +24,4 @@ MaxHealth = 24.0
 MoveSpeed = 280.0
 Armor = 1.0
 StartingWeapon = ExtResource("3_weapon")
-Weapons = Array[ExtResource("4_item")]([ExtResource("weapon_0"), ExtResource("weapon_1"), ExtResource("weapon_hand_axes"), ExtResource("weapon_crossbow"), ExtResource("weapon_longbow")])
 Spells = Array[ExtResource("2_ability")]([ExtResource("spell_0"), ExtResource("spell_1"), ExtResource("spell_2"), ExtResource("spell_3"), ExtResource("spell_4"), ExtResource("spell_5"), ExtResource("spell_6"), ExtResource("spell_7")])

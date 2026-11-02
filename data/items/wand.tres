@@ -7,7 +7,7 @@
 script = ExtResource("1_item")
 Id = "wand"
 DisplayName = "Wand"
-Price = 0
+Price = 25
 IconColor = Color(0.902, 0.945, 1, 1)
 Slot = 1
 Weapon = ExtResource("3_weapon")
