@@ -128,7 +128,7 @@ public partial class Player : CharacterBody2D, IDamageable
     {
         _class = playerClass;
         Potions = potions;
-        Abilities.Setup(spells);
+        Abilities.Setup(spells, playerClass);
     }
 
     /// <summary>Sets the basic attack from the main-hand weapon and its rarity's damage multiplier. Call before ApplyStats.</summary>

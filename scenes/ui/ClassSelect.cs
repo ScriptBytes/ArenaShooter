@@ -81,6 +81,12 @@ public partial class ClassSelect : CanvasLayer
 
         content.AddChild(UiStyles.WrappedLabel($"Weapon: {playerClass.StartingWeapon.DisplayName}", 18));
         content.AddChild(UiStyles.WrappedLabel(playerClass.StartingWeapon.Weapon.Description, 14));
+        if (playerClass.WeaponTraitText is { } trait)
+        {
+            var traitLabel = UiStyles.WrappedLabel(trait, 14);
+            traitLabel.AddThemeColorOverride("font_color", UiStyles.Gold);
+            content.AddChild(traitLabel);
+        }
         content.AddChild(new HSeparator());
 
         content.AddChild(UiStyles.WrappedLabel($"Spells: pick {playerClass.SpellPicks} of {playerClass.Spells.Count}", 18));

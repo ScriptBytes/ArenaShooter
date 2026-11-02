@@ -1,12 +1,11 @@
 [gd_resource type="Resource" script_class="MeleeArcAbility" format=3]
 
 [ext_resource type="Script" path="res://scripts/abilities/MeleeArcAbility.cs" id="1_script"]
-[ext_resource type="Resource" path="res://data/minions/skeleton.tres" id="3_minion"]
 
 [resource]
 script = ExtResource("1_script")
 DisplayName = "Gravedigger's Spade"
-Description = "A heavy swing that stuns. Enemies it kills have a 15% chance to rise as skeletons."
+Description = "A heavy swing that briefly stuns."
 IconColor = Color(0.6, 0.55, 0.45, 1)
 Cooldown = 0.85
 Damage = 9.0
@@ -14,7 +13,4 @@ Range = 85.0
 StunDuration = 0.3
 Knockback = 120.0
 CritMultiplier = 2.0
-RaiseChance = 15.0
-RaiseWindow = 0.5
 ArcDegrees = 120.0
-RaiseMinion = ExtResource("3_minion")

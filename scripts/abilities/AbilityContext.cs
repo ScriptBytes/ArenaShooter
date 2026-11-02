@@ -23,6 +23,10 @@ public class AbilityContext
     /// <summary>Damage multiplier for minions: Damage% and Minion Damage% added together.</summary>
     public float MinionDamageMultiplier { get; set; } = 1f;
 
+    /// <summary>Class trait, weapon context only: enemies hit may rise as this minion if the ability raises none itself.</summary>
+    public MinionData RaiseMinion { get; set; }
+    public float RaiseChance { get; set; }
+
     public SceneTree Tree => Caster.GetTree();
     public Node World => Caster.GetTree().CurrentScene;
     public Vector2 Origin => Caster.GlobalPosition;

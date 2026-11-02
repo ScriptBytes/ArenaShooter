@@ -12,6 +12,7 @@
 [ext_resource type="Resource" path="res://data/spells/bone_armor.tres" id="spell_6"]
 [ext_resource type="Resource" path="res://data/spells/corpse_explosion.tres" id="spell_7"]
 [ext_resource type="Texture2D" uid="uid://dqkin0pkbc6hn" path="res://art/classes/necromancer.svg" id="9_sprite"]
+[ext_resource type="Resource" path="res://data/minions/skeleton.tres" id="10_minion"]
 
 [resource]
 script = ExtResource("1_class")
@@ -23,5 +24,7 @@ Sprite = ExtResource("9_sprite")
 MaxHealth = 24.0
 MoveSpeed = 300.0
 Armor = 1.0
+WeaponRaiseMinion = ExtResource("10_minion")
+WeaponRaiseChance = 15.0
 StartingWeapon = ExtResource("3_weapon")
 Spells = Array[ExtResource("2_ability")]([ExtResource("spell_0"), ExtResource("spell_1"), ExtResource("spell_2"), ExtResource("spell_3"), ExtResource("spell_4"), ExtResource("spell_5"), ExtResource("spell_6"), ExtResource("spell_7")])

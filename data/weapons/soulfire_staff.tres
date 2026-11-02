@@ -5,12 +5,11 @@
 [resource]
 script = ExtResource("1_script")
 DisplayName = "Soulfire Staff"
-Description = "Soulfire leaps between up to 3 enemies, stealing life from each."
+Description = "Soulfire leaps between up to 3 enemies."
 IconColor = Color(0.5, 0.95, 0.4, 1)
 Cooldown = 0.7
 Damage = 6.0
 Range = 380.0
-LifeSteal = 8.0
 Jumps = 2
 JumpRange = 150.0
 JumpFalloff = 0.75

@@ -23,5 +23,6 @@ Sprite = ExtResource("9_sprite")
 MaxHealth = 21.0
 MoveSpeed = 300.0
 Armor = 0.0
+WeaponLifeSteal = 8.0
 StartingWeapon = ExtResource("3_weapon")
 Spells = Array[ExtResource("2_ability")]([ExtResource("spell_0"), ExtResource("spell_1"), ExtResource("spell_2"), ExtResource("spell_3"), ExtResource("spell_4"), ExtResource("spell_5"), ExtResource("spell_6"), ExtResource("spell_7")])

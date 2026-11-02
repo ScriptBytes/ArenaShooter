@@ -6,13 +6,14 @@
 [resource]
 script = ExtResource("1_script")
 DisplayName = "Hex Rod"
-Description = "Fires cursed bolts that steal a little life."
+Description = "Cursed bolts that keep hurting for a moment."
 IconColor = Color(1, 0.42, 0.62, 1)
 Cooldown = 0.4
 Damage = 4.0
 Range = 420.0
 Knockback = 30.0
-LifeSteal = 8.0
 ProjectileSpeed = 650.0
 ProjectileRadius = 4.0
 ProjectileScene = ExtResource("2_projectile")
+DotDamage = 1.0
+DotDuration = 2.0

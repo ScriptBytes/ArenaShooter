@@ -194,6 +194,8 @@ public partial class Main : Node2D
         Combat.ResetMeters();
         foreach (var spell in spells)
             Combat.RegisterSource(spell);
+        if (playerClass.WeaponRaiseMinion is { } raised)
+            Combat.Damage.SetColor(raised.DisplayName, raised.GlowColor);
         ApplyLoadout();
         Hud.BindAbilities(Player.Abilities);
         Hud.BindPotions(Player);

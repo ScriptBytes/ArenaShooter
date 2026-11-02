@@ -13,7 +13,6 @@ Damage = 4.0
 Range = 400.0
 DotDamage = 2.5
 DotDuration = 3.0
-LifeSteal = 5.0
 Knockback = 30.0
 ProjectileSpeed = 520.0
 ProjectileRadius = 7.0

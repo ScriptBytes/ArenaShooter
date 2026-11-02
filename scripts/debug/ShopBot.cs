@@ -183,6 +183,8 @@ public sealed class ShopBot
             return (0.5f, 0f);
 
         var minionNames = new HashSet<string>();
+        if (_class.WeaponRaiseMinion != null)
+            minionNames.Add(_class.WeaponRaiseMinion.DisplayName);
         foreach (var ability in _player.Abilities.Spells.Select(s => s.Ability).Append(_player.Abilities.Weapon?.Ability))
         {
             if (ability is SummonAbility { Minion: { } summoned })
@@ -199,9 +201,9 @@ public sealed class ShopBot
     }
 
     private bool StealsLife() =>
-        _player.Abilities.Weapon?.Ability.LifeSteal > 0f || _player.Abilities.Spells.Any(s => s.Ability.LifeSteal > 0f);
+        _class.WeaponLifeSteal > 0f || _player.Abilities.Weapon?.Ability.LifeSteal > 0f || _player.Abilities.Spells.Any(s => s.Ability.LifeSteal > 0f);
 
     private bool HasMinions() =>
-        _player.Abilities.Spells.Any(s => s.Ability is SummonAbility || s.Ability.RaiseMinion != null)
+        _class.WeaponRaiseMinion != null || _player.Abilities.Spells.Any(s => s.Ability is SummonAbility || s.Ability.RaiseMinion != null)
         || _player.Abilities.Weapon?.Ability.RaiseMinion != null;
 }

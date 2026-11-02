@@ -21,6 +21,7 @@ public partial class AbilityCaster : Node2D
     private AbilityContext _context;
     // The weapon's own copy of the context, so its rarity can scale its damage without touching spells.
     private AbilityContext _weaponContext;
+    private ClassData _class;
     private float _weaponCooldownMultiplier = 1f;
     private float _spellCooldownMultiplier = 1f;
     private float _weaponDamageMultiplier = 1f;
@@ -31,8 +32,11 @@ public partial class AbilityCaster : Node2D
         _weaponContext = new AbilityContext(this);
     }
 
-    public void Setup(IEnumerable<AbilityData> spells)
+    public void Setup(IEnumerable<AbilityData> spells, ClassData playerClass)
     {
+        _class = playerClass;
+        _weaponContext.RaiseMinion = playerClass.WeaponRaiseMinion;
+        _weaponContext.RaiseChance = playerClass.WeaponRaiseChance;
         _spells.Clear();
         foreach (var spell in spells)
         {
@@ -58,6 +62,7 @@ public partial class AbilityCaster : Node2D
     {
         Fill(_context, stats, 1f);
         Fill(_weaponContext, stats, _weaponDamageMultiplier);
+        _weaponContext.LifeStealBonus += _class?.WeaponLifeSteal ?? 0f;
         _weaponCooldownMultiplier = 1f / stats.Multiplier(StatType.AttackSpeed);
         if (Weapon != null)
             Weapon.CooldownMultiplier = _weaponCooldownMultiplier;

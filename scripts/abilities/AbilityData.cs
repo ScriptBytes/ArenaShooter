@@ -73,7 +73,8 @@ public partial class AbilityData : Resource
     protected HitEffects Effects(AbilityContext ctx) =>
         new(SlowMultiplier, SlowDuration, Knockback, EffectiveCritChance(ctx), CritMultiplier,
             EffectiveLifeSteal(ctx), DotDamage * ctx.DamageMultiplier, DotDuration, IconColor,
-            RaiseMinion, RaiseMinion == null ? 0f : RaiseChance / 100f, RaiseWindow,
+            RaiseMinion ?? ctx.RaiseMinion,
+            RaiseMinion != null ? RaiseChance / 100f : ctx.RaiseMinion != null ? ctx.RaiseChance / 100f : 0f, RaiseWindow,
             StunDuration, DotSpreads, DisplayName);
 
     /// <summary>Hits within arm's reach, so the player has to get close. Shown on weapons ("Melee" / "Ranged").</summary>

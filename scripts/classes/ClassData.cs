@@ -37,4 +37,18 @@ public partial class ClassData : Resource
 
     /// <summary>How many spells to pick from the list (at most 4, one per hotkey slot).</summary>
     [Export(PropertyHint.Range, "1,4,1")] public int SpellPicks { get; set; } = 3;
+
+    /// <summary>Class trait: percent of weapon damage healed back, on whatever weapon is equipped.</summary>
+    [ExportGroup("Weapon Trait")]
+    [Export(PropertyHint.Range, "0,100,1")] public float WeaponLifeSteal { get; set; }
+
+    /// <summary>Class trait: enemies killed by the weapon may rise as this minion, whatever the weapon.</summary>
+    [Export] public MinionData WeaponRaiseMinion { get; set; }
+    [Export(PropertyHint.Range, "0,100,1")] public float WeaponRaiseChance { get; set; }
+
+    /// <summary>The weapon trait as a line for the class card, or null if the class has none.</summary>
+    public string WeaponTraitText =>
+        WeaponLifeSteal > 0f ? $"Your weapon hits steal {WeaponLifeSteal:0}% life"
+        : WeaponRaiseMinion != null ? $"Enemies your weapon kills have a {WeaponRaiseChance:0}% chance to rise as {WeaponRaiseMinion.DisplayName.ToLower()}s"
+        : null;
 }
